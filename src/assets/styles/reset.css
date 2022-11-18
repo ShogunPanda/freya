@@ -1,0 +1,89 @@
+*,
+*:hover,
+*:focus,
+*:active,
+*::before,
+*::after {
+  box-sizing: border-box;
+  outline: none;
+}
+
+body,
+a,
+p,
+strong,
+em,
+li,
+dd,
+dt,
+button,
+input,
+select,
+textarea,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  line-height: 1.4em;
+}
+
+h1 {
+  font-size: 3.5em;
+}
+
+h2 {
+  font-size: 2.5em;
+}
+
+h3 {
+  font-size: 2em;
+}
+
+h4 {
+  font-size: 1.5em;
+}
+
+h5,
+h6 {
+  font-size: 1em;
+}
+
+a {
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+strong {
+  font-weight: bold;
+}
+
+ul,
+ol {
+  padding-left: 1.7rem;
+}
+
+ul.unstyled,
+ol.unstyled {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+}
+
+dl {
+  margin: 0;
+}
+
+dt {
+  font-weight: bold;
+}
+
+dt:nth-child(n + 1) {
+  margin-top: 1rem;
+}
+
+dl {
+  margin: 0;
+}
