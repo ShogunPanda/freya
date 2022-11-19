@@ -129,7 +129,7 @@ export async function generateSlideset(theme: Theme, talk: Talk): Promise<string
         header({
           talk,
           theme,
-          css: await finalizeCss(themeCss + css, theme.fontsStyles),
+          css: await finalizeCss(unoConfig, themeCss + css, theme.fontsStyles),
           js: await finalizeJs(client.replace('const context = {}', `const context = ${JSON.stringify(clientContext)}`))
         })
       )

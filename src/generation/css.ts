@@ -11,13 +11,16 @@ import postcssMinifySelector from 'postcss-minify-selectors'
 import postcssNested from 'postcss-nested'
 import postcssNormalizeWhitespace from 'postcss-normalize-whitespace'
 
-function inlineCss(fonts: string, id: string): string | Promise<string> {
+async function inlineCss(config: UserConfig, fonts: string, id: string): Promise<string> {
   id = id.replace(/^\/handled\//, '')
 
   if (id === 'virtual:theme-fonts') {
     return fonts
   } else if (id.startsWith('@freya')) {
-    return readFile(fileURLToPath(new URL(`../assets/styles/${id.replace('@freya/', '')}`, import.meta.url)), 'utf8')
+    return transformCSS(
+      await readFile(fileURLToPath(new URL(`../assets/styles/${id.replace('@freya/', '')}`, import.meta.url)), 'utf8'),
+      config
+    )
   }
 
   return `/*!!! not-found: ${id} */`
@@ -33,14 +36,19 @@ export const systemFonts =
   "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'"
 export const systemMonospaceFonts = "ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace"
 
-export async function finalizeCss(css: string, fonts: string, minify: boolean = true): Promise<string> {
+export async function finalizeCss(
+  config: UserConfig,
+  css: string,
+  fonts: string,
+  minify: boolean = true
+): Promise<string> {
   // Process them using postcss
   const processed = await postcss([
     postcssImport({
       resolve(id: string): string {
         return `/handled/${id}`
       },
-      load: inlineCss.bind(null, fonts)
+      load: inlineCss.bind(null, config, fonts)
     }),
     postcssNested(),
     ...(minify
@@ -54,15 +62,19 @@ export async function finalizeCss(css: string, fonts: string, minify: boolean = 
   return processed.css
 }
 
-export async function transformCSSFile(path: string, config: UserConfig): Promise<string> {
+export async function transformCSS(css: string, config: UserConfig): Promise<string> {
   // Create a generator
   const generator = createGenerator(config)
 
   // Trasform the file
-  const code = new MagicString(await readFile(path, 'utf8'))
+  const code = new MagicString(css)
   await transformDirectives(code, generator, {})
 
   return code.toString()
+}
+
+export async function transformCSSFile(path: string, config: UserConfig): Promise<string> {
+  return transformCSS(await readFile(path, 'utf8'), config)
 }
 
 export function defineUnoConfig<Theme extends {} = UnoTheme>(config: UserConfig<Theme>): UserConfig<Theme> {
