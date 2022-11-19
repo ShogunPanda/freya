@@ -1,3 +1,8 @@
+### 2022-11-19 / 0.3.1
+
+- fix: Fixed directory structure.
+- fix: Remove leftover console.log.
+
 ### 2022-11-19 / 0.3.0
 
 - feat: Added create-freya-slideset instead of freya init.
