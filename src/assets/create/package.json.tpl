@@ -27,6 +27,8 @@
     "lint": "eslint src  --ext .ts,.tsx"
   },
   "dependencies": {
+    "@unocss/transformer-directives": "^0.46.5",
+    "@unocss/preset-wind": "^0.46.5",
     "freya-slides": "^@VERSION@",
     "react": "^18.2.0"
   },
