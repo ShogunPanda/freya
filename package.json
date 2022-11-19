@@ -14,7 +14,8 @@
   "license": "ISC",
   "private": false,
   "bin": {
-    "freya": "dist/cli/index.js"
+    "freya": "dist/cli/index.js",
+    "create-freya-slideset": "dist/cli/create.js"
   },
   "files": [
     "dist",

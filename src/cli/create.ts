@@ -1,8 +1,14 @@
+#!/usr/bin/env node
+
+import { program } from 'commander'
+import { readFileSync } from 'node:fs'
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pino from 'pino'
 import { rootDir } from '../generation/loader.js'
+
+const packageInfo = JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'))
 
 const templates = {
   'src/talks/@NAME@.yml': `
@@ -166,7 +172,7 @@ function compile(template: string, variables: Record<string, string>): string {
   })
 }
 
-export async function init(name: string, directory: string): Promise<void> {
+export async function initializeSlideset(name: string, directory: string): Promise<void> {
   console.log(name, directory)
   const packageJson = JSON.parse(await readFile(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'))
   const logger = pino({ transport: { target: 'pino-pretty' } })
@@ -212,3 +218,22 @@ export async function init(name: string, directory: string): Promise<void> {
     await writeFile(destination, compile(template.trim(), variables), 'utf8')
   }
 }
+
+program
+  .name('create'.trim())
+  .arguments('<name> [directory>')
+  .description('Initializes a freya slideset.')
+  .version(packageInfo.version, '-V, --version', 'Show version number')
+  .helpOption('-h, --help', 'Show this help')
+  .addHelpCommand(false)
+  .showSuggestionAfterError(true)
+  .allowUnknownOption(false)
+  .action(async (name: string, directory: string) => {
+    try {
+      await initializeSlideset(name, directory ?? name)
+    } catch (error) {
+      console.error(error)
+    }
+  })
+
+program.parse()

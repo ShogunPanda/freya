@@ -7,6 +7,15 @@ Opinionated JSX based slides generator.
 
 http://sw.cowtech.it/freya-slides
 
+## Installation
+
+```
+npx --package=freya-slides -- create-freya-slideset my-slideset
+cd my-slideset
+npm install
+freya dev
+```
+
 ## ESM Only
 
 This package only supports to be directly imported in a ESM context.
