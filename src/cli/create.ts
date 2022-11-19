@@ -11,160 +11,15 @@ import { rootDir } from '../generation/loader.js'
 const packageInfo = JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'))
 
 const templates = {
-  'src/talks/@NAME@/talk.yml': `
-  ---
-  config:
-    theme: main
-    dimensions:
-      width: 2000
-      height: 1120
-  document:
-    title:
-    author:
-      name:
-      description:
-      email:
-  slides:
-    - title: 'Hello world!'
-  `,
-  'src/themes/main/theme.yml': `
-  ---
-style: style.css
-images:
-fonts:
-  ranges:
-  families:
-  `,
-  'src/themes/main/style.css': `
-@import 'virtual:theme-fonts';
-@import '@freya/normalize.css';
-@import '@freya/reset.css';
-  `,
-  'src/themes/main/unocss.config.ts': `
-import { defineUnoConfig } from '@freya/generation/css.js'
-
-export default defineUnoConfig({
-})
-  `,
-  'src/themes/main/layouts/default.tsx': `
-import { parseContent } from '@freya/generation/generator.js'
-import { Slide, SlideProps } from '@freya/generation/models.js'
-
-export default function DefaultLayout({ slide, index }: SlideProps<Slide>): JSX.Element {
-  const { title, content } = slide
-
-  return (
-    <div key={\`slide:\${index}\`}>
-      <h1 dangerouslySetInnerHTML={{ __html: parseContent(title) }} />
-
-      {content?.filter(Boolean).map((c: string, contentIndex: number) => (
-        <h4 key={\`content:\${index}:\${contentIndex}\`} dangerouslySetInnerHTML={{ __html: parseContent(c) }}/>
-      ))}
-    </div>
-  )
-}
-  `,
-  '.eslintrc.json': `
-{
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "project": "tsconfig.json"
-  },
-  "extends": ["@cowtech/eslint-config/react-with-typescript"],
-  "overrides": [
-    {
-      "files": ["*.js"],
-      "parser": "espree",
-      "parserOptions": {
-        "ecmaVersion": 2020
-      },
-      "extends": ["@cowtech/eslint-config"],
-      "rules": {
-        "@typescript-eslint/typedef": 0,
-        "@typescript-eslint/require-await": 0
-      }
-    }
-  ]
-}
-
-  `,
-  'package.json': `
-{
-  "name": "@NAME@",
-  "version": "0.1.0",
-  "description": "",
-  "homepage": "",
-  "repository": "",
-  "bugs": {
-    "url": ""
-  },
-  "author": "",
-  "license": "",
-  "licenses": [
-    {
-      "type": "",
-      "url": ""
-    }
-  ],
-  "type": "module",
-  "private": true,
-  "scripts": {
-    "dev": "freya dev",
-    "build": "freya build",
-    "serve": "freya serve",
-    "jpeg": "freya jpeg",
-    "pdf": "freya pdf",
-    "format": "prettier -w src",
-    "lint": "eslint src  --ext .ts,.tsx"
-  },
-  "dependencies": {
-    "freya-slides": "^@VERSION@",
-    "react": "^18.2.0"
-  },
-  "devDependencies": {
-    "@cowtech/eslint-config": "^8.7.5",
-    "@types/react": "^18.0.25",
-    "eslint": "^8.26.0",
-    "prettier": "^2.7.1"
-  }
-}
-  `,
-  'prettier.config.cjs': `
-module.exports = {
-  printWidth: 120,
-  semi: false,
-  singleQuote: true,
-  bracketSpacing: true,
-  trailingComma: 'none',
-  arrowParens: 'avoid'
-}
-  `,
-  'tsconfig.json': `
-{
-  "compilerOptions": {
-    "target": "ES2021",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "jsx": "react-jsx",
-    "outDir": "dist",
-    "allowJs": false,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "strict": true,
-    "noEmit": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "strictNullChecks": true,
-    "useUnknownInCatchVariables": false,
-    "baseUrl": ".",
-    "paths": {
-      "@freya/*": ["node_modules/freya-slides/dist/*"]
-    },
-    "lib": ["dom", "dom.iterable", "esnext"]
-  },
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
-}
-  `
+  'src/talks/@NAME@/talk.yml': 'talk.yml',
+  'src/themes/main/theme.yml': 'theme.yml',
+  'src/themes/main/style.css': 'style.css',
+  'src/themes/main/unocss.config.ts': 'unocss.config.ts',
+  'src/themes/main/layouts/default.tsx': 'layout.tsx',
+  '.eslintrc.json': 'eslintrc.json',
+  'package.json': 'package.json',
+  'prettier.config.cjs': 'prettier.config.cjs',
+  'tsconfig.json': 'tsconfig.json'
 }
 
 function compile(template: string, variables: Record<string, string>): string {
@@ -213,10 +68,14 @@ export async function initializeSlideset(name: string, directory: string): Promi
   }
 
   // Create all files
-  for (const [file, template] of Object.entries(templates)) {
+  for (const [file, templateFile] of Object.entries(templates)) {
     const destination = compile(resolve(fullOutput, file), variables)
 
     logger.info(`Creating file ${relative(fullOutput, destination)} ...`)
+    const template = await readFile(
+      fileURLToPath(new URL(`../assets/create/${templateFile}.tpl`, import.meta.url)),
+      'utf8'
+    )
     await writeFile(destination, compile(template.trim(), variables), 'utf8')
   }
 }

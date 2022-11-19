@@ -31,12 +31,13 @@ export async function getTheme(themeName: string): Promise<Theme> {
   const fonts = theme.fonts
 
   // Generate all the fonts related CSS
-  for (const [name, styles] of Object.entries(fonts.families)) {
-    for (const [style, weights] of Object.entries(styles)) {
-      for (const [weight, definition] of Object.entries(weights)) {
-        for (const [range, url] of Object.entries(definition)) {
-          fontsStyles +=
-            `
+  if (fonts.families && fonts.ranges) {
+    for (const [name, styles] of Object.entries(fonts.families)) {
+      for (const [style, weights] of Object.entries(styles)) {
+        for (const [weight, definition] of Object.entries(weights)) {
+          for (const [range, url] of Object.entries(definition)) {
+            fontsStyles +=
+              `
 @font-face {
   font-family: "${name}";
   font-style: ${style};
@@ -47,7 +48,8 @@ export async function getTheme(themeName: string): Promise<Theme> {
 }
         `.trim() + '\n'
 
-          fontsUrls.push(url)
+            fontsUrls.push(url)
+          }
         }
       }
     }
@@ -56,7 +58,7 @@ export async function getTheme(themeName: string): Promise<Theme> {
   return {
     id: themeName,
     ...theme,
-    images: theme.images.map(i => resolveImageUrl(themeName, '', i)),
+    images: (theme.images ?? []).map(i => resolveImageUrl(themeName, '', i)),
     fontsStyles,
     fontsUrls
   }
