@@ -201,7 +201,7 @@ export async function initializeSlideset(name: string, directory: string): Promi
   await mkdir(fullOutput, { recursive: true })
 
   // Create the structure for the talk
-  await mkdir(resolve(fullOutput, 'src/talks/@NAME@/assets'), { recursive: true })
+  await mkdir(resolve(fullOutput, `src/talks/${name}/assets`), { recursive: true })
 
   // Create the structure for the theme
   await mkdir(resolve(fullOutput, 'src/themes/main/assets/'), { recursive: true })
