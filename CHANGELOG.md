@@ -1,3 +1,7 @@
+### 2022-11-19 / 0.3.4
+
+- fix: Extract create loaders to separate files.
+
 ### 2022-11-19 / 0.3.3
 
 - fix: Minor fix.
