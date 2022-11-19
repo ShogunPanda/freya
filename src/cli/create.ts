@@ -173,7 +173,6 @@ function compile(template: string, variables: Record<string, string>): string {
 }
 
 export async function initializeSlideset(name: string, directory: string): Promise<void> {
-  console.log(name, directory)
   const packageJson = JSON.parse(await readFile(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'))
   const logger = pino({ transport: { target: 'pino-pretty' } })
   const fullOutput = resolve(rootDir, directory)
@@ -194,6 +193,8 @@ export async function initializeSlideset(name: string, directory: string): Promi
       throw error
     }
   }
+
+  logger.info(`Preparing slideset into directory ${fullOutput} ...`)
 
   // Create the main directory
   await mkdir(fullOutput, { recursive: true })
