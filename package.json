@@ -23,7 +23,10 @@
     "README.md"
   ],
   "type": "module",
-  "exports": "./dist/index.js",
+  "exports": {
+    "./loader": "./dist/loader.js",
+    ".": "./dist/index.js"
+  },
   "types": "./dist/index.d.ts",
   "scripts": {
     "predev": "rm -rf dist && mkdir dist && cp -a src/assets dist",
@@ -38,6 +41,7 @@
     "postpublish": "git push origin && git push origin -f --tags"
   },
   "dependencies": {
+    "@esbuild-kit/esm-loader": "^2.5.0",
     "@fastify/static": "^6.5.0",
     "@unocss/core": "^0.46.5",
     "@unocss/preset-mini": "^0.46.5",
@@ -62,7 +66,6 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "terser": "^5.15.1",
-    "tsx": "^3.12.1",
     "wait-on": "^6.0.1",
     "xml-js": "^1.6.11"
   },

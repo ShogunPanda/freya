@@ -1,4 +1,4 @@
-#!/usr/bin/env node --no-warnings=loader --loader tsx
+#!/usr/bin/env node --no-warnings=loader --loader freya-slides/loader
 
 import { Command, program } from 'commander'
 import { readFileSync } from 'node:fs'

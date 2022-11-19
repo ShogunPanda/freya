@@ -112,8 +112,7 @@ export default function DefaultLayout({ slide, index }: SlideProps<Slide>): JSX.
   },
   "dependencies": {
     "freya-slides": "^@VERSION@",
-    "react": "^18.2.0",
-    "tsx": "^3.12.1"
+    "react": "^18.2.0"
   },
   "devDependencies": {
     "@cowtech/eslint-config": "^8.7.5",
