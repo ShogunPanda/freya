@@ -1,3 +1,7 @@
+### 2022-11-20 / 0.4.0
+
+- feat: Transform included CSS as well.
+
 ### 2022-11-19 / 0.3.5
 
 - fix: Minor fix.
