@@ -8,6 +8,7 @@ import { setCurrentMode } from '../generation/mode.js'
 import { build } from './build.js'
 import { developmentServer } from './development.js'
 import { exportJPEGs, exportPDFs } from './export.js'
+import { init } from './init.js'
 import { localServer } from './serve.js'
 
 const packageInfo = JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'))
@@ -110,6 +111,18 @@ program
       const server = await developmentServer('127.0.0.1', 0, false)
       await exportPDFs((server.server.address() as AddressInfo).port, directory)
       await server.close()
+    } catch (error) {
+      console.error(error)
+    }
+  })
+
+program
+  .command('init <name> [directory]')
+  .description('Initialize a slideset.')
+  .alias('i')
+  .action(async function devAction(this: Command, name: string, directory?: string): Promise<void> {
+    try {
+      await init(name, directory ?? name)
     } catch (error) {
       console.error(error)
     }

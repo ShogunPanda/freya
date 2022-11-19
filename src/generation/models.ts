@@ -38,10 +38,13 @@ export interface Config {
   }
 }
 
-export interface Document {
+export interface BaseDocument {
   title: string
   author: Record<string, any>
-  company: Record<string, any>
+}
+
+export interface Document extends BaseDocument {
+  [key: string]: any
 }
 
 export interface RawTalk {
