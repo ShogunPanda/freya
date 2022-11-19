@@ -11,7 +11,7 @@ import { rootDir } from '../generation/loader.js'
 const packageInfo = JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'))
 
 const templates = {
-  'src/talks/@NAME@.yml': `
+  'src/talks/@NAME@/talk.yml': `
   ---
   config:
     theme: main
@@ -25,6 +25,7 @@ const templates = {
       description:
       email:
   slides:
+    - title: 'Hello world!'
   `,
   'src/themes/main/theme.yml': `
   ---
@@ -200,7 +201,7 @@ export async function initializeSlideset(name: string, directory: string): Promi
   await mkdir(fullOutput, { recursive: true })
 
   // Create the structure for the talk
-  await mkdir(resolve(fullOutput, 'src/talks/assets'), { recursive: true })
+  await mkdir(resolve(fullOutput, 'src/talks/@NAME@/assets'), { recursive: true })
 
   // Create the structure for the theme
   await mkdir(resolve(fullOutput, 'src/themes/main/assets/'), { recursive: true })
