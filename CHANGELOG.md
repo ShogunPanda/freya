@@ -1,3 +1,7 @@
+### 2022-11-19 / 0.3.0
+
+- feat: Added create-freya-slideset instead of freya init.
+
 ### 2022-11-19 / 0.2.1
 
 - fix: Fixed loading.
