@@ -8,14 +8,14 @@ export interface FontsList {
 
 export interface RawTheme {
   style: string
-  images: Array<string>
+  images: string[]
   fonts: FontsList
 }
 
 export interface Theme extends RawTheme {
   id: string
   fontsStyles: string
-  fontsUrls: Array<string>
+  fontsUrls: string[]
 }
 
 export interface BaseSlide {
@@ -50,7 +50,7 @@ export interface Document extends BaseDocument {
 export interface RawTalk {
   config: Config
   document: Document
-  slides: Array<Slide>
+  slides: Slide[]
 }
 
 export interface Talk extends RawTalk {
@@ -58,7 +58,7 @@ export interface Talk extends RawTalk {
   slidesCount: number
   slidesPadding: number
   aspectRatio: number
-  images: Array<string>
+  images: string[]
 }
 
 export interface ClientContext {

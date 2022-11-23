@@ -49,7 +49,7 @@ export function normalizeSVGProps(props: Record<string, string | undefined>): SV
           const [k, v] = s.split(':')
 
           // Camelcase the key
-          return [k.replace(/-(.)/g, ([, c]) => c.toUpperCase()), v]
+          return [k.replaceAll(/-(.)/g, ([, c]) => c.toUpperCase()), v]
         })
         .filter(e => e[0])
     ),

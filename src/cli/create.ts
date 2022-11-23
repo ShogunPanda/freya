@@ -23,7 +23,7 @@ const templates = {
 }
 
 function compile(template: string, variables: Record<string, string>): string {
-  return template.replace(/(@([A-Z]+)@)/g, (_, all: string, name: string) => {
+  return template.replaceAll(/(@([A-Z]+)@)/g, (_, all: string, name: string) => {
     return variables[name] ?? all
   })
 }

@@ -5,7 +5,7 @@ import { resolveImageUrl } from '../generation/loader.js'
 import { Talk, Theme } from '../generation/models.js'
 
 interface BodyProps {
-  slides: Array<ReactNode>
+  slides: ReactNode[]
 }
 
 interface HeaderProps {

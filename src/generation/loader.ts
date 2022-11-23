@@ -26,7 +26,7 @@ export function resolveImageUrl(theme: string, talk: string, url?: string): stri
 
 export async function getTheme(themeName: string): Promise<Theme> {
   let fontsStyles = ''
-  const fontsUrls: Array<string> = []
+  const fontsUrls: string[] = []
   const theme = load(await readFile(resolve(rootDir, 'src/themes', themeName, 'theme.yml'), 'utf8')) as RawTheme
   const fonts = theme.fonts
 
@@ -69,7 +69,7 @@ export async function getTalk(id: string): Promise<Talk> {
   const talk = load(await readFile(resolve(rootDir, 'src/talks', id, 'talk.yml'), 'utf8')) as Talk
 
   // Gather all the images
-  const images: Array<string> = []
+  const images: string[] = []
 
   for (const slide of talk.slides) {
     // Render notes

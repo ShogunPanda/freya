@@ -5,7 +5,7 @@ interface SlidesListProps {
 }
 
 export function SlidesList({ count }: SlidesListProps): JSX.Element {
-  const slides: Array<number> = []
+  const slides: number[] = []
   for (let i = 0; i < count; i++) {
     slides.push(i)
   }

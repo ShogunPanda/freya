@@ -81,7 +81,7 @@ export async function generateSlideset(theme: Theme, talk: Talk): Promise<string
   }
 
   // Generate each slide
-  const slides: Array<ReactNode> = []
+  const slides: ReactNode[] = []
 
   for (let i = 0; i < talk.slides.length; i++) {
     const slide = talk.slides[i]
