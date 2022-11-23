@@ -1,3 +1,7 @@
+### 2022-11-23 / 0.5.1
+
+- chore: Updated dependencies.
+
 ### 2022-11-22 / 0.5.0
 
 - feat: Added documentation.
