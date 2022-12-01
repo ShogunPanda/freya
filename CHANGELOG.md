@@ -1,3 +1,7 @@
+### 2022-12-01 / 0.6.0
+
+- feat: Added index file.
+
 ### 2022-11-23 / 0.5.1
 
 - chore: Updated dependencies.
