@@ -104,6 +104,15 @@ export async function developmentServer(ip: string, port: number, logging: boole
 
   server.route({
     method: 'GET',
+    url: '/',
+    handler(this: FastifyInstance, _: FastifyRequest, reply: FastifyReply): void {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      reply.type('text/html').send(this.slidesets.index)
+    }
+  })
+
+  server.route({
+    method: 'GET',
     url: '/:talk',
     handler: talkHandler
   })

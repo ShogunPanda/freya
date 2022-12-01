@@ -28,6 +28,7 @@ body {
   }
 
   &__slide {
+    @apply z-1;
     @apply relative;
     @apply flex;
     @apply flex-col;
@@ -38,6 +39,10 @@ body {
     @apply p-0_5sp;
     @apply overflow-hidden;
     transform: var(--nf-slide-transform);
+
+    & > * {
+      @apply z-1;
+    }
 
     &:not([class^='bg-']):not([class*=' bg-']) {
       @apply bg-white;

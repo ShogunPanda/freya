@@ -36,6 +36,15 @@ export async function localServer(directory: string, ip: string, port: number): 
 
   server.route({
     method: 'GET',
+    url: '/',
+    handler(this: FastifyInstance, _: FastifyRequest, reply: FastifyReply): void {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      reply.sendFile('index.html')
+    }
+  })
+
+  server.route({
+    method: 'GET',
     url: '/:talk',
     handler: talkHandler
   })

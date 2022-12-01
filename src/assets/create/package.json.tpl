@@ -18,9 +18,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "freya dev",
+    "dev": "freya development",
     "build": "freya build",
-    "serve": "freya serve",
+    "serve": "freya server",
     "jpeg": "freya jpeg",
     "pdf": "freya pdf",
     "format": "prettier -w src",

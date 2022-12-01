@@ -29,6 +29,7 @@ program
   .description('Starts the development server')
   .option('-i, --ip <ip>', 'The IP to listen on', '0.0.0.0')
   .option('-p, --port <port>', 'The port to listen on', v => Number.parseInt(v, 10), 3000)
+  .alias('dev')
   .alias('d')
   .action(async function devAction(this: Command): Promise<void> {
     try {
@@ -60,10 +61,11 @@ program
   })
 
 program
-  .command('serve [directory]')
+  .command('server [directory]')
   .description('Serve built slides')
   .option('-i, --ip <ip>', 'The IP to listen on', '0.0.0.0')
   .option('-p, --port <port>', 'The port to listen on', v => Number.parseInt(v, 10), 3000)
+  .alias('serve')
   .alias('s')
   .action(async function serveAction(this: Command, directory: string): Promise<void> {
     try {

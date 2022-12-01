@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url'
 import { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { minify } from 'terser'
+import { body as indexBody, page as index } from '../templates/index.js'
 import { body, header, page } from '../templates/page.js'
 import { finalizeCss, transformCSSFile } from './css.js'
 import { getTalk, getTalks, getTheme, rootDir } from './loader.js'
@@ -143,15 +144,24 @@ export async function generateSlidesets(context: FastifyInstance | Context): Pro
   const slidesets: Record<string, string> = {}
   const talks = await getTalks()
 
+  const resolvedTalks: Record<string, Talk> = {}
+
   // For each talk, generate all the slideset
   for (const id of talks) {
     const startTime = process.hrtime.bigint()
     const talk = await getTalk(id)
     const theme = await getTheme(talk.config.theme)
 
+    resolvedTalks[id] = talk
     slidesets[id] = await generateSlideset(theme, talk)
     context.log.info(`Generated slideset ${id} in ${elapsedTime(startTime)} ms`)
   }
+
+  // Generate the index file
+  slidesets.index = renderToStaticMarkup(index()).replace(
+    '@BODY@',
+    renderToStaticMarkup(indexBody({ talks: resolvedTalks }))
+  )
 
   return slidesets
 }
