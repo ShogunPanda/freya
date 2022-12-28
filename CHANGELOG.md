@@ -1,3 +1,7 @@
+### 2022-12-28 / 0.7.0
+
+- feat: Rewritten CLI.
+
 ### 2022-12-01 / 0.6.0
 
 - feat: Added index file.
