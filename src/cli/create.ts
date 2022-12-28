@@ -17,6 +17,7 @@ const templates = {
   'src/themes/main/unocss.config.ts': 'unocss.config.ts',
   'src/themes/main/layouts/default.tsx': 'layout.tsx',
   '.eslintrc.json': 'eslintrc.json',
+  '.swcrc': 'swcrc',
   'package.json': 'package.json',
   'prettier.config.cjs': 'prettier.config.cjs',
   'tsconfig.json': 'tsconfig.json'

@@ -59,8 +59,8 @@ async function exportNotes(logger: BaseLogger, talk: Talk, directory: string, fi
   logger.info(`Generated file ${filename} in ${elapsedTime(startTime)} ms ...`)
 }
 
-export async function exportJPEGs(port: number, output: string): Promise<void> {
-  const { fullOutput, baseUrl, logger, browser, page, talks } = await prepareExport(port, output)
+export async function exportJPEGs(port: number): Promise<void> {
+  const { fullOutput, baseUrl, logger, browser, page, talks } = await prepareExport(port, 'dist/jpeg')
 
   for (const id of talks) {
     const talk = await getTalk(id)
@@ -69,7 +69,7 @@ export async function exportJPEGs(port: number, output: string): Promise<void> {
     await page.setViewportSize(talk.config.dimensions)
 
     // Open the page and wait for it to be completely loaded
-    await page.goto(new URL(`/${id}`, baseUrl).toString())
+    await page.goto(new URL(`/${id}?print=true`, baseUrl).toString())
     await Promise.all([page.waitForLoadState('load'), page.waitForLoadState('networkidle')])
     await page.waitForSelector('[data-freya-id="loading"]', { state: 'detached' })
 
@@ -103,8 +103,8 @@ export async function exportJPEGs(port: number, output: string): Promise<void> {
   await browser.close()
 }
 
-export async function exportPDFs(port: number, output: string): Promise<void> {
-  const { fullOutput, baseUrl, logger, browser, page, talks } = await prepareExport(port, output)
+export async function exportPDFs(port: number): Promise<void> {
+  const { fullOutput, baseUrl, logger, browser, page, talks } = await prepareExport(port, 'dist/pdf')
 
   for (const id of talks) {
     const startTime = process.hrtime.bigint()
@@ -114,7 +114,7 @@ export async function exportPDFs(port: number, output: string): Promise<void> {
     await page.setViewportSize(talk.config.dimensions)
 
     // Open the page and wait for it to be completely loaded
-    await page.goto(new URL(`/${id}`, baseUrl).toString())
+    await page.goto(new URL(`/${id}?print=true`, baseUrl).toString())
     await Promise.all([page.waitForLoadState('load'), page.waitForLoadState('networkidle')])
     await page.waitForSelector('[data-freya-id="loading"]', { state: 'detached' })
 

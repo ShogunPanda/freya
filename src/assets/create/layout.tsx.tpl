@@ -1,5 +1,4 @@
-import { parseContent } from '@freya/generation/generator.js'
-import { Slide, SlideProps } from '@freya/generation/models.js'
+import { parseContent, Slide, SlideProps } from 'freya-slides'
 
 export default function DefaultLayout({ slide, index }: SlideProps<Slide>): JSX.Element {
   const { title, content, notes } = slide

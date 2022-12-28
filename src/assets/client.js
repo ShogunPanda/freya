@@ -12,7 +12,7 @@
       })
     )
 
-    if (context.mode !== 'print') {
+    if (location.search === '') {
       window.addEventListener('resize', updateSlidesAppearance.bind(null, context))
       document.addEventListener('fullscreenchange', updateSlidesAppearance.bind(null, context))
       updateSlidesAppearance(context)

@@ -1,6 +1,9 @@
 import fastifyStatic from '@fastify/static'
 import fastify, { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
+import { existsSync } from 'node:fs'
+import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import pino from 'pino'
 import { getTalks, rootDir } from '../generation/loader.js'
 
 interface TalkHandlerParams {
@@ -25,11 +28,19 @@ function talkHandler(
   reply.sendFile(`${talk}.html`)
 }
 
-export async function localServer(directory: string, ip: string, port: number): Promise<FastifyInstance> {
+export async function localServer(ip: string, port: number, logger?: pino.Logger | false): Promise<FastifyInstance> {
+  const https = existsSync(resolve(rootDir, 'ssl'))
+    ? {
+        key: await readFile(resolve(rootDir, 'ssl/privkey.pem')),
+        cert: await readFile(resolve(rootDir, 'ssl/cert.pem')),
+        ca: await readFile(resolve(rootDir, 'ssl/chain.pem'))
+      }
+    : null
+
   const server = fastify({
-    logger: {
-      transport: { target: 'pino-pretty' }
-    }
+    https,
+    logger: typeof logger === 'undefined' ? { transport: { target: 'pino-pretty' } } : logger,
+    forceCloseConnections: true
   })
 
   server.decorate('talks', new Set(await getTalks()))
@@ -56,15 +67,18 @@ export async function localServer(directory: string, ip: string, port: number): 
   })
 
   await server.register(fastifyStatic, {
-    root: resolve(rootDir, directory)
+    root: resolve(rootDir, 'dist/html')
   })
 
   server.setNotFoundHandler(function (_: FastifyRequest, reply: FastifyReply) {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    reply.sendFile('404.html')
+    reply.type('text/html').sendFile('404.html')
   })
 
-  process.on('SIGINT', () => server.close())
+  process.on('SIGINT', () => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    server.close()
+  })
 
   return new Promise<FastifyInstance>((resolve, reject) => {
     server.listen({ host: ip, port }, (err: Error | null) => {

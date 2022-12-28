@@ -1,15 +1,15 @@
-#!/usr/bin/env node --no-warnings=loader --loader freya-slides/loader
+#!/usr/bin/env node
 
 import { Command, program } from 'commander'
 import { readFileSync } from 'node:fs'
+import { mkdir, rm } from 'node:fs/promises'
 import { AddressInfo } from 'node:net'
+import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { setCurrentMode } from '../generation/mode.js'
-import { build } from './build.js'
-import { developmentServer } from './development.js'
-import { exportJPEGs, exportPDFs } from './export.js'
-import { localServer } from './serve.js'
+import pino from 'pino'
+import { rootDir } from '../generation/loader.js'
 
+const logger = pino({ transport: { target: 'pino-pretty' } })
 const packageInfo = JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'))
 
 program
@@ -33,90 +33,100 @@ program
   .alias('d')
   .action(async function devAction(this: Command): Promise<void> {
     try {
+      const { localServer } = await import('./server.js')
+      const { developmentBuilder } = await import('./builders.js')
+
+      // Prepare the target directory
+      await rm(resolve(rootDir, 'dist/html'), { force: true, recursive: true })
+      await mkdir(resolve(rootDir, 'dist/html'), { recursive: true })
+
       const { ip, port } = this.optsWithGlobals()
-      setCurrentMode('development')
-      await developmentServer(ip, port)
+
+      await Promise.all([developmentBuilder(logger), localServer(ip, port, logger)])
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       process.exit(1)
     }
   })
 
 program
-  .command('build [directory]')
+  .command('build')
   .description('Build all the slides')
   .alias('b')
-  .action(async function buildAction(this: Command, directory: string): Promise<void> {
+  .action(async function buildAction(this: Command): Promise<void> {
     try {
-      if (!directory || directory === '') {
-        directory = 'dist/html'
-      }
+      const { productionBuilder } = await import('./builders.js')
 
-      setCurrentMode('production')
-      await build(directory)
+      await productionBuilder()
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       process.exit(1)
     }
   })
 
 program
-  .command('server [directory]')
+  .command('server')
   .description('Serve built slides')
   .option('-i, --ip <ip>', 'The IP to listen on', '0.0.0.0')
   .option('-p, --port <port>', 'The port to listen on', v => Number.parseInt(v, 10), 3000)
   .alias('serve')
   .alias('s')
-  .action(async function serveAction(this: Command, directory: string): Promise<void> {
+  .action(async function serveAction(this: Command): Promise<void> {
     try {
-      if (!directory || directory === '') {
-        directory = 'dist/html'
-      }
+      const { localServer } = await import('./server.js')
 
       const { ip, port } = this.optsWithGlobals()
-      await localServer(directory, ip, port)
+      await localServer(ip, port)
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       process.exit(1)
     }
   })
 
 program
-  .command('jpeg [directory]')
+  .command('jpeg')
   .description('Build all the slides as a set of JPEG images files')
   .alias('j')
-  .action(async function exportPNGAction(this: Command, directory: string): Promise<void> {
+  .action(async function exportJPEGAction(this: Command): Promise<void> {
     try {
-      if (!directory || directory === '') {
-        directory = 'dist/jpeg'
-      }
+      const { localServer } = await import('./server.js')
+      const { productionBuilder } = await import('./builders.js')
+      const { exportJPEGs } = await import('./exporters.js')
 
-      setCurrentMode('print')
-      const server = await developmentServer('127.0.0.1', 0, false)
-      await exportJPEGs((server.server.address() as AddressInfo).port, directory)
+      // Prepare the target directory
+      await rm(resolve(rootDir, 'dist/html'), { force: true, recursive: true })
+      await mkdir(resolve(rootDir, 'dist/html'), { recursive: true })
+
+      await productionBuilder()
+      const server = await localServer('127.0.0.1', 0, false)
+      await exportJPEGs((server.server.address() as AddressInfo).port)
       await server.close()
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       process.exit(1)
     }
   })
 
 program
-  .command('pdf [directory]')
+  .command('pdf')
   .description('Build all the slides as PDF files')
   .alias('p')
-  .action(async function exportPNGAction(this: Command, directory: string): Promise<void> {
+  .action(async function exportPNGAction(this: Command): Promise<void> {
     try {
-      if (!directory || directory === '') {
-        directory = 'dist/pdf'
-      }
+      const { localServer } = await import('./server.js')
+      const { productionBuilder } = await import('./builders.js')
+      const { exportPDFs } = await import('./exporters.js')
 
-      setCurrentMode('print')
-      const server = await developmentServer('127.0.0.1', 0, false)
-      await exportPDFs((server.server.address() as AddressInfo).port, directory)
+      // Prepare the target directory
+      await rm(resolve(rootDir, 'dist/html'), { force: true, recursive: true })
+      await mkdir(resolve(rootDir, 'dist/html'), { recursive: true })
+
+      await productionBuilder()
+      const server = await localServer('127.0.0.1', 0, false)
+      await exportPDFs((server.server.address() as AddressInfo).port)
       await server.close()
     } catch (error) {
-      console.error(error)
+      logger.error(error)
       process.exit(1)
     }
   })

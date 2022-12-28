@@ -16,9 +16,6 @@
     "strictNullChecks": true,
     "useUnknownInCatchVariables": false,
     "baseUrl": ".",
-    "paths": {
-      "@freya/*": ["node_modules/freya-slides/dist/*"]
-    },
     "lib": ["dom", "dom.iterable", "esnext"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]

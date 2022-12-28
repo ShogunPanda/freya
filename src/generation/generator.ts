@@ -1,9 +1,8 @@
 import { createGenerator } from '@unocss/core'
 import { FastifyInstance } from 'fastify'
 import markdownIt from 'markdown-it'
-import { createHash } from 'node:crypto'
-import { readFile, unlink, writeFile } from 'node:fs/promises'
-import { basename, dirname, extname, resolve } from 'node:path'
+import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -12,33 +11,13 @@ import { body as indexBody, page as index } from '../templates/index.js'
 import { body, header, page } from '../templates/page.js'
 import { finalizeCss, transformCSSFile } from './css.js'
 import { getTalk, getTalks, getTheme, rootDir } from './loader.js'
-import { getCurrentMode } from './mode.js'
 import { ClientContext, Context, Slide, SlideRenderer, Talk, Theme } from './models.js'
-
-export const uncachedImportPrefix = '__uncached__'
 
 export const markdownRenderer = markdownIt({
   html: true,
   breaks: true,
   linkify: true
 })
-
-// Bypass the Node.js ESM cache by temporarily copying the file to import in a file named after its hash in the same folder
-async function uncachedImport<T = any>(path: string): Promise<T> {
-  const contents = await readFile(path)
-  const md5 = createHash('sha1').update(contents).digest('hex')
-  const tmpPath = resolve(dirname(path), `${uncachedImportPrefix}_${basename(path)}_${md5}${extname(path)}`)
-
-  await writeFile(tmpPath, contents)
-
-  try {
-    const imported = await import(tmpPath)
-
-    return imported as T
-  } finally {
-    await unlink(tmpPath)
-  }
-}
 
 export async function finalizeJs(code: string): Promise<string> {
   const { code: minified } = await minify(code)
@@ -64,14 +43,12 @@ export function parseContent(raw?: string): string {
 }
 
 export async function generateSlideset(theme: Theme, talk: Talk): Promise<string> {
-  const { default: unoConfig } = await uncachedImport(
-    resolve(rootDir, 'src/themes', talk.config.theme, 'unocss.config.ts')
-  )
+  const { default: unoConfig } = await import(resolve(rootDir, 'tmp/themes', talk.config.theme, 'unocss.config.js'))
 
   // Prepare the client
   const title = talk.document.title
   const clientContext: ClientContext = {
-    mode: getCurrentMode(),
+    mode: 'main',
     id: talk.id,
     title,
     dimensions: talk.config.dimensions,
@@ -99,8 +76,8 @@ export async function generateSlideset(theme: Theme, talk: Talk): Promise<string
       slide.classes = {}
     }
 
-    const { default: layout } = await uncachedImport<{ default: SlideRenderer<Slide> }>(
-      resolve(rootDir, 'src/themes', talk.config.theme, 'layouts', (slide.layout ?? 'default') + '.tsx')
+    const { default: layout }: { default: SlideRenderer<Slide> } = await import(
+      resolve(rootDir, 'tmp/themes', talk.config.theme, 'layouts', (slide.layout ?? 'default') + '.js')
     )
 
     slides.push({ ...layout({ theme, talk, slide, index: i + 1 }), key: `slide:${i + 1}` })

@@ -24,10 +24,7 @@
     "README.md"
   ],
   "type": "module",
-  "exports": {
-    "./loader": "./dist/loader.js",
-    ".": "./dist/index.js"
-  },
+  "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "predev": "rm -rf dist && mkdir dist && cp -a src/assets dist",
@@ -42,12 +39,14 @@
     "postpublish": "git push origin && git push origin -f --tags"
   },
   "dependencies": {
-    "@esbuild-kit/esm-loader": "^2.5.1",
     "@fastify/static": "^6.5.1",
+    "@swc/cli": "^0.1.57",
+    "@swc/core": "^1.3.19",
     "@unocss/core": "^0.46.5",
     "@unocss/preset-mini": "^0.46.5",
     "@unocss/transformer-directives": "^0.46.5",
     "canvas": "^2.10.2",
+    "chokidar": "^3.5.3",
     "commander": "^9.4.1",
     "fastify": "^4.10.2",
     "glob": "^8.0.3",
@@ -72,8 +71,6 @@
   },
   "devDependencies": {
     "@cowtech/eslint-config": "^8.8.0",
-    "@swc/cli": "^0.1.57",
-    "@swc/core": "^1.3.19",
     "@types/glob": "^8.0.0",
     "@types/js-yaml": "^4.0.5",
     "@types/markdown-it": "^12.2.3",
@@ -83,7 +80,6 @@
     "@types/react": "^18.0.25",
     "@types/react-dom": "^18.0.9",
     "@types/wait-on": "^5.3.1",
-    "chokidar": "^3.5.3",
     "eslint": "^8.28.0",
     "prettier": "^2.8.0",
     "typescript": "^4.9.3"

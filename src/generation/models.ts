@@ -1,5 +1,4 @@
 import pino from 'pino'
-import { Mode } from './mode.js'
 
 export interface FontsList {
   ranges: Record<string, string>
@@ -62,7 +61,7 @@ export interface Talk extends RawTalk {
 }
 
 export interface ClientContext {
-  mode: Mode
+  mode: 'main'
   id: string
   title: string
   dimensions: {

@@ -15,20 +15,6 @@ const style = `
   outline: none;
 }
 
-a,
-a:hover,
-a:active,
-a:visited,
-a:focus {
-  color: #2165e3;
-  text-decoration: none;
-}
-
-a:hover {
-  color: #fb7a9c;
-}
-
-
 @font-face {
   font-family: 'Poppins';
   font-style: normal;
@@ -53,13 +39,13 @@ main {
   flex-direction: column;
   width: 80%;
   max-width: 80vw;
-  row-gap: 4ch;
+  row-gap: 10ch;
 }
 
 nav {
   display: flex;
   flex-direction: column;
-  row-gap: 4ch;
+  row-gap: 6ch;
 }
 
 h1, h2, h4 {
@@ -67,6 +53,31 @@ h1, h2, h4 {
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
   margin: 0;
   line-height: 1.4em;
+}
+
+h1 {
+  font-size: 40pt;
+}
+
+h2 {
+  font-size: 25pt;
+}
+
+h4 {
+  color: #ecb22e;
+}
+
+a,
+a:hover,
+a:active,
+a:visited,
+a:focus {
+  color: #2165e3;
+  text-decoration: none;
+}
+
+a:hover, a:hover h4 {
+  color: #fb7a9c;
 }
 `
 

@@ -2,11 +2,17 @@ import { load } from 'js-yaml'
 import { existsSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { markdownRenderer } from './generator.js'
-import { getCurrentMode } from './mode.js'
 import { RawTheme, Talk, Theme } from './models.js'
 
 export const rootDir = process.cwd()
+
+export let swc = resolve(rootDir, 'node_modules/.bin/swc')
+
+if (!existsSync(swc)) {
+  swc = fileURLToPath(new URL('../../node_modules/.bin/swc', import.meta.url))
+}
 
 export function resolveImagePath(theme: string, talk: string, url?: string): string {
   return resolve(
@@ -17,11 +23,7 @@ export function resolveImagePath(theme: string, talk: string, url?: string): str
 }
 
 export function resolveImageUrl(theme: string, talk: string, url?: string): string {
-  const suffix = getCurrentMode() !== 'production' ? '/assets' : ''
-
-  return (url ?? '')
-    .replace('@talk', `/assets/talks/${talk}${suffix}`)
-    .replace('@theme', `/assets/themes/${theme}${suffix}`)
+  return (url ?? '').replace('@talk', `/assets/talks/${talk}`).replace('@theme', `/assets/themes/${theme}`)
 }
 
 export async function getTheme(themeName: string): Promise<Theme> {

@@ -1,2 +1,2 @@
-export * as components from './components/index.js'
-export * as generation from './generation/index.js'
+export * from './components/index.js'
+export * from './generation/index.js'

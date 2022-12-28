@@ -147,8 +147,7 @@ A theme must contain at least the following files:
   A sample layout file looks like this:
 
   ```tsx
-  import { parseContent } from '@freya/generation/generator.js'
-  import { Slide, SlideProps } from '@freya/generation/models.js'
+  import { Slide, SlideProps, parseContent } from 'freya-slides'
 
   export default function DefaultLayout({ slide, index }: SlideProps<Slide>): JSX.Element {
     const { title, content, notes } = slide
