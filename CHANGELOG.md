@@ -1,3 +1,7 @@
+### 2022-12-30 / 0.8.0
+
+- feat: Added SSE based synchronization.
+
 ### 2022-12-28 / 0.7.0
 
 - feat: Rewritten CLI.
