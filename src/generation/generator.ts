@@ -48,7 +48,6 @@ export async function generateSlideset(theme: Theme, talk: Talk): Promise<string
   // Prepare the client
   const title = talk.document.title
   const clientContext: ClientContext = {
-    mode: 'main',
     id: talk.id,
     title,
     dimensions: talk.config.dimensions,

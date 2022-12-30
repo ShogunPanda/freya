@@ -49,6 +49,7 @@
     "chokidar": "^3.5.3",
     "commander": "^9.4.1",
     "fastify": "^4.10.2",
+    "fastify-http-errors-enhanced": "^4.1.0",
     "glob": "^8.0.3",
     "js-yaml": "^4.1.0",
     "magic-string": "^0.26.7",

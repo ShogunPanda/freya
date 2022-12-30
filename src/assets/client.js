@@ -12,35 +12,11 @@
       })
     )
 
+    // When using export, this is not empty
     if (location.search === '') {
       window.addEventListener('resize', updateSlidesAppearance.bind(null, context))
       document.addEventListener('fullscreenchange', updateSlidesAppearance.bind(null, context))
       updateSlidesAppearance(context)
-    }
-  }
-
-  function handleShortcut(context, ev) {
-    // Setup shortcuts
-    const shortcuts = {
-      ArrowLeft: gotoPreviousSlide,
-      ArrowUp: gotoPreviousSlide,
-      Backspace: gotoPreviousSlide,
-      ArrowRight: gotoNextSlide,
-      ArrowDown: gotoNextSlide,
-      ' ': gotoNextSlide,
-      Enter: gotoNextSlide,
-      Escape: closeOverlay,
-      g: toggleList,
-      l: toggleList,
-      p: togglePresenter,
-      s: togglePresenterTimer,
-      t: startPresenterTimer
-    }
-
-    const handler = shortcuts[ev.key]
-    if (handler) {
-      ev.preventDefault()
-      handler(context)
     }
   }
 
@@ -127,6 +103,70 @@
     })
   }
 
+  function setupSynchronization(context) {
+    const events = new EventSource(`/${context.id}/sync`)
+
+    events.addEventListener('sync', ev => {
+      const { current } = JSON.parse(ev.data)
+
+      if (
+        typeof current !== 'number' ||
+        Number.isNaN(current) ||
+        current < 1 ||
+        current > context.total ||
+        context.current === current
+      ) {
+        return
+      }
+
+      updateCurrentSlide(context, current)
+      window.dispatchEvent(new Event('freya:slide:syncReceived'))
+    })
+
+    events.addEventListener('end', e => {
+      events.close()
+    })
+
+    events.addEventListener('error', event => {
+      console.error('Receiving synchronization failed', event)
+    })
+  }
+
+  function handleShortcut(context, ev) {
+    // Setup shortcuts
+    const shortcuts = {
+      ArrowLeft: gotoPreviousSlide,
+      ArrowUp: gotoPreviousSlide,
+      Backspace: gotoPreviousSlide,
+      ArrowRight: gotoNextSlide,
+      ArrowDown: gotoNextSlide,
+      ' ': gotoNextSlide,
+      Enter: gotoNextSlide,
+      Escape: closeOverlay,
+      g: toggleList,
+      l: toggleList,
+      p: togglePresenter,
+      s: togglePresenterTimer,
+      t: startPresenterTimer
+    }
+
+    const handler = shortcuts[ev.key]
+    if (handler) {
+      ev.preventDefault()
+      handler(context)
+    }
+  }
+
+  function isVisible(container) {
+    return container.classList.contains('hidden') === false
+  }
+
+  function sendCurrentSlideUpdate(context) {
+    fetch(`/${context.id}/sync/${context.current}`, { method: 'POST' }).catch(error => {
+      console.error('Sending synchronization data failed', error)
+    })
+  }
+
   function gotoPreviousSlide(context) {
     if (context.current < 2) {
       return
@@ -174,9 +214,8 @@
     document.title = `${paddedSlide} - ${context.title}`
     window.dispatchEvent(new Event('freya:slide:changed'))
 
-    // Upload local storage
-    if (context.mode === 'presenter') {
-      window.localStorage.setItem(`${context.id}:current`, context.current)
+    if (isVisible(context.presenter)) {
+      sendCurrentSlideUpdate(context)
     }
   }
 
@@ -218,30 +257,25 @@
   }
 
   function closeOverlay(context) {
-    if (context.mode === 'list') {
+    if (isVisible(context.list)) {
       toggleList(context, false)
-    } else if (context.mode === 'presenter') {
+    } else {
       togglePresenter(context, false)
     }
   }
 
   function toggleList(context, visible) {
-    if (context.mode === 'presenter' && visible !== false) {
-      return
-    }
-
     if (typeof visible === 'boolean') {
       context.list.classList.toggle('hidden', !visible)
     } else {
       context.list.classList.toggle('hidden')
     }
 
-    context.mode = context.list.classList.contains('hidden') ? 'main' : 'list'
     window.dispatchEvent(new Event('freya:list:toggled'))
   }
 
   function togglePresenter(context, visible) {
-    if (context.mode === 'list' && visible !== false) {
+    if (isVisible(context.list) && visible !== false) {
       return
     }
 
@@ -251,9 +285,8 @@
       context.presenter.classList.toggle('hidden')
     }
 
-    context.mode = context.presenter.classList.contains('hidden') ? 'main' : 'presenter'
-
-    if (context.mode === 'presenter') {
+    if (isVisible(context.presenter)) {
+      sendCurrentSlideUpdate(context)
       startPresenterTimer(context)
     } else {
       stopPresenterTimer(context)
@@ -263,7 +296,7 @@
   }
 
   function startPresenterTimer(context, reset = true) {
-    if (context.mode !== 'presenter') {
+    if (!isVisible(context.presenter)) {
       return
     }
 
@@ -281,13 +314,17 @@
   }
 
   function stopPresenterTimer(context) {
+    if (!isVisible(context.presenter)) {
+      return
+    }
+
     clearInterval(context.presenterInterval)
     context.presenterInterval = null
     window.dispatchEvent(new Event('freya:presenter:timer:stopped'))
   }
 
   function togglePresenterTimer(context) {
-    if (context.mode !== 'presenter') {
+    if (!isVisible(context.presenter)) {
       return
     }
 
@@ -296,21 +333,6 @@
     } else {
       startPresenterTimer(context, false)
     }
-  }
-
-  function syncCurrentSlide(context, ev) {
-    if (context.mode === 'presenter' || ev.key !== `${context.id}:current`) {
-      return
-    }
-
-    const newCurrent = Number.parseInt(ev.newValue, 10)
-
-    if (Number.isNaN(newCurrent) || newCurrent < 1 || newCurrent > context.total) {
-      return
-    }
-
-    updateCurrentSlide(context, newCurrent)
-    window.dispatchEvent(new Event('freya:slide:synced'))
   }
 
   function start(context) {
@@ -335,10 +357,10 @@
     setupSlides(context)
     setupList(context)
     setupPresenter(context)
+    setupSynchronization(context)
 
     // Setup other events
     document.addEventListener('keydown', handleShortcut.bind(null, context), false)
-    window.addEventListener('storage', syncCurrentSlide.bind(null, context))
 
     // Update the UI
     start(context)

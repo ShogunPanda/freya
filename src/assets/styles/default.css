@@ -112,7 +112,7 @@ body {
   }
 
   &__slides {
-    @apply z-10002;
+    @apply z-10003;
 
     &__close {
       @apply fixed;
@@ -172,7 +172,7 @@ body {
   }
 
   &__presenter {
-    @apply z-10003;
+    @apply z-10002;
 
     &__layout {
       @apply grid;

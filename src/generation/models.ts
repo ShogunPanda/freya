@@ -1,3 +1,4 @@
+import EventEmitter from 'node:events'
 import pino from 'pino'
 
 export interface FontsList {
@@ -61,7 +62,6 @@ export interface Talk extends RawTalk {
 }
 
 export interface ClientContext {
-  mode: 'main'
   id: string
   title: string
   dimensions: {
@@ -93,5 +93,6 @@ declare module 'fastify' {
   interface FastifyInstance {
     talks: Set<string>
     slidesets: Record<string, string>
+    syncEmitters: Record<string, Set<EventEmitter>>
   }
 }
