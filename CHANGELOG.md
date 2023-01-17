@@ -1,3 +1,7 @@
+### 2023-01-17 / 0.8.1
+
+- fix: Fixed export.
+
 ### 2022-12-30 / 0.8.0
 
 - feat: Added SSE based synchronization.
