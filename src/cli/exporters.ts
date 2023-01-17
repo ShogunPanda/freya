@@ -114,7 +114,7 @@ export async function exportPDFs(port: number): Promise<void> {
     await page.setViewportSize(talk.config.dimensions)
 
     // Open the page and wait for it to be completely loaded
-    await page.goto(new URL(`/${id}?print=true`, baseUrl).toString())
+    await page.goto(new URL(`/${id}?export=true`, baseUrl).toString())
     await Promise.all([page.waitForLoadState('load'), page.waitForLoadState('networkidle')])
     await page.waitForSelector('[data-freya-id="loading"]', { state: 'detached' })
 

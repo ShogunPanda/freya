@@ -12,8 +12,7 @@
       })
     )
 
-    // When using export, this is not empty
-    if (location.search === '') {
+    if (!context.export) {
       window.addEventListener('resize', updateSlidesAppearance.bind(null, context))
       document.addEventListener('fullscreenchange', updateSlidesAppearance.bind(null, context))
       updateSlidesAppearance(context)
@@ -353,11 +352,17 @@
   window.addEventListener('load', function () {
     const context = {}
 
+    const params = new URLSearchParams(location.search)
+    context.export = params.get('export') === 'true'
+
     // Setup elements
     setupSlides(context)
     setupList(context)
     setupPresenter(context)
-    setupSynchronization(context)
+
+    if (!context.export) {
+      setupSynchronization(context)
+    }
 
     // Setup other events
     document.addEventListener('keydown', handleShortcut.bind(null, context), false)
