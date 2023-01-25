@@ -27,7 +27,7 @@ program
 program
   .command('development')
   .description('Starts the development server')
-  .option('-i, --ip <ip>', 'The IP to listen on', '0.0.0.0')
+  .option('-i, --ip <ip>', 'The IP to listen on', '::')
   .option('-p, --port <port>', 'The port to listen on', v => Number.parseInt(v, 10), 3000)
   .alias('dev')
   .alias('d')
@@ -67,7 +67,7 @@ program
 program
   .command('server')
   .description('Serve built slides')
-  .option('-i, --ip <ip>', 'The IP to listen on', '0.0.0.0')
+  .option('-i, --ip <ip>', 'The IP to listen on', '::')
   .option('-p, --port <port>', 'The port to listen on', v => Number.parseInt(v, 10), 3000)
   .alias('serve')
   .alias('s')
