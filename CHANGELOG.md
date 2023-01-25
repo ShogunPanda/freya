@@ -1,3 +1,7 @@
+### 2023-01-25 / 0.8.2
+
+- fix: Use :: as default server.
+
 ### 2023-01-17 / 0.8.1
 
 - fix: Fixed export.
