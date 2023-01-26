@@ -146,7 +146,10 @@
       l: toggleList,
       p: togglePresenter,
       s: togglePresenterTimer,
-      t: startPresenterTimer
+      t: startPresenterTimer,
+      f: function () {
+        document.body.webkitRequestFullscreen()
+      }
     }
 
     const handler = shortcuts[ev.key]
