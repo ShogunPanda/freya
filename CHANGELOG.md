@@ -1,3 +1,7 @@
+### 2023-01-26 / 0.8.4
+
+- wip: Preliminar fullscreen support for iOS.
+
 ### 2023-01-25 / 0.8.3
 
 
