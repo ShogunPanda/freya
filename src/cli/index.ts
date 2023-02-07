@@ -91,7 +91,7 @@ program
     try {
       const { localServer } = await import('./server.js')
       const { productionBuilder } = await import('./builders.js')
-      const { exportJPEGs } = await import('./exporters.js')
+      const { exportAllAsJPEGs } = await import('./exporters.js')
 
       // Prepare the target directory
       await rm(resolve(rootDir, 'dist/html'), { force: true, recursive: true })
@@ -99,7 +99,7 @@ program
 
       await productionBuilder()
       const server = await localServer('127.0.0.1', 0, false)
-      await exportJPEGs((server.server.address() as AddressInfo).port)
+      await exportAllAsJPEGs((server.server.address() as AddressInfo).port)
       await server.close()
     } catch (error) {
       logger.error(error)
@@ -115,7 +115,7 @@ program
     try {
       const { localServer } = await import('./server.js')
       const { productionBuilder } = await import('./builders.js')
-      const { exportPDFs } = await import('./exporters.js')
+      const { exportAllAsPDFs } = await import('./exporters.js')
 
       // Prepare the target directory
       await rm(resolve(rootDir, 'dist/html'), { force: true, recursive: true })
@@ -123,7 +123,7 @@ program
 
       await productionBuilder()
       const server = await localServer('127.0.0.1', 0, false)
-      await exportPDFs((server.server.address() as AddressInfo).port)
+      await exportAllAsPDFs((server.server.address() as AddressInfo).port)
       await server.close()
     } catch (error) {
       logger.error(error)
