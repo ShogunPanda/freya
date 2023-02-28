@@ -1,3 +1,7 @@
+### 2023-02-28 / 0.11.1
+
+- fix: Fixed index style.
+
 ### 2023-02-28 / 0.11.0
 
 - feat: Support deploy command.
