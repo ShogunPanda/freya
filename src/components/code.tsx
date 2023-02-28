@@ -62,7 +62,7 @@ function enhanceLines(rendered: string, highlight: string, numbers: boolean): st
     // Add line and numbers information to the line
     let replacement = `<div class="${classes.join(' ')}">`
 
-    if (!numbers) {
+    if (numbers) {
       replacement += `<span class="hljs-line-number">${i}</span>`
     }
 
@@ -90,7 +90,7 @@ export function Code({
   rendered = separateLines(rendered)
 
   // Handle line numbers and highlights
-  rendered = enhanceLines(rendered, highlight ?? '', Boolean(numbers))
+  rendered = enhanceLines(rendered, highlight ?? '', numbers !== false)
 
   // Workarounds to render all characters properly
   rendered = rendered.replaceAll('$', '&#36;')
