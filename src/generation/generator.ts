@@ -97,10 +97,26 @@ export async function generateSlideset(environment: Context['environment'], them
   }
 
   // Generate the JS
-  const pusher = pusherConfig
-    ? await readFile(fileURLToPath(new URL('../../node_modules/pusher-js/dist/web/pusher.js', import.meta.url)), 'utf8')
-    : ''
   const client = await readFile(fileURLToPath(new URL('../assets/client.js', import.meta.url)), 'utf8')
+  let pusher: string = ''
+  if (pusherConfig) {
+    for (const moduleDirectory of ['../../../pusher-js', '../../node_modules/pusher-js']) {
+      try {
+        pusher = await readFile(
+          fileURLToPath(new URL(`${moduleDirectory}/dist/web/pusher.js`, import.meta.url)),
+          'utf8'
+        )
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          throw error
+        }
+      }
+
+      if (!pusher) {
+        throw new Error('Cannot find pusher-js module.')
+      }
+    }
+  }
 
   // Render the page
   const html = renderToStaticMarkup(page(title))
