@@ -17,12 +17,21 @@ async function inlineCss(config: UserConfig, fonts: string, id: string): Promise
   if (id === 'virtual:theme-fonts') {
     return fonts
   } else if (id.startsWith('@freya/highlight')) {
-    const url = new URL(
-      `../../node_modules/highlight.js/styles/${id.replace('@freya/highlight/', '')}`,
-      import.meta.url
-    )
+    const cleanId = id.replace('@freya/highlight/', '')
 
-    return transformCSS(await readFile(fileURLToPath(url), 'utf8'), config)
+    for (const rootModuleDirectory of ['../../../', '../../node_modules']) {
+      try {
+        const url = new URL(`${rootModuleDirectory}/highlight.js/styles/${cleanId}`, import.meta.url)
+
+        return transformCSS(await readFile(fileURLToPath(url), 'utf8'), config)
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          throw error
+        }
+      }
+    }
+
+    throw new Error('Cannot find highlight.js module')
   } else if (id.startsWith('@freya')) {
     const url = new URL(`../assets/styles/${id.replace('@freya/', '')}`, import.meta.url)
 

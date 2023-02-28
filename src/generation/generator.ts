@@ -100,10 +100,10 @@ export async function generateSlideset(environment: Context['environment'], them
   const client = await readFile(fileURLToPath(new URL('../assets/client.js', import.meta.url)), 'utf8')
   let pusher: string = ''
   if (pusherConfig) {
-    for (const moduleDirectory of ['../../../pusher-js', '../../node_modules/pusher-js']) {
+    for (const moduleDirectory of ['../../../', '../../node_modules']) {
       try {
         pusher = await readFile(
-          fileURLToPath(new URL(`${moduleDirectory}/dist/web/pusher.js`, import.meta.url)),
+          fileURLToPath(new URL(`${moduleDirectory}/pusher-js/dist/web/pusher.js`, import.meta.url)),
           'utf8'
         )
       } catch (error) {
