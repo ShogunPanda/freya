@@ -51,6 +51,7 @@
     "fastify": "^4.10.2",
     "fastify-http-errors-enhanced": "^4.1.0",
     "glob": "^8.0.3",
+    "highlight.js": "^11.7.0",
     "js-yaml": "^4.1.0",
     "magic-string": "^0.26.7",
     "markdown-it": "^13.0.1",
@@ -64,6 +65,7 @@
     "postcss-minify-selectors": "^5.2.1",
     "postcss-nested": "^6.0.0",
     "postcss-normalize-whitespace": "^5.1.1",
+    "qrcode-generator": "^1.4.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "terser": "^5.15.1",
@@ -73,6 +75,7 @@
   "devDependencies": {
     "@cowtech/eslint-config": "^8.8.0",
     "@types/glob": "^8.0.0",
+    "@types/highlight.js": "^10.1.0",
     "@types/js-yaml": "^4.0.5",
     "@types/markdown-it": "^12.2.3",
     "@types/node": "^18.11.9",

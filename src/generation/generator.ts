@@ -1,5 +1,4 @@
 import { createGenerator } from '@unocss/core'
-import { FastifyInstance } from 'fastify'
 import markdownIt from 'markdown-it'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
@@ -42,7 +41,7 @@ export function parseContent(raw?: string): string {
     .trim()
 }
 
-export async function generateSlideset(theme: Theme, talk: Talk): Promise<string> {
+export async function generateSlideset(environment: Context['environment'], theme: Theme, talk: Talk): Promise<string> {
   const { default: unoConfig } = await import(resolve(rootDir, 'tmp/themes', talk.config.theme, 'unocss.config.js'))
 
   // Prepare the client
@@ -79,7 +78,7 @@ export async function generateSlideset(theme: Theme, talk: Talk): Promise<string
       resolve(rootDir, 'tmp/themes', talk.config.theme, 'layouts', (slide.layout ?? 'default') + '.js')
     )
 
-    slides.push({ ...layout({ theme, talk, slide, index: i + 1 }), key: `slide:${i + 1}` })
+    slides.push({ ...layout({ environment, theme, talk, slide, index: i + 1 }), key: `slide:${i + 1}` })
   }
 
   // Render the page body
@@ -116,7 +115,7 @@ export async function generateSlideset(theme: Theme, talk: Talk): Promise<string
   return html
 }
 
-export async function generateSlidesets(context: FastifyInstance | Context): Promise<Record<string, string>> {
+export async function generateSlidesets(context: Context): Promise<Record<string, string>> {
   const slidesets: Record<string, string> = {}
   const talks = await getTalks()
 
@@ -129,7 +128,7 @@ export async function generateSlidesets(context: FastifyInstance | Context): Pro
     const theme = await getTheme(talk.config.theme)
 
     resolvedTalks[id] = talk
-    slidesets[id] = await generateSlideset(theme, talk)
+    slidesets[id] = await generateSlideset(context.environment, theme, talk)
     context.log.info(`Generated slideset ${id} in ${elapsedTime(startTime)} ms`)
   }
 

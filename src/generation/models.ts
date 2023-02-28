@@ -14,6 +14,7 @@ export interface RawTheme {
 
 export interface Theme extends RawTheme {
   id: string
+  urls: Record<string, string>
   fontsStyles: string
   fontsUrls: string[]
 }
@@ -22,6 +23,12 @@ export interface BaseSlide {
   layout?: string
   title: string
   notes: string
+  code?: {
+    content: string
+    language?: string
+    numbers?: boolean
+    highlight?: string
+  }
   options: Record<string, any>
   classes: Record<string, any>
 }
@@ -32,6 +39,7 @@ export interface Slide extends BaseSlide {
 
 export interface Config {
   theme: string
+  urls: Record<string, string>
   dimensions: {
     width: number
     height: number
@@ -74,7 +82,15 @@ export interface ClientContext {
   current: number
 }
 
+export interface Context {
+  environment: 'development' | 'production'
+  log: pino.BaseLogger
+  talks: Set<string>
+  slidesets: Record<string, string>
+}
+
 export interface SlideProps<T = Slide> {
+  environment: Context['environment']
   theme: Theme
   talk: Talk
   slide: T
@@ -83,16 +99,9 @@ export interface SlideProps<T = Slide> {
 
 export type SlideRenderer<T> = (props: SlideProps<T>) => JSX.Element
 
-export interface Context {
-  log: pino.BaseLogger
-  talks: Set<string>
-  slidesets: Record<string, string>
-}
-
 declare module 'fastify' {
   interface FastifyInstance {
     talks: Set<string>
-    slidesets: Record<string, string>
     syncEmitters: Record<string, Set<EventEmitter>>
   }
 }

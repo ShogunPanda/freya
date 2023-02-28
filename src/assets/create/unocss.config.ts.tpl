@@ -93,6 +93,38 @@ function generateBorders(customUnit: string, ratio: number, unit: string): Array
   return borders
 }
 
+function generateRadiuses(customUnit: string, ratio: number, unit: string): Rule[] {
+  const radiuses: Rule[] = [
+    [new RegExp(`^rounded-(\\d+(?:_\\d+)?)${customUnit}$`), ([, d]) => numericRule('border-radius', d, unit, ratio)]
+  ]
+
+  for (const [short, long] of [
+    ['t', ['top-left', 'top-right']],
+    ['b', ['bottom-left', 'bottom-right']],
+    ['l', ['top-left', 'bottom-left']],
+    ['r', ['top-right', 'bottom-right']],
+    ['tl', ['top-left']],
+    ['tr', ['top-right']],
+    ['bl', ['bottom-left']],
+    ['br', ['bottom-right']]
+  ]) {
+    radiuses.push([
+      new RegExp(`^rounded-${short}-(\\d+(?:_\\d+)?)${customUnit}$`),
+      ([, d]) => {
+        const r: CSSValue = {}
+
+        for (const l of long) {
+          Object.assign(r, numericRule(`border-${l}-radius`, d, unit, ratio))
+        }
+
+        return r
+      }
+    ])
+  }
+
+  return radiuses
+}
+
 function generatePositions(customUnit: string, ratio: number, unit: string): Array<Rule> {
   const positions: Array<Rule> = []
   for (const position of ['top', 'bottom', 'left', 'right']) {
@@ -137,6 +169,7 @@ function generateCustomUnits(): Array<Rule> {
       ...generatePositions(customUnit, ratio, unit),
       ...generateGaps(customUnit, ratio, unit),
       ...generateBorders(customUnit, ratio, unit),
+      ...generateRadiuses(customUnit, ratio, unit),
       ...generateDimensions('w', 'width', customUnit, ratio, unit),
       ...generateDimensions('h', 'height', customUnit, ratio, unit)
     )
@@ -181,6 +214,7 @@ export default defineUnoConfig({
     ['flex-row', { 'flex-direction': 'row' }],
     [/^grid-([a-z]+)$/, ([, value]: Array<string>) => ({ 'grid-area': value })],
     ...generateCustomUnits(),
+    ...generateBorders('', 1, 'px'),
     ...generateBorders('', 1, 'px'),
     [/^stroke-width-(\d+(?:_\d+)?)$/, ([, value]: Array<string>) => numericRule('stroke-width', value)],
     [/^line-height-(\d+(?:_\d+)?)$/, ([, value]: Array<string>) => numericRule('line-height', value, 'em')],

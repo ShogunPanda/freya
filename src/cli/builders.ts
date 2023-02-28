@@ -109,7 +109,7 @@ export function developmentBuilder(logger: pino.Logger): Promise<void> {
         return
       }
 
-      const worker = new Worker(fileURLToPath(import.meta.url), { workerData: { mode: 'development' } })
+      const worker = new Worker(fileURLToPath(import.meta.url))
       worker.on('error', error => {
         compiling = false
         fail(error)
@@ -146,6 +146,7 @@ export async function productionBuilder(): Promise<void> {
   logger.info(`Building into directory ${output} ...`)
 
   const context: Context = {
+    environment: isMainThread ? 'production' : 'development',
     log: logger,
     talks: await getTalks(),
     slidesets: {}

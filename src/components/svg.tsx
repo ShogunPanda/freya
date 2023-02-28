@@ -5,7 +5,7 @@ import { normalizeSVGProps, parseSVG } from '../generation/svg.js'
 
 interface SvgProps extends SVGProps<SVGSVGElement> {
   contents: string
-  classes?: string
+  className?: string
   theme: string
 }
 
@@ -14,7 +14,7 @@ interface SvgIconProps extends SVGProps<SVGSVGElement> {
   viewBoxHeight?: string
   theme: string
   name: string
-  classes?: string
+  className?: string
 }
 
 export function Svg({ theme, contents, ...props }: SvgProps): JSX.Element {

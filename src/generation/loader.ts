@@ -59,6 +59,7 @@ export async function getTheme(themeName: string): Promise<Theme> {
 
   return {
     id: themeName,
+    urls: {},
     ...theme,
     images: (theme.images ?? []).map(i => resolveImageUrl(themeName, '', i)),
     fontsStyles,
@@ -89,6 +90,7 @@ export async function getTalk(id: string): Promise<Talk> {
 
   // Set some properties
   talk.id = id
+  talk.config.urls = { ...talk.config.urls }
   talk.slidesCount = talk.slides.length
   talk.slidesPadding = Math.ceil(Math.log10(talk.slides.length))
   talk.aspectRatio = talk.config.dimensions.width / talk.config.dimensions.height

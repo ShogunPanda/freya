@@ -1,3 +1,5 @@
+export { Code } from './code.js'
 export { Presenter } from './presenter.js'
+export { QRCode } from './qr.js'
 export { SlidesList } from './slides-list.js'
 export { Svg, SvgCloseIcon, SvgIcon } from './svg.js'

@@ -16,11 +16,17 @@ async function inlineCss(config: UserConfig, fonts: string, id: string): Promise
 
   if (id === 'virtual:theme-fonts') {
     return fonts
-  } else if (id.startsWith('@freya')) {
-    return transformCSS(
-      await readFile(fileURLToPath(new URL(`../assets/styles/${id.replace('@freya/', '')}`, import.meta.url)), 'utf8'),
-      config
+  } else if (id.startsWith('@freya/highlight')) {
+    const url = new URL(
+      `../../node_modules/highlight.js/styles/${id.replace('@freya/highlight/', '')}`,
+      import.meta.url
     )
+
+    return transformCSS(await readFile(fileURLToPath(url), 'utf8'), config)
+  } else if (id.startsWith('@freya')) {
+    const url = new URL(`../assets/styles/${id.replace('@freya/', '')}`, import.meta.url)
+
+    return transformCSS(await readFile(fileURLToPath(url), 'utf8'), config)
   }
 
   return `/*!!! not-found: ${id} */`
