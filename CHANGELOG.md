@@ -1,3 +1,7 @@
+### 2023-02-28 / 0.10.1
+
+- fix: Fixed numbers logic.
+
 ### 2023-02-28 / 0.10.0
 
 - feat: Added QR and code blocks support.
