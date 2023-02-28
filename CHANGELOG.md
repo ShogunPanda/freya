@@ -1,3 +1,7 @@
+### 2023-02-28 / 0.10.0
+
+- feat: Added QR and code blocks support.
+
 ### 2023-02-07 / 0.9.0
 
 - feat: Parallel exporting.
