@@ -1,3 +1,6 @@
+### 2023-02-28 / 0.11.4
+
+
 ### 2023-02-28 / 0.11.3
 
 - fix: Improve highlight.js detection.
