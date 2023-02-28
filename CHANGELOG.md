@@ -1,3 +1,7 @@
+### 2023-02-28 / 0.11.0
+
+- feat: Support deploy command.
+
 ### 2023-02-28 / 0.10.1
 
 - fix: Fixed numbers logic.
