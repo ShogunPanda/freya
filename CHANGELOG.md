@@ -1,3 +1,7 @@
+### 2023-02-28 / 0.11.3
+
+- fix: Improve highlight.js detection.
+
 ### 2023-02-28 / 0.11.2
 
 - fix: Improve pusher-js detection.
