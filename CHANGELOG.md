@@ -1,3 +1,7 @@
+### 2023-02-28 / 0.11.2
+
+- fix: Improve pusher-js detection.
+
 ### 2023-02-28 / 0.11.1
 
 - fix: Fixed index style.
