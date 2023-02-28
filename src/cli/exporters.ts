@@ -18,12 +18,12 @@ interface ExportContext {
   talks: Set<string>
 }
 
-async function prepareExport(port: number, output: string): Promise<ExportContext> {
+async function prepareExport(type: string, port: number, output: string): Promise<ExportContext> {
   const fullOutput = resolve(rootDir, output)
   const baseUrl = new URL(`http://127.0.0.1:${port}`)
 
   const logger = pino({ transport: { target: 'pino-pretty' } })
-  logger.info(`Exporting into directory ${output} ...`)
+  logger.info(`Exporting ${type} files into directory ${output} ...`)
 
   // Prepare the output directory
   await rm(fullOutput, { recursive: true, force: true })
@@ -61,7 +61,8 @@ export async function exportAsJPEGs(
   id: string,
   fullOutput: string,
   baseUrl: URL,
-  browser: Browser
+  browser: Browser,
+  skipSpeakerNotes: boolean = false
 ): Promise<void> {
   const page = await browser.newPage()
   const talk = await getTalk(id)
@@ -98,7 +99,9 @@ export async function exportAsJPEGs(
     await page.press('body', 'Enter')
   }
 
-  await exportNotes(logger, talk, fullOutput, join(id, 'speaker-notes.html'))
+  if (!skipSpeakerNotes) {
+    await exportNotes(logger, talk, fullOutput, join(id, 'speaker-notes.html'))
+  }
 }
 
 export async function exportAsPDF(
@@ -106,7 +109,8 @@ export async function exportAsPDF(
   id: string,
   fullOutput: string,
   baseUrl: URL,
-  browser: Browser
+  browser: Browser,
+  skipSpeakerNotes: boolean = false
 ): Promise<void> {
   const page = await browser.newPage()
   const talk = await getTalk(id)
@@ -153,21 +157,31 @@ export async function exportAsPDF(
 
   logger.info(`Generated file ${id}.pdf in ${elapsedTime(startTime)} ms ...`)
 
-  await exportNotes(logger, talk, fullOutput, `${id}-speaker-notes.html`)
+  if (!skipSpeakerNotes) {
+    await exportNotes(logger, talk, fullOutput, `${id}-speaker-notes.html`)
+  }
 }
 
-export async function exportAllAsJPEGs(port: number): Promise<void> {
-  const { fullOutput, baseUrl, logger, browser, talks } = await prepareExport(port, 'dist/jpeg')
+export async function exportAllAsJPEGs(
+  port: number,
+  output: string = 'dist/jpeg',
+  skipSpeakerNotes: boolean = false
+): Promise<void> {
+  const { fullOutput, baseUrl, logger, browser, talks } = await prepareExport('JPEGs', port, output)
 
-  await Promise.all([...talks].map(id => exportAsJPEGs(logger, id, fullOutput, baseUrl, browser)))
+  await Promise.all([...talks].map(id => exportAsJPEGs(logger, id, fullOutput, baseUrl, browser, skipSpeakerNotes)))
 
   await browser.close()
 }
 
-export async function exportAllAsPDFs(port: number): Promise<void> {
-  const { fullOutput, baseUrl, logger, browser, talks } = await prepareExport(port, 'dist/pdf')
+export async function exportAllAsPDFs(
+  port: number,
+  output: string = 'dist/pdf',
+  skipSpeakerNotes: boolean = false
+): Promise<void> {
+  const { fullOutput, baseUrl, logger, browser, talks } = await prepareExport('PDFs', port, output)
 
-  await Promise.all([...talks].map(id => exportAsPDF(logger, id, fullOutput, baseUrl, browser)))
+  await Promise.all([...talks].map(id => exportAsPDF(logger, id, fullOutput, baseUrl, browser, skipSpeakerNotes)))
 
   await browser.close()
 }

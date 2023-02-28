@@ -37,9 +37,6 @@ program
       const { developmentBuilder } = await import('./builders.js')
 
       // Prepare the target directory
-      await rm(resolve(rootDir, 'dist/html'), { force: true, recursive: true })
-      await mkdir(resolve(rootDir, 'dist/html'), { recursive: true })
-
       const { ip, port } = this.optsWithGlobals()
 
       await Promise.all([developmentBuilder(logger), localServer(ip, port, logger)])
@@ -94,13 +91,11 @@ program
       const { exportAllAsJPEGs } = await import('./exporters.js')
 
       // Prepare the target directory
-      await rm(resolve(rootDir, 'dist/html'), { force: true, recursive: true })
-      await mkdir(resolve(rootDir, 'dist/html'), { recursive: true })
-
-      await productionBuilder()
-      const server = await localServer('127.0.0.1', 0, false)
+      await productionBuilder('dist/tmp')
+      const server = await localServer('127.0.0.1', 0, false, 'dist/tmp')
       await exportAllAsJPEGs((server.server.address() as AddressInfo).port)
       await server.close()
+      await rm(resolve(rootDir, 'dist/tmp'), { force: true, recursive: true })
     } catch (error) {
       logger.error(error)
       process.exit(1)
@@ -118,12 +113,35 @@ program
       const { exportAllAsPDFs } = await import('./exporters.js')
 
       // Prepare the target directory
-      await rm(resolve(rootDir, 'dist/html'), { force: true, recursive: true })
-      await mkdir(resolve(rootDir, 'dist/html'), { recursive: true })
-
-      await productionBuilder()
-      const server = await localServer('127.0.0.1', 0, false)
+      await productionBuilder('dist/tmp')
+      const server = await localServer('127.0.0.1', 0, false, 'dist/tmp')
       await exportAllAsPDFs((server.server.address() as AddressInfo).port)
+      await server.close()
+      await rm(resolve(rootDir, 'dist/tmp'), { force: true, recursive: true })
+    } catch (error) {
+      logger.error(error)
+      process.exit(1)
+    }
+  })
+
+program
+  .command('deploy')
+  .description('Build all the slides as HTML and PDF files ready to be deployed on Netlify')
+  .alias('y')
+  .action(async function exportPNGAction(this: Command): Promise<void> {
+    try {
+      const { localServer } = await import('./server.js')
+      const { productionBuilder } = await import('./builders.js')
+      const { exportAllAsPDFs } = await import('./exporters.js')
+
+      // Prepare the target directory
+      await rm(resolve(rootDir, 'dist/deploy/site'), { force: true, recursive: true })
+      await mkdir(resolve(rootDir, 'dist/deploy/site/pdfs'), { recursive: true })
+
+      // Export in HTML and PDF
+      await productionBuilder('dist/deploy/site', true)
+      const server = await localServer('127.0.0.1', 0, false, 'dist/deploy/site')
+      await exportAllAsPDFs((server.server.address() as AddressInfo).port, 'dist/deploy/site/pdfs', true)
       await server.close()
     } catch (error) {
       logger.error(error)

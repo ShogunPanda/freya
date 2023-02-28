@@ -33,7 +33,7 @@ export function body({ slides }: BodyProps): JSX.Element {
 export function header({ talk, theme, css, js }: HeaderProps): JSX.Element {
   const { fontsUrls, images: themeImages, id } = theme
 
-  const faviconImageUrl = resolveImageUrl(id, talk.id, '@theme/assets/favicon.webp')
+  const faviconImageUrl = resolveImageUrl(id, talk.id, '@theme/favicon.webp')
 
   return (
     <>

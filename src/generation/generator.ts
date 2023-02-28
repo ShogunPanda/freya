@@ -9,7 +9,7 @@ import { minify } from 'terser'
 import { body as indexBody, page as index } from '../templates/index.js'
 import { body, header, page } from '../templates/page.js'
 import { finalizeCss, transformCSSFile } from './css.js'
-import { getTalk, getTalks, getTheme, rootDir } from './loader.js'
+import { getTalk, getTalks, getTheme, pusherConfig, rootDir } from './loader.js'
 import { ClientContext, Context, Slide, SlideRenderer, Talk, Theme } from './models.js'
 
 export const markdownRenderer = markdownIt({
@@ -53,7 +53,9 @@ export async function generateSlideset(environment: Context['environment'], them
     slidesCount: talk.slidesCount,
     slidesPadding: talk.slidesPadding,
     aspectRatio: talk.aspectRatio,
-    current: 0
+    current: 0,
+    environment,
+    pusher: pusherConfig ? { key: pusherConfig.key, cluster: pusherConfig.cluster } : undefined
   }
 
   // Generate each slide
@@ -95,6 +97,9 @@ export async function generateSlideset(environment: Context['environment'], them
   }
 
   // Generate the JS
+  const pusher = pusherConfig
+    ? await readFile(fileURLToPath(new URL('../../node_modules/pusher-js/dist/web/pusher.js', import.meta.url)), 'utf8')
+    : ''
   const client = await readFile(fileURLToPath(new URL('../assets/client.js', import.meta.url)), 'utf8')
 
   // Render the page
@@ -106,7 +111,9 @@ export async function generateSlideset(environment: Context['environment'], them
           talk,
           theme,
           css: await finalizeCss(unoConfig, themeCss + css, theme.fontsStyles),
-          js: await finalizeJs(client.replace('const context = {}', `const context = ${JSON.stringify(clientContext)}`))
+          js: await finalizeJs(
+            pusher + '\n' + client.replace('const context = {}', `const context = ${JSON.stringify(clientContext)}`)
+          )
         })
       )
     )

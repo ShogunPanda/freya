@@ -2,14 +2,14 @@ import { watch } from 'chokidar'
 import globCb from 'glob'
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { isMainThread, Worker } from 'node:worker_threads'
 import pino from 'pino'
 import { elapsedTime, generateSlidesets } from '../generation/generator.js'
-import { getTalk, getTalks, rootDir, swc } from '../generation/loader.js'
+import { getTalk, getTalks, pusherConfig, rootDir, swc } from '../generation/loader.js'
 import { Context } from '../generation/models.js'
 
 const glob = promisify(globCb)
@@ -49,15 +49,29 @@ function compileSourceCode(): Promise<void> {
 
 function generateNetlifyConfiguration(context: Context): string {
   const startTime = process.hrtime.bigint()
-  let generated = ''
+  let generated = '[build]\npublish = "site"\nedge_functions = "functions"\n\n'
 
   for (const talk of context.talks) {
     generated += `[[redirects]]\nfrom = "/${talk}/*"\nto = "/${talk}.html"\nstatus = 200\n\n`
   }
 
-  context.log.info(`Generated TOML file /netlify.toml in ${elapsedTime(startTime)} ms`)
+  if (pusherConfig) {
+    generated += '[[edge_functions]]\npath = "/pusher/auth"\nfunction = "pusher-auth"\n\n'
+  }
+
+  context.log.info(`Generated TOML file netlify.toml in ${elapsedTime(startTime)} ms`)
 
   return generated.trim()
+}
+
+async function generatePusherAuthFunction(context: Context): Promise<string> {
+  const startTime = process.hrtime.bigint()
+  let functionFile = await readFile(new URL('../templates/pusher-auth.js', import.meta.url), 'utf8')
+  functionFile = functionFile.replace('@KEY@', pusherConfig!.key).replace('@SECRET@', pusherConfig!.secret)
+
+  context.log.info(`Generated function pusher-auth.js in ${elapsedTime(startTime)} ms`)
+
+  return functionFile
 }
 
 export function developmentBuilder(logger: pino.Logger): Promise<void> {
@@ -133,17 +147,18 @@ export function developmentBuilder(logger: pino.Logger): Promise<void> {
   return promise
 }
 
-export async function productionBuilder(): Promise<void> {
+export async function productionBuilder(output: string = 'dist/html', netlify: boolean = false): Promise<void> {
   if (!existsSync(resolve(rootDir, './tmp')) || isMainThread) {
     await compileSourceCode()
   }
 
-  const output = 'dist/html'
   const fullOutput = resolve(rootDir, output)
+  await rm(fullOutput, { force: true, recursive: true })
+  await mkdir(fullOutput, { recursive: true })
 
   // Prepare the context
   const logger = pino({ transport: { target: 'pino-pretty' } })
-  logger.info(`Building into directory ${output} ...`)
+  logger.info(`Building HTML version into directory ${output} ...`)
 
   const context: Context = {
     environment: isMainThread ? 'production' : 'development',
@@ -166,9 +181,21 @@ export async function productionBuilder(): Promise<void> {
     await writeFile(resolve(fullOutput, `${name}.html`), file, 'utf8')
   }
 
-  // Copy file 404.html and netlify.toml
+  // Copy file 404.html
   await cp(fileURLToPath(new URL('../assets/404.html', import.meta.url)), resolve(fullOutput, '404.html'))
-  await writeFile(resolve(fullOutput, 'netlify.toml'), generateNetlifyConfiguration(context), 'utf8')
+
+  if (netlify) {
+    await writeFile(resolve(fullOutput, '../netlify.toml'), generateNetlifyConfiguration(context), 'utf8')
+  }
+
+  if (pusherConfig) {
+    await mkdir(resolve(fullOutput, '../functions'), { recursive: true })
+    await writeFile(
+      resolve(fullOutput, '../functions/pusher-auth.js'),
+      await generatePusherAuthFunction(context),
+      'utf8'
+    )
+  }
 
   // Copy themes and talks assets
   for (const talk of context.talks) {

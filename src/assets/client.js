@@ -1,3 +1,5 @@
+/* globals Pusher */
+
 {
   function setupSlides(context) {
     // Load all the slides
@@ -103,10 +105,24 @@
   }
 
   function setupSynchronization(context) {
-    const events = new EventSource(`/${context.id}/sync`)
+    if (!context.pusher) {
+      return
+    }
 
-    events.addEventListener('sync', ev => {
-      const { current } = JSON.parse(ev.data)
+    Pusher.logToConsole = context.environment === 'development'
+
+    const pusher = new Pusher(context.pusher.key, {
+      cluster: context.pusher.cluster,
+      channelAuthorization: { endpoint: '/pusher/auth' }
+    })
+    const url = new URL(location.href)
+
+    context.channel = pusher.subscribe(
+      `private-talks-${url.protocol.replace(':', '')}-${url.hostname}-${url.port}-${context.id}-${context.environment}`
+    )
+
+    context.channel.bind('client-update', function (data) {
+      const { current } = data
 
       if (
         typeof current !== 'number' ||
@@ -118,15 +134,11 @@
         return
       }
 
-      updateCurrentSlide(context, current)
+      updateCurrentSlide(context, current, true)
       window.dispatchEvent(new Event('freya:slide:syncReceived'))
     })
 
-    events.addEventListener('end', e => {
-      events.close()
-    })
-
-    events.addEventListener('error', event => {
+    context.channel.bind('pusher:error', event => {
       console.error('Receiving synchronization failed', event)
     })
   }
@@ -164,9 +176,11 @@
   }
 
   function sendCurrentSlideUpdate(context) {
-    fetch(`/${context.id}/sync/${context.current}`, { method: 'POST' }).catch(error => {
-      console.error('Sending synchronization data failed', error)
-    })
+    if (!context.current || !context.channel) {
+      return
+    }
+
+    context.channel.trigger('client-update', { current: context.current })
   }
 
   function gotoPreviousSlide(context) {
@@ -197,7 +211,7 @@
     document.body.style.setProperty('--nf-slide-transform', `scale(${(correction * 0.9).toFixed(1)})`)
   }
 
-  function updateCurrentSlide(context, current) {
+  function updateCurrentSlide(context, current, syncing) {
     // Hide previously visible slide
     if (context.current > 0) {
       context.slides.get(context.current).classList.add('hidden')
@@ -216,7 +230,7 @@
     document.title = `${paddedSlide} - ${context.title}`
     window.dispatchEvent(new Event('freya:slide:changed'))
 
-    if (isVisible(context.presenter)) {
+    if (!syncing && isVisible(context.presenter)) {
       sendCurrentSlideUpdate(context)
     }
   }

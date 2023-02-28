@@ -1,4 +1,3 @@
-import EventEmitter from 'node:events'
 import pino from 'pino'
 
 export interface FontsList {
@@ -69,6 +68,12 @@ export interface Talk extends RawTalk {
   images: string[]
 }
 
+export interface Pusher {
+  key: string
+  secret: string
+  cluster: string
+}
+
 export interface ClientContext {
   id: string
   title: string
@@ -80,6 +85,8 @@ export interface ClientContext {
   slidesPadding: number
   aspectRatio: number
   current: number
+  environment: Context['environment']
+  pusher?: Omit<Pusher, 'secret'>
 }
 
 export interface Context {
@@ -102,6 +109,5 @@ export type SlideRenderer<T> = (props: SlideProps<T>) => JSX.Element
 declare module 'fastify' {
   interface FastifyInstance {
     talks: Set<string>
-    syncEmitters: Record<string, Set<EventEmitter>>
   }
 }

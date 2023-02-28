@@ -3,10 +3,28 @@ import { existsSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { isMainThread } from 'node:worker_threads'
 import { markdownRenderer } from './generator.js'
-import { RawTheme, Talk, Theme } from './models.js'
+import { Pusher, RawTheme, Talk, Theme } from './models.js'
+
+function loadPusherSettings(): Pusher | undefined {
+  const { PUSHER_KEY: key, PUSHER_SECRET: secret, PUSHER_CLUSTER: cluster } = process.env
+
+  if (!key || !secret || !cluster) {
+    if (!isMainThread) {
+      process.emitWarning(
+        'In order to enable synchronization, please define PUSHER_KEY, PUSHER_SECRET and PUSHER_CLUSTER environment variables.'
+      )
+    }
+
+    return undefined
+  }
+
+  return { key, secret, cluster }
+}
 
 export const rootDir = process.cwd()
+export const pusherConfig = loadPusherSettings()
 
 export let swc = resolve(rootDir, 'node_modules/.bin/swc')
 
