@@ -1,3 +1,7 @@
+### 2023-03-01 / 0.13.0
+
+- feat: Support common.yml file.
+
 ### 2023-03-01 / 0.12.0
 
 - feat: Support swipes in mobile devices.
