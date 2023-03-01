@@ -55,6 +55,18 @@ The `slides` value must be an array. Each slide structure is free for you to use
 
 - `slides.*.notes` value should contain speaker notes in Markdown. Layouts should not show them directly.
 
+You can store the `config` and any property in the `document` section inside a separate `common.yml` in the `src/talks` folder and reference them in the `talk.yml` file like this:
+
+```
+config: common.config
+document:
+  title:
+  author: config.author
+  company: config.company
+```
+
+Note that `common.yml` file is not validated.
+
 ### Talk assets
 
 Images and other assets can be stored in the `src/talks/$NAME/assets` folder and you can reference them using the `@talk` root folder in URLs.
@@ -82,6 +94,14 @@ You can enter presenter mode by pressing `p`. In presenter mode, you will also s
 All other session of the browser connected to the same slideset will see the same slide that you are presenting.
 
 Presenter mode can be exited by pressing `p` or the `Escape` key.
+
+### Deploying to Netlify
+
+If you want to deploy to Netlify, you can generate a site ready to be deployed using `freya deploy`. The generated site will be in the `dist/deploy` folder and you can deploy using a command like this:
+
+```shell
+freya deploy && cd dist/deploy && netlify deploy --site $SITE --prod
+```
 
 ## Themes
 

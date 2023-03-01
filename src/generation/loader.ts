@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { isMainThread } from 'node:worker_threads'
 import { markdownRenderer } from './generator.js'
-import { Pusher, RawTheme, Talk, Theme } from './models.js'
+import { Config, Pusher, RawTheme, Talk, Theme } from './models.js'
 
 function loadPusherSettings(): Pusher | undefined {
   const { PUSHER_KEY: key, PUSHER_SECRET: secret, PUSHER_CLUSTER: cluster } = process.env
@@ -89,6 +89,23 @@ export async function getTalk(id: string): Promise<Talk> {
   // Get the talk definition
   const talk = load(await readFile(resolve(rootDir, 'src/talks', id, 'talk.yml'), 'utf8')) as Talk
 
+  // If there is a common.yml file in the talks folder, load it
+  const commonPath = resolve(rootDir, 'src/talks', 'common.yml')
+
+  if (existsSync(commonPath)) {
+    const common = (await load(await readFile(commonPath, 'utf8'))) as Record<string, object>
+
+    if (typeof talk.config === 'string' && talk.config === 'common.config') {
+      talk.config = common.config as Config
+    }
+
+    for (const [key, value] of Object.entries(talk.document)) {
+      if (typeof value === 'string' && value.startsWith('common.')) {
+        talk.document[key] = common[value.replace('common.', '')]
+      }
+    }
+  }
+
   // Gather all the images
   const images: string[] = []
 
@@ -119,5 +136,5 @@ export async function getTalk(id: string): Promise<Talk> {
 
 export async function getTalks(): Promise<Set<string>> {
   const allFiles = await readdir(resolve(rootDir, 'src/talks'))
-  return new Set(allFiles.filter(talk => existsSync(resolve(rootDir, 'src/talks', talk, 'talk.yml'))))
+  return new Set(allFiles.filter((talk: string) => existsSync(resolve(rootDir, 'src/talks', talk, 'talk.yml'))))
 }
