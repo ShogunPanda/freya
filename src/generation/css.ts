@@ -3,6 +3,7 @@ import { Theme as UnoTheme } from '@unocss/preset-mini'
 import { transformDirectives } from '@unocss/transformer-directives'
 import MagicString from 'magic-string'
 import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import postcss from 'postcss'
 import postcssDiscardComments from 'postcss-discard-comments'
@@ -10,6 +11,7 @@ import postcssImport from 'postcss-import'
 import postcssMinifySelector from 'postcss-minify-selectors'
 import postcssNested from 'postcss-nested'
 import postcssNormalizeWhitespace from 'postcss-normalize-whitespace'
+import { rootDir } from './loader.js'
 
 async function inlineCss(config: UserConfig, fonts: string, id: string): Promise<string> {
   id = id.replace(/^\/handled\//, '')
@@ -19,11 +21,12 @@ async function inlineCss(config: UserConfig, fonts: string, id: string): Promise
   } else if (id.startsWith('@freya/highlight')) {
     const cleanId = id.replace('@freya/highlight/', '')
 
-    for (const rootModuleDirectory of ['../../../', '../../node_modules']) {
+    for (const rootModuleDirectory of ['node_modules', 'node_modules/freya-slides/node_modules']) {
       try {
-        const url = new URL(`${rootModuleDirectory}/highlight.js/styles/${cleanId}`, import.meta.url)
-
-        return transformCSS(await readFile(fileURLToPath(url), 'utf8'), config)
+        return transformCSS(
+          await readFile(resolve(rootDir, rootModuleDirectory, `highlight.js/styles/${cleanId}`), 'utf8'),
+          config
+        )
       } catch (error) {
         if (error.code !== 'ENOENT') {
           throw error

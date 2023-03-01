@@ -100,21 +100,18 @@ export async function generateSlideset(environment: Context['environment'], them
   const client = await readFile(fileURLToPath(new URL('../assets/client.js', import.meta.url)), 'utf8')
   let pusher: string = ''
   if (pusherConfig) {
-    for (const rootModuleDirectory of ['../../../', '../../node_modules']) {
+    for (const rootModuleDirectory of ['node_modules', 'node_modules/freya-slides/node_modules']) {
       try {
-        pusher = await readFile(
-          fileURLToPath(new URL(`${rootModuleDirectory}/pusher-js/dist/web/pusher.js`, import.meta.url)),
-          'utf8'
-        )
+        pusher = await readFile(resolve(rootDir, rootModuleDirectory, 'pusher-js/dist/web/pusher.js'), 'utf8')
       } catch (error) {
         if (error.code !== 'ENOENT') {
           throw error
         }
       }
+    }
 
-      if (!pusher) {
-        throw new Error('Cannot find pusher-js module.')
-      }
+    if (!pusher) {
+      throw new Error('Cannot find pusher-js module.')
     }
   }
 

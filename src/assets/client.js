@@ -171,6 +171,41 @@
     }
   }
 
+  function handleTouchStart(context, ev) {
+    context.firstTouch = ev.touches[0]
+  }
+
+  function handleTouchMove(context, ev) {
+    context.lastTouch = ev.touches[0]
+  }
+
+  function handleTouchEnd(context) {
+    if (!context.firstTouch || !context.lastTouch) {
+      return
+    }
+
+    const xShift = context.firstTouch.clientX - context.lastTouch.clientX
+    const yShift = context.firstTouch.clientY - context.lastTouch.clientY
+    const absoluteXShift = Math.abs(xShift)
+    const absoluteYShift = Math.abs(yShift)
+    const tolerance = 100
+    let direction = ''
+
+    if (absoluteXShift > tolerance && absoluteYShift < tolerance) {
+      // Horizontal swipe
+      direction = xShift < 0 ? 'previous' : 'next'
+    } else if (absoluteYShift > tolerance && absoluteXShift < tolerance) {
+      // Vertical swipe
+      direction = yShift < 0 ? 'previous' : 'next'
+    }
+
+    if (direction === 'previous') {
+      gotoPreviousSlide(context)
+    } else if (direction === 'next') {
+      gotoNextSlide(context)
+    }
+  }
+
   function isVisible(container) {
     return container.classList.contains('hidden') === false
   }
@@ -383,6 +418,9 @@
 
     // Setup other events
     document.addEventListener('keydown', handleShortcut.bind(null, context), false)
+    document.addEventListener('touchstart', handleTouchStart.bind(null, context), false)
+    document.addEventListener('touchmove', handleTouchMove.bind(null, context), false)
+    document.addEventListener('touchend', handleTouchEnd.bind(null, context), false)
 
     // Update the UI
     start(context)
