@@ -1,3 +1,8 @@
+### 2023-03-01 / 0.12.0
+
+- feat: Support swipes in mobile devices.
+- chore: Minor rename.
+
 ### 2023-02-28 / 0.11.4
 
 
