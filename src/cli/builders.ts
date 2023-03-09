@@ -126,7 +126,14 @@ export function developmentBuilder(logger: pino.Logger): Promise<void> {
       const worker = new Worker(fileURLToPath(import.meta.url))
       worker.on('error', error => {
         compiling = false
-        fail(error)
+
+        const errorString =
+          error.message +
+          '\n\n' +
+          error.stack.toString().trim().replaceAll(/(^.)/gm, '$1'.padStart(17, ' ')).replaceAll(rootDir, '$ROOT')
+        logger.error('Code compilation failed:\n\n  ' + errorString + '\n')
+
+        worker.terminate().catch(() => {})
       })
 
       worker.on('exit', () => {
