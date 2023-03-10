@@ -7,11 +7,15 @@ import { existsSync } from 'node:fs'
 import { mkdir, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import pino from 'pino'
-import { getTalks, pusherConfig, rootDir } from '../generation/loader.js'
+import { pusherConfig, rootDir } from '../generation/loader.js'
 
 interface TalkHandlerParams {
   talk: string
   slide: string
+}
+
+function pageExists(server: FastifyInstance, page: string): boolean {
+  return existsSync(resolve(server.rootDir, `${page}.html`))
 }
 
 function talkHandler(
@@ -21,7 +25,7 @@ function talkHandler(
 ): void {
   const talk = request.params.talk
 
-  if (!this.talks.has(talk)) {
+  if (talk === '404.html' || talk === '__wait.html' || !pageExists(this, talk)) {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     reply.code(404).sendFile('404.html')
     return
@@ -57,8 +61,11 @@ export async function localServer(
   await server.register(fastifyHttpErrorsEnhanced, { handle404Errors: false })
   await server.register(fastifyFormBody)
 
-  const talks = await getTalks()
-  server.decorate('talks', talks)
+  server.addHook('preHandler', async (_: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    if (pageExists(server, '__wait')) {
+      return reply.sendFile('__wait.html')
+    }
+  })
 
   if (pusherConfig) {
     const { key, secret } = pusherConfig
@@ -104,8 +111,10 @@ export async function localServer(
   })
 
   await server.register(fastifyStatic, {
-    root: resolve(rootDir, staticDir)
+    root: fullOutput
   })
+
+  server.decorate('rootDir', fullOutput)
 
   server.setNotFoundHandler(function (_: FastifyRequest, reply: FastifyReply) {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises

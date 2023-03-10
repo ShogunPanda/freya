@@ -108,6 +108,6 @@ export type SlideRenderer<T> = (props: SlideProps<T>) => JSX.Element
 
 declare module 'fastify' {
   interface FastifyInstance {
-    talks: Set<string>
+    rootDir: string
   }
 }

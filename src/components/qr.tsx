@@ -7,7 +7,7 @@ interface QRCodeProps {
 }
 
 export function QRCode({ data, className }: QRCodeProps): JSX.Element {
-  const qr = QRCodeGenerator(0, 'L')
+  const qr = QRCodeGenerator(0, 'M')
   qr.addData(data)
   qr.make()
 

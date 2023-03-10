@@ -118,6 +118,7 @@ export function developmentBuilder(logger: pino.Logger): Promise<void> {
           .trim()
           .replaceAll(/(^.)/gm, '$1'.padStart(17, ' '))
           .replaceAll(rootDir, '$ROOT')
+          .trim()
 
         logger.error('Code compilation failed:\n\n  ' + errorString + '\n')
         return
@@ -127,10 +128,11 @@ export function developmentBuilder(logger: pino.Logger): Promise<void> {
       worker.on('error', error => {
         compiling = false
 
-        const errorString =
-          error.message +
-          '\n\n' +
-          error.stack.toString().trim().replaceAll(/(^.)/gm, '$1'.padStart(17, ' ')).replaceAll(rootDir, '$ROOT')
+        const errorStack = (
+          error.stack?.toString().trim().replaceAll(/(^.)/gm, '$1'.padStart(17, ' ')).replaceAll(rootDir, '$ROOT') ?? ''
+        ).trim()
+
+        const errorString = error.message + errorStack + '\n\n'
         logger.error('Code compilation failed:\n\n  ' + errorString + '\n')
 
         worker.terminate().catch(() => {})
@@ -163,10 +165,25 @@ export async function productionBuilder(output: string = 'dist/html', netlify: b
   await rm(fullOutput, { force: true, recursive: true })
   await mkdir(fullOutput, { recursive: true })
 
-  // Prepare the context
   const logger = pino({ transport: { target: 'pino-pretty' } })
   logger.info(`Building HTML version into directory ${output} ...`)
 
+  // Prepare output directory
+  await rm(fullOutput, { recursive: true, force: true })
+  await mkdir(fullOutput, { recursive: true })
+  await mkdir(resolve(fullOutput, 'assets/talks'), { recursive: true })
+  await mkdir(resolve(fullOutput, 'assets/themes'), { recursive: true })
+
+  // Copy file 404.html
+  await cp(fileURLToPath(new URL('../assets/404.html', import.meta.url)), resolve(fullOutput, '404.html'))
+
+  // Remove wait file
+  const waitFilePath = !isMainThread ? resolve(fullOutput, '__wait.html') : undefined
+  if (waitFilePath) {
+    await cp(fileURLToPath(new URL('../assets/wait.html', import.meta.url)), waitFilePath)
+  }
+
+  // Prepare the context
   const context: Context = {
     environment: isMainThread ? 'production' : 'development',
     log: logger,
@@ -177,20 +194,12 @@ export async function productionBuilder(output: string = 'dist/html', netlify: b
   // Generate the slidesets
   context.slidesets = await generateSlidesets(context)
 
-  // Prepare output directory
-  await rm(fullOutput, { recursive: true, force: true })
-  await mkdir(fullOutput, { recursive: true })
-  await mkdir(resolve(fullOutput, 'assets/talks'), { recursive: true })
-  await mkdir(resolve(fullOutput, 'assets/themes'), { recursive: true })
-
   // Write slidesets
   for (const [name, file] of Object.entries(context.slidesets)) {
     await writeFile(resolve(fullOutput, `${name}.html`), file, 'utf8')
   }
 
-  // Copy file 404.html
-  await cp(fileURLToPath(new URL('../assets/404.html', import.meta.url)), resolve(fullOutput, '404.html'))
-
+  // Generate Netlify and Pusher, if needed
   if (netlify) {
     await writeFile(resolve(fullOutput, '../netlify.toml'), generateNetlifyConfiguration(context), 'utf8')
   }
@@ -206,21 +215,34 @@ export async function productionBuilder(output: string = 'dist/html', netlify: b
 
   // Copy themes and talks assets
   for (const talk of context.talks) {
-    await cp(resolve(rootDir, 'src/talks', talk, 'assets'), resolve(fullOutput, 'assets/talks', talk), {
-      recursive: true
-    })
-
     const {
       config: { theme }
     } = await getTalk(talk)
-    await cp(resolve(rootDir, 'src/themes', theme, 'assets'), resolve(fullOutput, 'assets/themes', theme), {
-      recursive: true
-    })
+
+    const talkAssets = resolve(rootDir, 'src/talks', talk, 'assets')
+    const themeAssets = resolve(rootDir, 'src/themes', theme, 'assets')
+
+    if (existsSync(talkAssets)) {
+      await cp(talkAssets, resolve(fullOutput, 'assets/talks', talk), {
+        recursive: true
+      })
+    }
+
+    if (existsSync(themeAssets)) {
+      await cp(themeAssets, resolve(fullOutput, 'assets/themes', theme), {
+        recursive: true
+      })
+    }
   }
 
   // Remove all file and directory starting with a double underscore
   for (const p of await glob(resolve(fullOutput, 'assets/**/__*'))) {
     await rm(p, { recursive: true })
+  }
+
+  // Remove waiting file
+  if (waitFilePath) {
+    await rm(waitFilePath)
   }
 }
 
