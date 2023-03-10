@@ -1,3 +1,10 @@
+### 2023-03-10 / 0.14.0
+
+- feat: Error page styling.
+- feat: Added hot-reload.
+- feat: Improved fault tolerance when building.
+- feat: Do not crash on compilation failures.
+
 ### 2023-03-01 / 0.13.0
 
 - feat: Support common.yml file.
