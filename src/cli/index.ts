@@ -74,7 +74,7 @@ program
       const { localServer } = await import('./server.js')
 
       const { ip, port } = this.optsWithGlobals()
-      await localServer(ip, port)
+      await localServer(ip, port, pino())
     } catch (error) {
       logger.error(error)
       process.exit(1)

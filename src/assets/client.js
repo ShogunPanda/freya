@@ -15,7 +15,7 @@
     )
 
     if (context.environment === 'development') {
-      console.log(context)
+      console.log('freya-slides context', context)
     }
 
     if (!context.export) {

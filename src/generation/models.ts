@@ -27,6 +27,7 @@ export interface BaseSlide {
     language?: string
     numbers?: boolean
     highlight?: string
+    rendered?: string
   }
   options: Record<string, any>
   classes: Record<string, any>
