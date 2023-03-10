@@ -39,7 +39,8 @@ program
       // Prepare the target directory
       const { ip, port } = this.optsWithGlobals()
 
-      await Promise.all([developmentBuilder(logger), localServer(ip, port, false)])
+      await localServer(ip, port, false)
+      await developmentBuilder(logger, ip, port)
     } catch (error) {
       logger.error(error)
       process.exit(1)

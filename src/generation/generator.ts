@@ -1,6 +1,7 @@
 import { createGenerator } from '@unocss/core'
 import markdownIt from 'markdown-it'
 import { readFile } from 'node:fs/promises'
+import { hostname } from 'node:os'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ReactNode } from 'react'
@@ -55,7 +56,13 @@ export async function generateSlideset(environment: Context['environment'], them
     aspectRatio: talk.aspectRatio,
     current: 0,
     environment,
-    pusher: pusherConfig ? { key: pusherConfig.key, cluster: pusherConfig.cluster } : undefined
+    pusher: pusherConfig
+      ? {
+          key: pusherConfig.key,
+          cluster: pusherConfig.cluster,
+          hostname: environment === 'development' ? hostname() : undefined
+        }
+      : undefined
   }
 
   // Generate each slide

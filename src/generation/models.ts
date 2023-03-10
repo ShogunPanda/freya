@@ -86,7 +86,7 @@ export interface ClientContext {
   aspectRatio: number
   current: number
   environment: Context['environment']
-  pusher?: Omit<Pusher, 'secret'>
+  pusher?: Omit<Pusher, 'secret'> & { hostname?: string }
 }
 
 export interface Context {

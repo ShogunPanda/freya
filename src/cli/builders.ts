@@ -3,12 +3,14 @@ import globCb from 'glob'
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { hostname } from 'node:os'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
-import { isMainThread, Worker } from 'node:worker_threads'
+import { isMainThread, parentPort, Worker } from 'node:worker_threads'
 import pino from 'pino'
-import { elapsedTime, generateSlidesets } from '../generation/generator.js'
+import Pusher, { Channel, ChannelAuthorizationOptions } from 'pusher-js'
+import { elapsedTime, finalizeJs, generateSlidesets } from '../generation/generator.js'
 import { getTalk, getTalks, pusherConfig, rootDir, swc } from '../generation/loader.js'
 import { Context } from '../generation/models.js'
 
@@ -64,6 +66,49 @@ function generateNetlifyConfiguration(context: Context): string {
   return generated.trim()
 }
 
+async function generateHotReloadPage(): Promise<string> {
+  let page = await readFile(fileURLToPath(new URL('../assets/status.html', import.meta.url)), 'utf8')
+
+  if (pusherConfig) {
+    const client = await readFile(fileURLToPath(new URL('../assets/hot-reload.js', import.meta.url)), 'utf8')
+
+    let pusher: string = ''
+    if (pusherConfig) {
+      for (const rootModuleDirectory of ['node_modules', 'node_modules/freya-slides/node_modules']) {
+        try {
+          pusher = await readFile(resolve(rootDir, rootModuleDirectory, 'pusher-js/dist/web/pusher.js'), 'utf8')
+        } catch (error) {
+          if (error.code !== 'ENOENT') {
+            throw error
+          }
+        }
+      }
+
+      if (!pusher) {
+        throw new Error('Cannot find pusher-js module.')
+      }
+
+      page = page.replace(
+        "console.warn('No pusher available. Hot reload disabled.')",
+        await finalizeJs(
+          pusher +
+            '\n' +
+            client.replace(
+              'const context = {}',
+              `const context = ${JSON.stringify({
+                key: pusherConfig.key,
+                cluster: pusherConfig.cluster,
+                hostname: hostname()
+              })}`
+            )
+        )
+      )
+    }
+  }
+
+  return page
+}
+
 async function generatePusherAuthFunction(context: Context): Promise<string> {
   const startTime = process.hrtime.bigint()
   let functionFile = await readFile(new URL('../templates/pusher-auth.js', import.meta.url), 'utf8')
@@ -74,7 +119,19 @@ async function generatePusherAuthFunction(context: Context): Promise<string> {
   return functionFile
 }
 
-export function developmentBuilder(logger: pino.Logger): Promise<void> {
+function notifyBuildStatus(
+  channel: Channel | undefined,
+  status: 'pending' | 'success' | 'failed',
+  payload?: object
+): void {
+  if (!channel) {
+    return
+  }
+
+  channel.trigger('client-update', { status, ...payload })
+}
+
+export async function developmentBuilder(logger: pino.Logger, ip: string, port: number): Promise<void> {
   let compiling = false
   let success: () => void
   let fail: (reason?: Error) => void
@@ -85,6 +142,23 @@ export function developmentBuilder(logger: pino.Logger): Promise<void> {
   })
 
   let timeout: NodeJS.Timeout | null
+  let pusherChannel: Channel
+
+  if (pusherConfig) {
+    pusherChannel = new Pusher(pusherConfig.key, {
+      cluster: pusherConfig.cluster,
+      channelAuthorization: {
+        endpoint: `http://${ip === '::' ? '127.0.0.1' : ''}:${port}/pusher/auth`
+      } as unknown as ChannelAuthorizationOptions
+    }).subscribe(`private-talks-${hostname()}-build-status`)
+
+    pusherChannel.bind('pusher:subscription_error', (event: any) => {
+      console.error('Subscription failed', event)
+    })
+    pusherChannel.bind('pusher:error', (event: any) => {
+      console.error('Sending build synchronization failed', event)
+    })
+  }
 
   function scheduleRun(): void {
     if (timeout) {
@@ -102,6 +176,7 @@ export function developmentBuilder(logger: pino.Logger): Promise<void> {
     }
 
     compiling = true
+    let failed = false
 
     const compilation = spawn(swc, ['-d', 'tmp', 'src'])
     let error = Buffer.alloc(0)
@@ -120,11 +195,20 @@ export function developmentBuilder(logger: pino.Logger): Promise<void> {
           .replaceAll(rootDir, '$ROOT')
           .trim()
 
+        failed = true
         logger.error('Code compilation failed:\n\n  ' + errorString + '\n')
+        notifyBuildStatus(pusherChannel, 'failed', { error: errorString })
         return
       }
 
       const worker = new Worker(fileURLToPath(import.meta.url))
+
+      worker.on('message', message => {
+        if (message === 'started') {
+          notifyBuildStatus(pusherChannel, 'pending')
+        }
+      })
+
       worker.on('error', error => {
         compiling = false
 
@@ -133,12 +217,19 @@ export function developmentBuilder(logger: pino.Logger): Promise<void> {
         ).trim()
 
         const errorString = error.message + errorStack + '\n\n'
+
+        failed = true
+        notifyBuildStatus(pusherChannel, 'failed', { error: errorString })
         logger.error('Code compilation failed:\n\n  ' + errorString + '\n')
 
         worker.terminate().catch(() => {})
       })
 
       worker.on('exit', () => {
+        if (!failed) {
+          notifyBuildStatus(pusherChannel, 'success')
+        }
+
         compiling = false
       })
     })
@@ -177,10 +268,11 @@ export async function productionBuilder(output: string = 'dist/html', netlify: b
   // Copy file 404.html
   await cp(fileURLToPath(new URL('../assets/404.html', import.meta.url)), resolve(fullOutput, '404.html'))
 
-  // Remove wait file
-  const waitFilePath = !isMainThread ? resolve(fullOutput, '__wait.html') : undefined
-  if (waitFilePath) {
-    await cp(fileURLToPath(new URL('../assets/wait.html', import.meta.url)), waitFilePath)
+  // Create wait file
+  const statusFilePath = !isMainThread ? resolve(fullOutput, '__status.html') : undefined
+  if (statusFilePath) {
+    await writeFile(statusFilePath, await generateHotReloadPage(), 'utf8')
+    parentPort?.postMessage('started')
   }
 
   // Prepare the context
@@ -241,9 +333,11 @@ export async function productionBuilder(output: string = 'dist/html', netlify: b
   }
 
   // Remove waiting file
-  if (waitFilePath) {
-    await rm(waitFilePath)
+  if (statusFilePath) {
+    await rm(statusFilePath)
   }
+
+  logger.info('Build completed.')
 }
 
 if (!isMainThread) {

@@ -45,12 +45,23 @@
         margin: 0;
         line-height: 1.4em;
       }
+
+      .hidden {
+        display: none;
+      }
     </style>
   </head>
   <body>
-    <h1>Building, please wait ...</h1>
+    <h1 id="pending">Building, please wait ...</h1>
+
+    <div id="error" class="hidden">
+      Compilation failed!
+
+      <pre id="error-content"></pre>
+    </div>
+
     <script type="text/javascript">
-      setTimeout(() => location.reload(), 250)
+      console.warn('No pusher available. Hot reload disabled.')
     </script>
   </body>
 </html>

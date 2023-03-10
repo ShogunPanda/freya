@@ -14,10 +14,15 @@
       })
     )
 
+    if (context.environment === 'development') {
+      console.log(context)
+    }
+
     if (!context.export) {
-      window.addEventListener('resize', updateSlidesAppearance.bind(null, context))
-      document.addEventListener('fullscreenchange', updateSlidesAppearance.bind(null, context))
-      updateSlidesAppearance(context)
+      const boundUpdatesSlidesAppearance = updateSlidesAppearance.bind(null, context)
+      window.addEventListener('resize', boundUpdatesSlidesAppearance)
+      document.addEventListener('fullscreenchange', boundUpdatesSlidesAppearance)
+      setTimeout(boundUpdatesSlidesAppearance, 10)
     }
   }
 
@@ -138,9 +143,27 @@
       window.dispatchEvent(new Event('freya:slide:syncReceived'))
     })
 
+    context.channel.bind('pusher:subscription_error', event => {
+      console.error('Subscription failed', event)
+    })
+
     context.channel.bind('pusher:error', event => {
       console.error('Receiving synchronization failed', event)
     })
+
+    if (context.environment === 'development' && context.pusher.hostname) {
+      const buildChannel = pusher.subscribe(`private-talks-${context.pusher.hostname}-build-status`)
+
+      buildChannel.bind('pusher:subscription_error', event => {
+        console.error('Build subscription failed', event)
+      })
+
+      buildChannel.bind('client-update', function (data) {
+        if (data.status === 'pending') {
+          location.reload()
+        }
+      })
+    }
   }
 
   function handleShortcut(context, ev) {
@@ -243,7 +266,7 @@
         ? currentHeight / context.dimensions.height
         : currentWidth / context.dimensions.width
 
-    document.body.style.setProperty('--nf-slide-transform', `scale(${(correction * 0.9).toFixed(1)})`)
+    document.body.style.setProperty('--nf-slide-transform', `scale(${(correction * 0.95).toFixed(1)})`)
   }
 
   function updateCurrentSlide(context, current, syncing) {

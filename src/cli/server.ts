@@ -25,7 +25,7 @@ function talkHandler(
 ): void {
   const talk = request.params.talk
 
-  if (talk === '404.html' || talk === '__wait.html' || !pageExists(this, talk)) {
+  if (talk === '404.html' || talk === '__status.html' || !pageExists(this, talk)) {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     reply.code(404).sendFile('404.html')
     return
@@ -61,9 +61,9 @@ export async function localServer(
   await server.register(fastifyHttpErrorsEnhanced, { handle404Errors: false })
   await server.register(fastifyFormBody)
 
-  server.addHook('preHandler', async (_: FastifyRequest, reply: FastifyReply): Promise<void> => {
-    if (pageExists(server, '__wait')) {
-      return reply.sendFile('__wait.html')
+  server.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    if (pageExists(server, '__status') && request.url !== '/pusher/auth') {
+      return reply.sendFile('__status.html')
     }
   })
 
