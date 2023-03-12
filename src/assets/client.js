@@ -266,7 +266,7 @@
         ? currentHeight / context.dimensions.height
         : currentWidth / context.dimensions.width
 
-    document.body.style.setProperty('--nf-slide-transform', `scale(${(correction * 0.95).toFixed(1)})`)
+    document.body.style.setProperty('--nf-slide-transform', `scale(${(correction * 0.98).toFixed(1)})`)
   }
 
   function updateCurrentSlide(context, current, syncing) {

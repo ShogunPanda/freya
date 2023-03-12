@@ -4,9 +4,9 @@ import { readdir, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { isMainThread } from 'node:worker_threads'
-import { getHighlighter, Lang, renderToHtml } from 'shiki'
+import { renderCode } from './code.js'
 import { markdownRenderer } from './generator.js'
-import { Config, Pusher, RawTheme, Slide, Talk, Theme } from './models.js'
+import { Config, Pusher, RawTheme, Talk, Theme } from './models.js'
 
 function loadPusherSettings(): Pusher | undefined {
   const { PUSHER_KEY: key, PUSHER_SECRET: secret, PUSHER_CLUSTER: cluster } = process.env
@@ -43,74 +43,6 @@ export function resolveImagePath(theme: string, talk: string, url?: string): str
 
 export function resolveImageUrl(theme: string, talk: string, url?: string): string {
   return (url ?? '').replace('@talk', `/assets/talks/${talk}`).replace('@theme', `/assets/themes/${theme}`)
-}
-
-export function parseRanges(highlight: any): number[][] {
-  return (highlight ?? '')
-    .split(',')
-    .map((raw: string) => {
-      const parsed = raw
-        .trim()
-        .split('-')
-        .map(r => Number.parseInt(r))
-        .filter(r => !Number.isNaN(r))
-
-      switch (parsed.length) {
-        case 0:
-          return null
-        case 1:
-          return [parsed[0], parsed[0]]
-        default:
-          return parsed.slice(0, 2)
-      }
-    })
-    .filter(Boolean)
-}
-
-export async function renderCode(
-  { content, language, numbers, highlight }: Slide['code'],
-  theme: string = 'one-dark-pro'
-): Promise<string> {
-  if (!language) {
-    language = 'javascript'
-  }
-
-  const highlighter = await getHighlighter({ langs: [language as unknown as Lang], themes: [theme] })
-  const tokens = highlighter.codeToThemedTokens(content.trim(), language, 'one-dark-pro')
-  const { fg, bg } = highlighter.getTheme(theme)
-
-  let i = 0
-  const ranges = parseRanges(highlight)
-
-  return renderToHtml(tokens, {
-    elements: {
-      line({ className, children }: Record<string, unknown>): string {
-        i++
-        const nextRange = ranges[0]
-
-        // There is a range to higlight
-        if (nextRange) {
-          // We have to highlight
-          if (nextRange[0] <= i && nextRange[1] >= i) {
-            ;(className as string) += ' highlighted'
-
-            // If it was a single line, make sure we move to the next range
-            if (nextRange[0] === nextRange[1]) {
-              ranges.shift()
-            }
-            // We're past the previous range, look for the next one
-          } else if (nextRange[0] <= i) {
-            ranges.shift()
-          }
-        }
-        const lineNumberSpan = numbers !== false ? `<span class="line-number">${i}</span>` : ''
-        return `<span class="${className}">${lineNumberSpan}${children}</span>`
-      }
-    },
-    fg,
-    bg,
-    themeName: theme
-  })
 }
 
 export async function getTheme(themeName: string): Promise<Theme> {
