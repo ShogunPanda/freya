@@ -136,7 +136,7 @@ export function QRCode({ data, image, imageRatio, label, classes }: QRCodeProps)
         )}
       </div>
       {label && (
-        <a href={data} target="_blank" rel="noopener" className={labelClassName}>
+        <a href={data} target="_blank" rel="noopener noreferrer" className={labelClassName}>
           {label}
         </a>
       )}
