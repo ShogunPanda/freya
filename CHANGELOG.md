@@ -1,3 +1,7 @@
+### 2023-03-13 / 0.16.0
+
+- fix: Linted code.
+
 ### 2023-03-13 / 0.15.0
 
 - feat: Improved QR generation.
