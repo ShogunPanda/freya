@@ -1,3 +1,9 @@
+### 2023-03-13 / 0.15.0
+
+- feat: Improved QR generation.
+- feat: Improved code highlighting.
+- feat: Replaced highlight.js with shiki.
+
 ### 2023-03-10 / 0.14.0
 
 - feat: Error page styling.
