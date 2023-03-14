@@ -1,3 +1,7 @@
+### 2023-03-14 / 0.17.0
+
+- feat: Added talks whitelisting.
+
 ### 2023-03-13 / 0.16.1
 
 
