@@ -15,6 +15,7 @@ const packageInfo = JSON.parse(readFileSync(fileURLToPath(new URL('../../package
 program
   .name('freya')
   .description('Opinionated JSX based slides generator.')
+  .option('-o, --only <string>', 'A comma separated list of talks to build.', '')
   .version(packageInfo.version, '-V, --version', 'Show version number')
   .helpOption('-h, --help', 'Show this help')
   .addHelpCommand(false)
@@ -34,10 +35,11 @@ program
   .action(async function devAction(this: Command): Promise<void> {
     try {
       const { localServer } = await import('./server.js')
-      const { developmentBuilder } = await import('./builders.js')
+      const { developmentBuilder, setWhitelistedTalks } = await import('./builders.js')
 
       // Prepare the target directory
       const { ip, port } = this.optsWithGlobals()
+      setWhitelistedTalks(this.optsWithGlobals().only)
 
       await localServer(ip, port, false)
       await developmentBuilder(logger, ip, port)
@@ -53,8 +55,9 @@ program
   .alias('b')
   .action(async function buildAction(this: Command): Promise<void> {
     try {
-      const { productionBuilder } = await import('./builders.js')
+      const { productionBuilder, setWhitelistedTalks } = await import('./builders.js')
 
+      setWhitelistedTalks(this.optsWithGlobals().only)
       await productionBuilder()
     } catch (error) {
       logger.error(error)
@@ -88,10 +91,11 @@ program
   .action(async function exportJPEGAction(this: Command): Promise<void> {
     try {
       const { localServer } = await import('./server.js')
-      const { productionBuilder } = await import('./builders.js')
+      const { productionBuilder, setWhitelistedTalks } = await import('./builders.js')
       const { exportAllAsJPEGs } = await import('./exporters.js')
 
       // Prepare the target directory
+      setWhitelistedTalks(this.optsWithGlobals().only)
       await productionBuilder('dist/tmp')
       const server = await localServer('127.0.0.1', 0, false, 'dist/tmp')
       await exportAllAsJPEGs((server.server.address() as AddressInfo).port)
@@ -107,13 +111,14 @@ program
   .command('pdf')
   .description('Build all the slides as PDF files')
   .alias('p')
-  .action(async function exportPNGAction(this: Command): Promise<void> {
+  .action(async function exportPDFAction(this: Command): Promise<void> {
     try {
       const { localServer } = await import('./server.js')
-      const { productionBuilder } = await import('./builders.js')
+      const { productionBuilder, setWhitelistedTalks } = await import('./builders.js')
       const { exportAllAsPDFs } = await import('./exporters.js')
 
       // Prepare the target directory
+      setWhitelistedTalks(this.optsWithGlobals().only)
       await productionBuilder('dist/tmp')
       const server = await localServer('127.0.0.1', 0, false, 'dist/tmp')
       await exportAllAsPDFs((server.server.address() as AddressInfo).port)
@@ -129,10 +134,10 @@ program
   .command('deploy')
   .description('Build all the slides as HTML and PDF files ready to be deployed on Netlify')
   .alias('y')
-  .action(async function exportPNGAction(this: Command): Promise<void> {
+  .action(async function deployAction(this: Command): Promise<void> {
     try {
       const { localServer } = await import('./server.js')
-      const { productionBuilder } = await import('./builders.js')
+      const { productionBuilder, setWhitelistedTalks } = await import('./builders.js')
       const { exportAllAsPDFs } = await import('./exporters.js')
 
       // Prepare the target directory
@@ -140,6 +145,8 @@ program
       await mkdir(resolve(rootDir, 'dist/deploy/site/pdfs'), { recursive: true })
 
       // Export in HTML and PDF
+      setWhitelistedTalks(this.optsWithGlobals().only)
+
       await productionBuilder('dist/deploy/site', true)
       const server = await localServer('127.0.0.1', 0, false, 'dist/deploy/site')
       await exportAllAsPDFs((server.server.address() as AddressInfo).port, 'dist/deploy/site/pdfs', true)

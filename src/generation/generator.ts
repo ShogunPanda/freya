@@ -10,7 +10,7 @@ import { minify } from 'terser'
 import { body as indexBody, page as index } from '../templates/index.js'
 import { body, header, page } from '../templates/page.js'
 import { finalizeCss, transformCSSFile } from './css.js'
-import { getTalk, getTalks, getTheme, pusherConfig, rootDir } from './loader.js'
+import { getTalk, getTheme, pusherConfig, rootDir } from './loader.js'
 import { ClientContext, Context, Slide, SlideRenderer, Talk, Theme } from './models.js'
 
 export const markdownRenderer = markdownIt({
@@ -144,12 +144,11 @@ export async function generateSlideset(environment: Context['environment'], them
 
 export async function generateSlidesets(context: Context): Promise<Record<string, string>> {
   const slidesets: Record<string, string> = {}
-  const talks = await getTalks()
 
   const resolvedTalks: Record<string, Talk> = {}
 
   // For each talk, generate all the slideset
-  for (const id of talks) {
+  for (const id of context.talks) {
     const startTime = process.hrtime.bigint()
     const talk = await getTalk(id)
     const theme = await getTheme(talk.config.theme)

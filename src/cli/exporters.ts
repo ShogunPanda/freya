@@ -9,6 +9,7 @@ import { elapsedTime } from '../generation/generator.js'
 import { getTalk, getTalks, rootDir } from '../generation/loader.js'
 import { Talk } from '../generation/models.js'
 import { speakerNotes } from '../templates/speaker-notes.js'
+import { filterWhitelistedTalks } from './builders.js'
 
 interface ExportContext {
   fullOutput: string
@@ -34,7 +35,7 @@ async function prepareExport(type: string, port: number, output: string): Promis
 
   // Generate each talk
   const browser = await chromium.launch()
-  const talks = await getTalks()
+  const talks = filterWhitelistedTalks(await getTalks())
 
   return {
     fullOutput,

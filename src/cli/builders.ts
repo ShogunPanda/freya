@@ -7,7 +7,7 @@ import { hostname } from 'node:os'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
-import { isMainThread, parentPort, Worker } from 'node:worker_threads'
+import { isMainThread, parentPort, Worker, workerData } from 'node:worker_threads'
 import pino from 'pino'
 import Pusher, { Channel, ChannelAuthorizationOptions } from 'pusher-js'
 import { elapsedTime, finalizeJs, generateSlidesets } from '../generation/generator.js'
@@ -15,6 +15,7 @@ import { getTalk, getTalks, pusherConfig, rootDir, swc } from '../generation/loa
 import { Context } from '../generation/models.js'
 
 const glob = promisify(globCb)
+let whitelistedTalks = workerData?.whitelistedTalks ?? []
 
 function compileSourceCode(): Promise<void> {
   let success: () => void
@@ -131,6 +132,21 @@ function notifyBuildStatus(
   channel.trigger('client-update', { status, ...payload })
 }
 
+export function filterWhitelistedTalks(talks: Set<string>): Set<string> {
+  if (whitelistedTalks.length === 0) {
+    return talks
+  }
+  return new Set([...talks].filter(t => whitelistedTalks.includes(t)))
+}
+
+export function setWhitelistedTalks(whitelist: string): void {
+  if (!whitelist) {
+    return
+  }
+
+  whitelistedTalks = whitelist.split(/\s*,\s*/).map(w => w.trim())
+}
+
 export async function developmentBuilder(logger: pino.Logger, ip: string, port: number): Promise<void> {
   let compiling = false
   let success: () => void
@@ -201,7 +217,7 @@ export async function developmentBuilder(logger: pino.Logger, ip: string, port: 
         return
       }
 
-      const worker = new Worker(fileURLToPath(import.meta.url))
+      const worker = new Worker(fileURLToPath(import.meta.url), { workerData: { whitelistedTalks } })
 
       worker.on('message', message => {
         if (message === 'started') {
@@ -241,6 +257,10 @@ export async function developmentBuilder(logger: pino.Logger, ip: string, port: 
 
   process.on('SIGINT', () => {
     watcher.close().then(success).catch(fail)
+
+    if (pusherChannel) {
+      pusherChannel.pusher.disconnect()
+    }
   })
 
   watcher.on('add', scheduleRun).on('change', scheduleRun).on('unlink', scheduleRun).on('error', fail!)
@@ -279,7 +299,7 @@ export async function productionBuilder(output: string = 'dist/html', netlify: b
   const context: Context = {
     environment: isMainThread ? 'production' : 'development',
     log: logger,
-    talks: await getTalks(),
+    talks: filterWhitelistedTalks(await getTalks()),
     slidesets: {}
   }
 
