@@ -1,3 +1,7 @@
+### 2023-05-02 / 0.18.0
+
+- feat: Performance improvements.
+
 ### 2023-03-14 / 0.17.0
 
 - feat: Added talks whitelisting.
