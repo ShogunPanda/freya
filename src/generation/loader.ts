@@ -4,8 +4,6 @@ import { readdir, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { isMainThread } from 'node:worker_threads'
-import { renderCode } from './code.js'
-import { markdownRenderer } from './generator.js'
 import { Config, Pusher, RawTheme, Talk, Theme } from './models.js'
 
 function loadPusherSettings(): Pusher | undefined {
@@ -107,18 +105,10 @@ export async function getTalk(id: string): Promise<Talk> {
     }
   }
 
-  // Gather all the images
+  // Gather all images
   const images: string[] = []
 
   for (const slide of talk.slides) {
-    // Render notes
-    slide.notes = markdownRenderer.render(slide.notes ?? '')
-
-    // Render code
-    if (slide.code) {
-      slide.code.rendered = await renderCode(slide.code)
-    }
-
     // Track the included images
     for (const property of ['image']) {
       const image = slide[property]

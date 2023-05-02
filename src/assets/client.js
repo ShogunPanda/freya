@@ -160,7 +160,10 @@
 
       buildChannel.bind('client-update', function (data) {
         if (data.status === 'pending') {
-          location.reload()
+          // Wait for some time before reloading. For most talks this will end up reloading when compilation has ended.
+          setTimeout(() => {
+            location.reload()
+          }, 750)
         }
       })
     }

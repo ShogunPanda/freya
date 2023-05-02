@@ -185,11 +185,9 @@ for (const id of talks) {
   const talk = await getTalk(id)
 
   for (const slide of talk.slides) {
-    for (const [name, value] of Object.entries(slide)) {
-      if ((name === 'class' || name.toLowerCase().endsWith('classes')) && typeof value === 'string') {
-        for (const klass of value.split(' ')) {
-          safelist.add(klass)
-        }
+    for (const value of Object.values(slide.classes ?? {})) {
+      for (const klass of value.split(' ')) {
+        safelist.add(klass)
       }
     }
   }

@@ -1,3 +1,4 @@
+import { minify } from '@swc/core'
 import { createGenerator } from '@unocss/core'
 import markdownIt from 'markdown-it'
 import { readFile } from 'node:fs/promises'
@@ -6,9 +7,9 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { minify } from 'terser'
-import { body as indexBody, page as index } from '../templates/index.js'
+import { page as index, body as indexBody } from '../templates/index.js'
 import { body, header, page } from '../templates/page.js'
+import { renderCode } from './code.js'
 import { finalizeCss, transformCSSFile } from './css.js'
 import { getTalk, getTheme, pusherConfig, rootDir } from './loader.js'
 import { ClientContext, Context, Slide, SlideRenderer, Talk, Theme } from './models.js'
@@ -20,8 +21,8 @@ export const markdownRenderer = markdownIt({
 })
 
 export async function finalizeJs(code: string): Promise<string> {
-  const { code: minified } = await minify(code)
-  return minified!
+  const { code: minified } = await minify(code, { compress: true, mangle: false })
+  return minified
 }
 
 export function elapsedTime(startTime: bigint): string {
@@ -40,6 +41,10 @@ export function parseContent(raw?: string): string {
     .replace(/^<p>/m, '')
     .replace(/<\/p>$/m, '')
     .trim()
+}
+
+export function renderNotes(slide: Slide): string {
+  return slide.notes ? markdownRenderer.render(slide.notes) : ''
 }
 
 export async function generateSlideset(environment: Context['environment'], theme: Theme, talk: Talk): Promise<string> {
@@ -81,6 +86,10 @@ export async function generateSlideset(environment: Context['environment'], them
 
     if (!slide.classes) {
       slide.classes = {}
+    }
+
+    if (slide.code && !slide.code.rendered) {
+      slide.code.rendered = await renderCode(slide.code)
     }
 
     const { default: layout }: { default: SlideRenderer<Slide> } = await import(
@@ -155,7 +164,7 @@ export async function generateSlidesets(context: Context): Promise<Record<string
 
     resolvedTalks[id] = talk
     slidesets[id] = await generateSlideset(context.environment, theme, talk)
-    context.log.info(`Generated slideset ${id} in ${elapsedTime(startTime)} ms`)
+    context.log.info(`Generated slideset ${id} in ${elapsedTime(startTime)} ms.`)
   }
 
   // Generate the index file

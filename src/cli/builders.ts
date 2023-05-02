@@ -7,7 +7,7 @@ import { hostname } from 'node:os'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
-import { isMainThread, parentPort, Worker, workerData } from 'node:worker_threads'
+import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads'
 import pino from 'pino'
 import Pusher, { Channel, ChannelAuthorizationOptions } from 'pusher-js'
 import { elapsedTime, finalizeJs, generateSlidesets } from '../generation/generator.js'
@@ -278,6 +278,7 @@ export async function productionBuilder(output: string = 'dist/html', netlify: b
 
   const logger = pino({ transport: { target: 'pino-pretty' } })
   logger.info(`Building HTML version into directory ${output} ...`)
+  const startTime = process.hrtime.bigint()
 
   // Prepare output directory
   await rm(fullOutput, { recursive: true, force: true })
@@ -326,6 +327,8 @@ export async function productionBuilder(output: string = 'dist/html', netlify: b
   }
 
   // Copy themes and talks assets
+  let fileOperations: Promise<void>[] = []
+  const themes = new Set()
   for (const talk of context.talks) {
     const {
       config: { theme }
@@ -335,29 +338,40 @@ export async function productionBuilder(output: string = 'dist/html', netlify: b
     const themeAssets = resolve(rootDir, 'src/themes', theme, 'assets')
 
     if (existsSync(talkAssets)) {
-      await cp(talkAssets, resolve(fullOutput, 'assets/talks', talk), {
-        recursive: true
-      })
+      fileOperations.push(
+        cp(talkAssets, resolve(fullOutput, 'assets/talks', talk), {
+          recursive: true
+        })
+      )
     }
 
-    if (existsSync(themeAssets)) {
-      await cp(themeAssets, resolve(fullOutput, 'assets/themes', theme), {
-        recursive: true
-      })
+    if (!themes.has(theme) && existsSync(themeAssets)) {
+      fileOperations.push(
+        cp(themeAssets, resolve(fullOutput, 'assets/themes', theme), {
+          recursive: true
+        })
+      )
     }
+
+    themes.add(theme)
   }
+
+  await Promise.all(fileOperations)
+  fileOperations = []
 
   // Remove all file and directory starting with a double underscore
   for (const p of await glob(resolve(fullOutput, 'assets/**/__*'))) {
-    await rm(p, { recursive: true })
+    fileOperations.push(rm(p, { recursive: true }))
   }
 
   // Remove waiting file
   if (statusFilePath) {
-    await rm(statusFilePath)
+    fileOperations.push(rm(statusFilePath))
   }
 
-  logger.info('Build completed.')
+  await Promise.all(fileOperations)
+
+  logger.info(`Build completed in ${elapsedTime(startTime)} ms.`)
 }
 
 if (!isMainThread) {

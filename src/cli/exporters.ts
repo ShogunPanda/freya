@@ -54,7 +54,7 @@ async function exportNotes(logger: BaseLogger, talk: Talk, directory: string, fi
   const startTime = process.hrtime.bigint()
 
   await writeFile(resolve(directory, filename), renderToStaticMarkup(speakerNotes(talk)), 'utf8')
-  logger.info(`Generated file ${filename} in ${elapsedTime(startTime)} ms ...`)
+  logger.info(`Generated file ${filename} in ${elapsedTime(startTime)} ms.`)
 }
 
 export async function exportAsJPEGs(
@@ -94,7 +94,7 @@ export async function exportAsJPEGs(
       quality: 100
     })
 
-    logger.info(`Generated file ${filename} in ${elapsedTime(startTime)} ms ...`)
+    logger.info(`Generated file ${filename} in ${elapsedTime(startTime)} ms.`)
 
     // Go the next slide
     await page.press('body', 'Enter')
@@ -156,7 +156,7 @@ export async function exportAsPDF(
 
   await writeFile(resolve(fullOutput, `${id}.pdf`), canvas.toBuffer())
 
-  logger.info(`Generated file ${id}.pdf in ${elapsedTime(startTime)} ms ...`)
+  logger.info(`Generated file ${id}.pdf in ${elapsedTime(startTime)} ms.`)
 
   if (!skipSpeakerNotes) {
     await exportNotes(logger, talk, fullOutput, `${id}-speaker-notes.html`)

@@ -1,4 +1,5 @@
 import { Fragment } from 'react'
+import { renderNotes } from '../generation/generator.js'
 import { Talk } from '../generation/models.js'
 
 const style = `
@@ -72,7 +73,7 @@ export function speakerNotes(talk: Talk): JSX.Element {
                 <span dangerouslySetInnerHTML={{ __html: s.title }} />
               </h2>
 
-              <div dangerouslySetInnerHTML={{ __html: s.notes }} />
+              <div dangerouslySetInnerHTML={{ __html: renderNotes(s) }} />
             </Fragment>
           )
         })}
