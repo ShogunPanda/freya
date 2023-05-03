@@ -1,12 +1,11 @@
 import { watch } from 'chokidar'
-import globCb from 'glob'
+import { glob } from 'glob'
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { hostname } from 'node:os'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { promisify } from 'node:util'
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads'
 import pino from 'pino'
 import Pusher, { Channel, ChannelAuthorizationOptions } from 'pusher-js'
@@ -14,7 +13,6 @@ import { elapsedTime, finalizeJs, generateSlidesets } from '../generation/genera
 import { getTalk, getTalks, pusherConfig, rootDir, swc } from '../generation/loader.js'
 import { Context } from '../generation/models.js'
 
-const glob = promisify(globCb)
 let whitelistedTalks = workerData?.whitelistedTalks ?? []
 
 function compileSourceCode(): Promise<void> {

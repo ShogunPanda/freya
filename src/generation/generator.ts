@@ -1,12 +1,11 @@
 import { minify } from '@swc/core'
 import { createGenerator } from '@unocss/core'
-import globCb from 'glob'
+import { glob } from 'glob'
 import markdownIt from 'markdown-it'
 import { readFile } from 'node:fs/promises'
 import { hostname } from 'node:os'
 import { relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { promisify } from 'node:util'
 import { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { page as index, body as indexBody } from '../templates/index.js'
@@ -16,8 +15,6 @@ import { renderCode } from './code.js'
 import { finalizeCss, transformCSSFile } from './css.js'
 import { getTalk, getTheme, pusherConfig, rootDir } from './loader.js'
 import { ClientContext, Context, Slide, SlideRenderer, Talk, Theme } from './models.js'
-
-const glob = promisify(globCb)
 
 async function resolvePusher(): Promise<[string, string]> {
   let pusherFile = ''
