@@ -29,7 +29,10 @@ export const pusherConfig = loadPusherSettings()
 let swc: string
 
 export async function resolveSwc(): Promise<string> {
-  const location = await glob(resolve(rootDir, 'node_modules/**/@swc/cli/bin/swc.js'), { follow: true })
+  const location = await glob(resolve(rootDir, 'node_modules/**/@swc/cli/lib/swc/index.js'), {
+    follow: true,
+    dot: true
+  })
 
   if (!location.length) {
     throw new Error('Cannot find swc.')
