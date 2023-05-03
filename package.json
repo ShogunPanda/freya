@@ -33,7 +33,7 @@
     "build": "swc -d dist src",
     "postbuild": "tsc -p . --emitDeclarationOnly",
     "format": "prettier -w src",
-    "lint": "eslint --resolve-plugins-relative-to . src",
+    "lint": "eslint src",
     "ci": "npm run lint",
     "prepublishOnly": "npm run ci",
     "postpublish": "git push origin && git push origin -f --tags"

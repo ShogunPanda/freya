@@ -1,8 +1,8 @@
+import { glob } from 'glob'
 import { load } from 'js-yaml'
 import { existsSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { isMainThread } from 'node:worker_threads'
 import { BaseLogger } from 'pino'
 import { cacheKey, loadFromCache, saveToCache } from './cache.js'
@@ -26,11 +26,17 @@ function loadPusherSettings(): Pusher | undefined {
 
 export const rootDir = process.cwd()
 export const pusherConfig = loadPusherSettings()
+let swc: string
 
-export let swc = resolve(rootDir, 'node_modules/.bin/swc')
+export async function resolveSwc(): Promise<string> {
+  const location = await glob(resolve(rootDir, 'node_modules/**/.bin/swc'), { follow: true })
 
-if (!existsSync(swc)) {
-  swc = fileURLToPath(new URL('../../node_modules/.bin/swc', import.meta.url))
+  if (!location.length) {
+    throw new Error('Cannot find swc.')
+  }
+
+  swc = location[0]
+  return swc
 }
 
 export function resolveImagePath(theme: string, talk: string, url?: string): string {

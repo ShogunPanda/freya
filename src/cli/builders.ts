@@ -9,13 +9,13 @@ import { fileURLToPath } from 'node:url'
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads'
 import pino from 'pino'
 import Pusher, { Channel, ChannelAuthorizationOptions } from 'pusher-js'
-import { elapsedTime, finalizeJs, generateSlidesets } from '../generation/generator.js'
-import { getTalk, getTalks, pusherConfig, rootDir, swc } from '../generation/loader.js'
+import { elapsedTime, finalizeJs, generateSlidesets, resolvePusher } from '../generation/generator.js'
+import { getTalk, getTalks, pusherConfig, resolveSwc, rootDir } from '../generation/loader.js'
 import { Context } from '../generation/models.js'
 
 let whitelistedTalks = workerData?.whitelistedTalks ?? []
 
-function compileSourceCode(): Promise<void> {
+async function compileSourceCode(): Promise<void> {
   let success: () => void
   let fail: (reason?: Error) => void
 
@@ -24,6 +24,7 @@ function compileSourceCode(): Promise<void> {
     fail = reject
   })
 
+  const swc = await resolveSwc()
   const compilation = spawn(swc, ['-d', 'tmp', 'src'])
   let error = Buffer.alloc(0)
 
@@ -71,21 +72,8 @@ async function generateHotReloadPage(): Promise<string> {
   if (pusherConfig) {
     const client = await readFile(fileURLToPath(new URL('../assets/hot-reload.js', import.meta.url)), 'utf8')
 
-    let pusher: string = ''
     if (pusherConfig) {
-      for (const rootModuleDirectory of ['node_modules', 'node_modules/freya-slides/node_modules']) {
-        try {
-          pusher = await readFile(resolve(rootDir, rootModuleDirectory, 'pusher-js/dist/web/pusher.js'), 'utf8')
-        } catch (error) {
-          if (error.code !== 'ENOENT') {
-            throw error
-          }
-        }
-      }
-
-      if (!pusher) {
-        throw new Error('Cannot find pusher-js module.')
-      }
+      const [, pusher] = await resolvePusher()
 
       page = page.replace(
         "console.warn('No pusher available. Hot reload disabled.')",
@@ -150,6 +138,7 @@ export async function developmentBuilder(logger: pino.Logger, ip: string, port: 
   let success: () => void
   let fail: (reason?: Error) => void
 
+  const swc = await resolveSwc()
   const promise = new Promise<void>((resolve, reject) => {
     success = resolve
     fail = reject

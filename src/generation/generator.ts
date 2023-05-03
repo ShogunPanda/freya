@@ -16,25 +16,19 @@ import { finalizeCss, transformCSSFile } from './css.js'
 import { getTalk, getTheme, pusherConfig, rootDir } from './loader.js'
 import { ClientContext, Context, Slide, SlideRenderer, Talk, Theme } from './models.js'
 
-async function resolvePusher(): Promise<[string, string]> {
+export async function resolvePusher(): Promise<[string, string]> {
   let pusherFile = ''
   let pusher = ''
 
   if (pusherConfig) {
-    for (const rootModuleDirectory of ['node_modules', 'node_modules/freya-slides/node_modules']) {
-      try {
-        pusherFile = resolve(rootDir, rootModuleDirectory, 'pusher-js/dist/web/pusher.js')
-        pusher = await readFile(pusherFile, 'utf8')
-      } catch (error) {
-        if (error.code !== 'ENOENT') {
-          throw error
-        }
-      }
-    }
+    const location = await glob(resolve(rootDir, 'node_modules/**/pusher-js/dist/web/pusher.js'), { follow: true })
 
-    if (!pusher) {
+    if (!location.length) {
       throw new Error('Cannot find pusher-js module.')
     }
+
+    pusherFile = location[0]
+    pusher = await readFile(pusherFile, 'utf8')
   }
 
   return [pusherFile, pusher]
