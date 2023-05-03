@@ -1,3 +1,7 @@
+### 2023-05-03 / 0.20.2
+
+- fix: Fix swc resolving.
+
 ### 2023-05-03 / 0.20.1
 
 - fix: Use glob based resolving.
