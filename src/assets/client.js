@@ -163,7 +163,7 @@
           // Wait for some time before reloading. For most talks this will end up reloading when compilation has ended.
           setTimeout(() => {
             location.reload()
-          }, 750)
+          }, 500)
         }
       })
     }

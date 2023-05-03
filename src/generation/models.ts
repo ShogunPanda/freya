@@ -16,6 +16,7 @@ export interface Theme extends RawTheme {
   urls: Record<string, string>
   fontsStyles: string
   fontsUrls: string[]
+  cacheKey: string
 }
 
 export interface BaseSlide {
@@ -67,6 +68,7 @@ export interface Talk extends RawTalk {
   slidesPadding: number
   aspectRatio: number
   images: string[]
+  cacheKey: string
 }
 
 export interface Pusher {

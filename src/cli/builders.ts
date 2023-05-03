@@ -276,7 +276,7 @@ export async function productionBuilder(output: string = 'dist/html', netlify: b
   await rm(fullOutput, { force: true, recursive: true })
   await mkdir(fullOutput, { recursive: true })
 
-  const logger = pino({ transport: { target: 'pino-pretty' } })
+  const logger = pino({ transport: { target: 'pino-pretty' }, level: process.env.LOG_LEVEL ?? 'info' })
   logger.info(`Building HTML version into directory ${output} ...`)
   const startTime = process.hrtime.bigint()
 
@@ -332,7 +332,7 @@ export async function productionBuilder(output: string = 'dist/html', netlify: b
   for (const talk of context.talks) {
     const {
       config: { theme }
-    } = await getTalk(talk)
+    } = await getTalk(talk, context.log)
 
     const talkAssets = resolve(rootDir, 'src/talks', talk, 'assets')
     const themeAssets = resolve(rootDir, 'src/themes', theme, 'assets')

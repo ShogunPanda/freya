@@ -23,7 +23,7 @@ async function prepareExport(type: string, port: number, output: string): Promis
   const fullOutput = resolve(rootDir, output)
   const baseUrl = new URL(`http://127.0.0.1:${port}`)
 
-  const logger = pino({ transport: { target: 'pino-pretty' } })
+  const logger = pino({ transport: { target: 'pino-pretty' }, level: process.env.LOG_LEVEL ?? 'info' })
   logger.info(`Exporting ${type} files into directory ${output} ...`)
 
   // Prepare the output directory
@@ -66,7 +66,7 @@ export async function exportAsJPEGs(
   skipSpeakerNotes: boolean = false
 ): Promise<void> {
   const page = await browser.newPage()
-  const talk = await getTalk(id)
+  const talk = await getTalk(id, logger)
 
   // Resize the browser
   await page.setViewportSize(talk.config.dimensions)
@@ -114,7 +114,7 @@ export async function exportAsPDF(
   skipSpeakerNotes: boolean = false
 ): Promise<void> {
   const page = await browser.newPage()
-  const talk = await getTalk(id)
+  const talk = await getTalk(id, logger)
 
   // Resize the browser
   await page.setViewportSize(talk.config.dimensions)

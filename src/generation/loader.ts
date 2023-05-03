@@ -4,6 +4,8 @@ import { readdir, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { isMainThread } from 'node:worker_threads'
+import { BaseLogger } from 'pino'
+import { cacheKey, loadFromCache, saveToCache } from './cache.js'
 import { Config, Pusher, RawTheme, Talk, Theme } from './models.js'
 
 function loadPusherSettings(): Pusher | undefined {
@@ -43,11 +45,21 @@ export function resolveImageUrl(theme: string, talk: string, url?: string): stri
   return (url ?? '').replace('@talk', `/assets/talks/${talk}`).replace('@theme', `/assets/themes/${theme}`)
 }
 
-export async function getTheme(themeName: string): Promise<Theme> {
+export async function getTheme(themeName: string, logger?: BaseLogger): Promise<Theme> {
   let fontsStyles = ''
   const fontsUrls: string[] = []
-  const theme = load(await readFile(resolve(rootDir, 'src/themes', themeName, 'theme.yml'), 'utf8')) as RawTheme
-  const fonts = theme.fonts
+
+  const themeFile = await readFile(resolve(rootDir, 'src/themes', themeName, 'theme.yml'), 'utf8')
+
+  const cached = await loadFromCache<Theme>(themeFile, logger)
+
+  if (cached) {
+    logger?.debug(`Loaded theme "${themeName}" from cache.`)
+    return cached
+  }
+
+  const rawTheme = load(themeFile) as RawTheme
+  const fonts = rawTheme.fonts
 
   // Generate all the fonts related CSS
   if (fonts.families && fonts.ranges) {
@@ -74,19 +86,33 @@ export async function getTheme(themeName: string): Promise<Theme> {
     }
   }
 
-  return {
+  const theme = {
     id: themeName,
     urls: {},
-    ...theme,
-    images: (theme.images ?? []).map(i => resolveImageUrl(themeName, '', i)),
+    ...rawTheme,
+    images: (rawTheme.images ?? []).map(i => resolveImageUrl(themeName, '', i)),
     fontsStyles,
-    fontsUrls
+    fontsUrls,
+    cacheKey: cacheKey(themeFile)
   }
+
+  await saveToCache(themeFile, theme)
+
+  return theme
 }
 
-export async function getTalk(id: string): Promise<Talk> {
+export async function getTalk(id: string, logger?: BaseLogger): Promise<Talk> {
+  const talkFile = resolve(rootDir, 'src/talks', id, 'talk.yml')
+
+  const cached = await loadFromCache<Talk>(talkFile, logger)
+
+  if (cached) {
+    logger?.debug(`Loaded talk "${id}" from cache.`)
+    return cached
+  }
+
   // Get the talk definition
-  const talk = load(await readFile(resolve(rootDir, 'src/talks', id, 'talk.yml'), 'utf8')) as Talk
+  const talk = load(await readFile(talkFile, 'utf8')) as Talk
 
   // If there is a common.yml file in the talks folder, load it
   const commonPath = resolve(rootDir, 'src/talks', 'common.yml')
@@ -126,7 +152,9 @@ export async function getTalk(id: string): Promise<Talk> {
   talk.slidesPadding = Math.ceil(Math.log10(talk.slides.length))
   talk.aspectRatio = talk.config.dimensions.width / talk.config.dimensions.height
   talk.images = images
+  talk.cacheKey = cacheKey(talkFile)
 
+  await saveToCache(talkFile, talk)
   return talk
 }
 

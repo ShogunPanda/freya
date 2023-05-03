@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import pino from 'pino'
 import { rootDir } from '../generation/loader.js'
 
-const logger = pino({ transport: { target: 'pino-pretty' } })
+const logger = pino({ transport: { target: 'pino-pretty' }, level: process.env.LOG_LEVEL ?? 'info' })
 const packageInfo = JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'))
 
 program
@@ -77,7 +77,7 @@ program
       const { localServer } = await import('./server.js')
 
       const { ip, port } = this.optsWithGlobals()
-      await localServer(ip, port, pino())
+      await localServer(ip, port, pino({ level: process.env.LOG_LEVEL ?? 'info' }))
     } catch (error) {
       logger.error(error)
       process.exit(1)

@@ -1,18 +1,68 @@
 import { minify } from '@swc/core'
 import { createGenerator } from '@unocss/core'
+import globCb from 'glob'
 import markdownIt from 'markdown-it'
 import { readFile } from 'node:fs/promises'
 import { hostname } from 'node:os'
-import { resolve } from 'node:path'
+import { relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { promisify } from 'node:util'
 import { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { page as index, body as indexBody } from '../templates/index.js'
 import { body, header, page } from '../templates/page.js'
+import { cacheKey, loadFromCache, saveToCache } from './cache.js'
 import { renderCode } from './code.js'
 import { finalizeCss, transformCSSFile } from './css.js'
 import { getTalk, getTheme, pusherConfig, rootDir } from './loader.js'
 import { ClientContext, Context, Slide, SlideRenderer, Talk, Theme } from './models.js'
+
+const glob = promisify(globCb)
+
+async function resolvePusher(): Promise<[string, string]> {
+  let pusherFile = ''
+  let pusher = ''
+
+  if (pusherConfig) {
+    for (const rootModuleDirectory of ['node_modules', 'node_modules/freya-slides/node_modules']) {
+      try {
+        pusherFile = resolve(rootDir, rootModuleDirectory, 'pusher-js/dist/web/pusher.js')
+        pusher = await readFile(pusherFile, 'utf8')
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          throw error
+        }
+      }
+    }
+
+    if (!pusher) {
+      throw new Error('Cannot find pusher-js module.')
+    }
+  }
+
+  return [pusherFile, pusher]
+}
+
+async function getCacheKeyContent(talk: Talk, theme: Theme, files: Record<string, string>): Promise<string> {
+  const key = [`talk:${talk.cacheKey}`, `theme:${theme.cacheKey}`]
+
+  for (const file of await glob(resolve(rootDir, 'src/talks', talk.id, '**/*.*'))) {
+    files[relative(rootDir, file)] = file
+  }
+  for (const file of await glob(resolve(rootDir, 'src/themes', theme.id, '**/*.*'))) {
+    files[relative(rootDir, file)] = file
+  }
+
+  key.push(
+    ...(await Promise.all(
+      Object.entries(files).map(async ([key, file]) => {
+        return `${key}:${cacheKey(await readFile(file))}`
+      })
+    ))
+  )
+
+  return key.join('\n')
+}
 
 export const markdownRenderer = markdownIt({
   html: true,
@@ -47,8 +97,24 @@ export function renderNotes(slide: Slide): string {
   return slide.notes ? markdownRenderer.render(slide.notes) : ''
 }
 
-export async function generateSlideset(environment: Context['environment'], theme: Theme, talk: Talk): Promise<string> {
-  const { default: unoConfig } = await import(resolve(rootDir, 'tmp/themes', talk.config.theme, 'unocss.config.js'))
+export async function generateSlideset(context: Context, theme: Theme, talk: Talk): Promise<string> {
+  // Gather all files needed for the cache key
+  const unoConfigFile = resolve(rootDir, 'tmp/themes', talk.config.theme, 'unocss.config.js')
+  const clientJsFile = fileURLToPath(new URL('../assets/client.js', import.meta.url))
+  const [pusherFile, pusher] = await resolvePusher()
+  const themeStyle = resolve(rootDir, 'src/themes', theme.id, theme.style)
+
+  const key = await getCacheKeyContent(talk, theme, { uno: unoConfigFile, client: clientJsFile, pusher: pusherFile })
+
+  const cached = await loadFromCache<string>(key, context.log)
+
+  if (cached) {
+    context.log.debug(`Loaded slideset "${talk.id}" from cache.`)
+    return cached
+  }
+
+  const environment = context.environment
+  const { default: unoConfig } = await import(unoConfigFile)
 
   // Prepare the client
   const title = talk.document.title
@@ -89,7 +155,14 @@ export async function generateSlideset(environment: Context['environment'], them
     }
 
     if (slide.code && !slide.code.rendered) {
-      slide.code.rendered = await renderCode(slide.code)
+      const cachedCode = await loadFromCache<string>(`code:${slide.code.content}`, context.log)
+
+      if (cachedCode) {
+        slide.code.rendered = cachedCode
+      } else {
+        slide.code.rendered = await renderCode(slide.code)
+        await saveToCache(`code:${slide.code.content}`, slide.code.rendered)
+      }
     }
 
     const { default: layout }: { default: SlideRenderer<Slide> } = await import(
@@ -109,27 +182,11 @@ export async function generateSlideset(environment: Context['environment'], them
   // Generate theme style
   let themeCss = ''
   if (theme.style) {
-    themeCss += await transformCSSFile(resolve(rootDir, 'src/themes', theme.id, theme.style), unoConfig)
+    themeCss += await transformCSSFile(themeStyle, unoConfig)
   }
 
   // Generate the JS
-  const client = await readFile(fileURLToPath(new URL('../assets/client.js', import.meta.url)), 'utf8')
-  let pusher: string = ''
-  if (pusherConfig) {
-    for (const rootModuleDirectory of ['node_modules', 'node_modules/freya-slides/node_modules']) {
-      try {
-        pusher = await readFile(resolve(rootDir, rootModuleDirectory, 'pusher-js/dist/web/pusher.js'), 'utf8')
-      } catch (error) {
-        if (error.code !== 'ENOENT') {
-          throw error
-        }
-      }
-    }
-
-    if (!pusher) {
-      throw new Error('Cannot find pusher-js module.')
-    }
-  }
+  const client = await readFile(clientJsFile, 'utf8')
 
   // Render the page
   const html = renderToStaticMarkup(page(title))
@@ -148,6 +205,7 @@ export async function generateSlideset(environment: Context['environment'], them
     )
     .replace('@BODY@', contents)
 
+  await saveToCache(key, html)
   return html
 }
 
@@ -159,11 +217,11 @@ export async function generateSlidesets(context: Context): Promise<Record<string
   // For each talk, generate all the slideset
   for (const id of context.talks) {
     const startTime = process.hrtime.bigint()
-    const talk = await getTalk(id)
-    const theme = await getTheme(talk.config.theme)
+    const talk = await getTalk(id, context.log)
+    const theme = await getTheme(talk.config.theme, context.log)
 
     resolvedTalks[id] = talk
-    slidesets[id] = await generateSlideset(context.environment, theme, talk)
+    slidesets[id] = await generateSlideset(context, theme, talk)
     context.log.info(`Generated slideset ${id} in ${elapsedTime(startTime)} ms.`)
   }
 

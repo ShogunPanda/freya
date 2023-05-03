@@ -31,7 +31,7 @@ function compile(template: string, variables: Record<string, string>): string {
 
 export async function initializeSlideset(name: string, directory: string): Promise<void> {
   const packageJson = JSON.parse(await readFile(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'))
-  const logger = pino({ transport: { target: 'pino-pretty' } })
+  const logger = pino({ transport: { target: 'pino-pretty' }, level: process.env.LOG_LEVEL ?? 'info' })
   const fullOutput = resolve(rootDir, directory)
 
   // Check if the output directory is not empty
