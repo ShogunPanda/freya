@@ -1,3 +1,7 @@
+### 2023-05-03 / 0.20.1
+
+- fix: Use glob based resolving.
+
 ### 2023-05-03 / 0.20.0
 
 - chore: Updated dependencies.
