@@ -21,7 +21,10 @@ export async function resolvePusher(): Promise<[string, string]> {
   let pusher = ''
 
   if (pusherConfig) {
-    const location = await glob(resolve(rootDir, 'node_modules/**/pusher-js/dist/web/pusher.js'), { follow: true })
+    const location = await glob(resolve(rootDir, 'node_modules/**/pusher-js/dist/web/pusher.js'), {
+      follow: true,
+      dot: true
+    })
 
     if (!location.length) {
       throw new Error('Cannot find pusher-js module.')
