@@ -1,3 +1,7 @@
+### 2023-05-03 / 0.19.0
+
+- feat: Added caching.
+
 ### 2023-05-02 / 0.18.0
 
 - feat: Performance improvements.
