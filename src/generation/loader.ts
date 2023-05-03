@@ -102,7 +102,7 @@ export async function getTheme(themeName: string, logger?: BaseLogger): Promise<
 }
 
 export async function getTalk(id: string, logger?: BaseLogger): Promise<Talk> {
-  const talkFile = resolve(rootDir, 'src/talks', id, 'talk.yml')
+  const talkFile = await readFile(resolve(rootDir, 'src/talks', id, 'talk.yml'), 'utf8')
 
   const cached = await loadFromCache<Talk>(talkFile, logger)
 
@@ -112,7 +112,7 @@ export async function getTalk(id: string, logger?: BaseLogger): Promise<Talk> {
   }
 
   // Get the talk definition
-  const talk = load(await readFile(talkFile, 'utf8')) as Talk
+  const talk = load(talkFile) as Talk
 
   // If there is a common.yml file in the talks folder, load it
   const commonPath = resolve(rootDir, 'src/talks', 'common.yml')
