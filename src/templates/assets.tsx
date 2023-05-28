@@ -1,7 +1,9 @@
 import { Talk } from '../generation/models.js'
 
 interface BodyProps {
-  talks: Record<string, Talk>
+  talk: Talk
+  talkAssets: [string, string][]
+  themeAssets: [string, string][]
 }
 
 const style = `
@@ -28,7 +30,6 @@ const style = `
 body {
   margin: 0;
   display: flex;
-  align-items: center;
   justify-content: center;
   width: 100%;
   min-height: 100%;
@@ -37,10 +38,9 @@ body {
 main {
   display: flex;
   flex-direction: column;
-  width: 80%;
-  max-width: 80vw;
-  row-gap: 5ch;
-  margin: 40pt;
+  width: 95%;
+  max-width: 95vw;
+  margin: 20pt;
 }
 
 nav {
@@ -49,7 +49,7 @@ nav {
   row-gap: 6ch;
 }
 
-h1, h2, h4 {
+h1, h2, h3, h4 {
   font-family: Poppins, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
   margin: 0;
@@ -58,16 +58,19 @@ h1, h2, h4 {
 
 h1 {
   font-size: 35pt;
+  color: #2165e3;
 }
 
 h2 {
   font-size: 25pt;
+  color: #ecb22e;
 }
 
-h4 {
-  color: #ecb22e;
-  font-size: 18pt;
+h3 {
+  font-size: 25pt;
+  margin-top: 3ch;
 }
+
 
 a,
 a:hover,
@@ -81,19 +84,83 @@ a:focus {
 a:hover, a:hover h4 {
   color: #fb7a9c;
 }
+
+nav {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(200px, 1fr));
+  column-gap: 1ch;
+  row-gap: 1ch;
+}
+
+section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  border: 2px solid #e0e0e0;
+  border-radius: 5px;
+  padding: 2ch;
+  box-shadow: 5px 5px 10px -5px #C0C0C0;
+  row-gap: 2ch;
+}
+
+section:hover {
+  background-color: #F0F0F0;
+}
+
+section div {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+section img {
+  min-width: 200px;
+  min-height: 200px;
+  max-width: 100%;
+  max-height: 200px;
+}
+
+section h4 {
+  white-space: nowrap;
+}
 `
 
-export function body({ talks }: BodyProps): JSX.Element {
+export function body({ talk, talkAssets, themeAssets }: BodyProps): JSX.Element {
   return (
     <main>
-      <h1>Slidesets</h1>
+      <h2>Assets</h2>
+      <h1>{talk.document.title}</h1>
+
+      <h3>Talk Assets</h3>
+
       <nav>
-        {Object.entries(talks).map(([id, talk]) => (
-          <a href={`/${id}`} key={`talk:${id}`}>
-            <h2>{talk.document.title}</h2>
-            <h4>{talk.document.author.name}</h4>
-          </a>
-        ))}
+        {talkAssets.map(([path, url]) => {
+          return (
+            <section key={path}>
+              <div>
+                <img src={url} />
+              </div>
+              <h4>{path}</h4>
+            </section>
+          )
+        })}
+      </nav>
+
+      <h3>Theme Assets</h3>
+
+      <nav>
+        {themeAssets.map(([path, url]) => {
+          return (
+            <section key={path}>
+              <div>
+                <img src={url} />
+              </div>
+              <h4>{path}</h4>
+            </section>
+          )
+        })}
       </nav>
     </main>
   )

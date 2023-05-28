@@ -41,7 +41,7 @@ program
       const { ip, port } = this.optsWithGlobals()
       setWhitelistedTalks(this.optsWithGlobals().only)
 
-      await localServer(ip, port, false)
+      await localServer({ ip, port, listAssets: true })
       await developmentBuilder(logger, ip, port)
     } catch (error) {
       logger.error(error)
@@ -77,7 +77,7 @@ program
       const { localServer } = await import('./server.js')
 
       const { ip, port } = this.optsWithGlobals()
-      await localServer(ip, port, pino({ level: process.env.LOG_LEVEL ?? 'info' }))
+      await localServer({ ip, port, logger: pino({ level: process.env.LOG_LEVEL ?? 'info' }) })
     } catch (error) {
       logger.error(error)
       process.exit(1)
@@ -97,7 +97,7 @@ program
       // Prepare the target directory
       setWhitelistedTalks(this.optsWithGlobals().only)
       await productionBuilder('dist/tmp')
-      const server = await localServer('127.0.0.1', 0, false, 'dist/tmp')
+      const server = await localServer({ ip: '127.0.0.1', port: 0, logger: false, staticDir: 'dist/tmp' })
       await exportAllAsJPEGs((server.server.address() as AddressInfo).port)
       await server.close()
       await rm(resolve(rootDir, 'dist/tmp'), { force: true, recursive: true })
@@ -120,7 +120,7 @@ program
       // Prepare the target directory
       setWhitelistedTalks(this.optsWithGlobals().only)
       await productionBuilder('dist/tmp')
-      const server = await localServer('127.0.0.1', 0, false, 'dist/tmp')
+      const server = await localServer({ ip: '127.0.0.1', port: 0, logger: false, staticDir: 'dist/tmp' })
       await exportAllAsPDFs((server.server.address() as AddressInfo).port)
       await server.close()
       await rm(resolve(rootDir, 'dist/tmp'), { force: true, recursive: true })
@@ -148,7 +148,7 @@ program
       setWhitelistedTalks(this.optsWithGlobals().only)
 
       await productionBuilder('dist/deploy/site', true)
-      const server = await localServer('127.0.0.1', 0, false, 'dist/deploy/site')
+      const server = await localServer({ ip: '127.0.0.1', port: 0, logger: false, staticDir: 'dist/deploy/site' })
       await exportAllAsPDFs((server.server.address() as AddressInfo).port, 'dist/deploy/site/pdfs', true)
       await server.close()
     } catch (error) {

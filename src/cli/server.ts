@@ -9,9 +9,25 @@ import { resolve } from 'node:path'
 import pino from 'pino'
 import { pusherConfig, rootDir } from '../generation/loader.js'
 
+interface ServerOptions {
+  ip: string
+  port: number
+  logger: pino.Logger | false
+  staticDir: string
+  listAssets: boolean
+}
+
 interface TalkHandlerParams {
   talk: string
   slide: string
+}
+
+const defaultServerOptions: ServerOptions = {
+  ip: '::',
+  port: 0,
+  logger: false,
+  staticDir: 'dist/html',
+  listAssets: false
 }
 
 function pageExists(server: FastifyInstance, page: string): boolean {
@@ -35,12 +51,26 @@ function talkHandler(
   reply.sendFile(`${talk}.html`)
 }
 
-export async function localServer(
-  ip: string,
-  port: number,
-  logger?: pino.Logger | false,
-  staticDir: string = 'dist/html'
-): Promise<FastifyInstance> {
+function assetsHandler(
+  this: FastifyInstance,
+  request: FastifyRequest<{ Params: TalkHandlerParams }>,
+  reply: FastifyReply
+): void {
+  const talk = request.params.talk
+
+  if (talk === '404.html' || talk === '__status.html' || !pageExists(this, talk)) {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    reply.code(404).sendFile('404.html')
+    return
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  reply.sendFile(`${talk}_assets.html`)
+}
+
+export async function localServer(options?: Partial<ServerOptions>): Promise<FastifyInstance> {
+  const { ip, port, logger, staticDir, listAssets } = { ...defaultServerOptions, ...options }
+
   const fullOutput = resolve(rootDir, staticDir)
   await mkdir(fullOutput, { recursive: true })
 
@@ -103,6 +133,14 @@ export async function localServer(
     url: '/:talk',
     handler: talkHandler
   })
+
+  if (listAssets) {
+    server.route({
+      method: 'GET',
+      url: '/:talk/assets',
+      handler: assetsHandler
+    })
+  }
 
   server.route({
     method: 'GET',

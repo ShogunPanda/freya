@@ -9,11 +9,18 @@ import { fileURLToPath } from 'node:url'
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads'
 import pino from 'pino'
 import Pusher, { Channel, ChannelAuthorizationOptions } from 'pusher-js'
-import { elapsedTime, finalizeJs, generateSlidesets, resolvePusher } from '../generation/generator.js'
+import {
+  elapsedTime,
+  finalizeJs,
+  generateAssetsListing,
+  generateSlidesets,
+  resolvePusher
+} from '../generation/generator.js'
 import { getTalk, getTalks, pusherConfig, resolveSwc, rootDir } from '../generation/loader.js'
 import { Context } from '../generation/models.js'
 
 let whitelistedTalks = workerData?.whitelistedTalks ?? []
+const listAssets = workerData?.assets ?? false
 
 async function compileSourceCode(): Promise<void> {
   let success: () => void
@@ -126,6 +133,10 @@ export function filterWhitelistedTalks(talks: Set<string>): Set<string> {
 }
 
 export function setWhitelistedTalks(whitelist: string): void {
+  if (process.env.FREYA_WHITELIST) {
+    whitelist = process.env.FREYA_WHITELIST + ',' + (whitelist ?? '')
+  }
+
   if (!whitelist) {
     return
   }
@@ -204,7 +215,7 @@ export async function developmentBuilder(logger: pino.Logger, ip: string, port: 
         return
       }
 
-      const worker = new Worker(fileURLToPath(import.meta.url), { workerData: { whitelistedTalks } })
+      const worker = new Worker(fileURLToPath(import.meta.url), { workerData: { whitelistedTalks, assets: true } })
 
       worker.on('message', message => {
         if (message === 'started') {
@@ -349,6 +360,14 @@ export async function productionBuilder(output: string = 'dist/html', netlify: b
   // Remove all file and directory starting with a double underscore
   for (const p of await glob(resolve(fullOutput, 'assets/**/__*'))) {
     fileOperations.push(rm(p, { recursive: true }))
+  }
+
+  if (listAssets) {
+    const lists = await generateAssetsListing(context)
+
+    for (const [name, file] of Object.entries(lists)) {
+      await writeFile(resolve(fullOutput, `${name}_assets.html`), file, 'utf8')
+    }
   }
 
   // Remove waiting file

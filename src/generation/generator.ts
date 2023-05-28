@@ -1,6 +1,6 @@
 import { minify } from '@swc/core'
 import { createGenerator } from '@unocss/core'
-import { glob } from 'glob'
+import { IgnoreLike, glob } from 'glob'
 import markdownIt from 'markdown-it'
 import { readFile } from 'node:fs/promises'
 import { hostname } from 'node:os'
@@ -8,6 +8,7 @@ import { relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { body as assetsBody, page as assetsPage } from '../templates/assets.js'
 import { page as index, body as indexBody } from '../templates/index.js'
 import { body, header, page } from '../templates/page.js'
 import { cacheKey, loadFromCache, saveToCache } from './cache.js'
@@ -15,6 +16,29 @@ import { renderCode } from './code.js'
 import { finalizeCss, transformCSSFile } from './css.js'
 import { getTalk, getTheme, pusherConfig, rootDir } from './loader.js'
 import { ClientContext, Context, Slide, SlideRenderer, Talk, Theme } from './models.js'
+
+interface Path {
+  name: string
+}
+
+const ignore: IgnoreLike = {
+  ignored(p: Path): boolean {
+    return p.name.startsWith('__')
+  },
+  childrenIgnored(p: Path): boolean {
+    return p.name.startsWith('__')
+  }
+}
+
+function assetsSorter(left: string, right: string): number {
+  if (left.startsWith('icons/') && !right.startsWith('icons/')) {
+    return -1
+  } else if (!left.startsWith('icons/') && right.startsWith('icons/')) {
+    return 1
+  }
+
+  return left.localeCompare(right)
+}
 
 export async function resolvePusher(): Promise<[string, string]> {
   let pusherFile = ''
@@ -226,4 +250,43 @@ export async function generateSlidesets(context: Context): Promise<Record<string
   )
 
   return slidesets
+}
+
+export async function generateAssetsListing(context: Context): Promise<Record<string, string>> {
+  const pages: Record<string, string> = {}
+  const page = assetsPage()
+
+  // For each talk, generate all the slideset
+  for (const id of context.talks) {
+    const startTime = process.hrtime.bigint()
+    const talk = await getTalk(id, context.log)
+
+    const talkPaths = await glob('**/*.{bmp,gif,jpg,jpeg,png,webp,svg}', {
+      cwd: resolve(rootDir, 'src/talks', id, 'assets'),
+      ignore
+    })
+
+    const themePaths = await glob('**/*.{bmp,gif,jpg,jpeg,png,webp,svg}', {
+      cwd: resolve(rootDir, 'src/themes', talk.config.theme, 'assets'),
+      ignore
+    })
+
+    const talkAssets: [string, string][] = []
+    for (const asset of talkPaths.sort(assetsSorter)) {
+      talkAssets.push([asset, `/assets/talks/${id}/${asset}`])
+    }
+
+    const themeAssets: [string, string][] = []
+    for (const asset of themePaths.sort(assetsSorter)) {
+      themeAssets.push([asset, `/assets/themes/${talk.config.theme}/${asset}`])
+    }
+
+    pages[id] = renderToStaticMarkup(page).replace(
+      '@BODY@',
+      renderToStaticMarkup(assetsBody({ talk, talkAssets, themeAssets }))
+    )
+    context.log.info(`Generated assets listing for slideset ${id} in ${elapsedTime(startTime)} ms.`)
+  }
+
+  return pages
 }
