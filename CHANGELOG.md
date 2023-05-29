@@ -1,3 +1,7 @@
+### 2023-05-29 / 0.21.1
+
+- fix: Fixed status style.
+
 ### 2023-05-28 / 0.21.0
 
 - feat: Generate assets page in development mode.
