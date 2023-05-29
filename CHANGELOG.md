@@ -1,3 +1,8 @@
+### 2023-05-29 / 0.22.0
+
+- fix: Fixed broken dependency.
+- fix: Fixed status style.
+
 ### 2023-05-29 / 0.21.1
 
 - fix: Fixed status style.
