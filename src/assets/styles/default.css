@@ -10,6 +10,7 @@ body {
   @apply min-h-100vh;
   @apply bg-black;
   @apply font-system-fonts;
+  @apply overflow-hidden;
 }
 
 .freya {
@@ -38,7 +39,7 @@ body {
     @apply min-h-1120px;
     @apply p-0_5sp;
     @apply overflow-hidden;
-    transform: var(--nf-slide-transform);
+    transform: var(--freya-slide-transform);
 
     & > * {
       @apply z-1;
@@ -134,7 +135,7 @@ body {
     &__wrapper {
       @apply relative;
       @apply w-266px;
-      height: calc(var(--nf-slide-wrapper-height) + 16px);
+      height: calc(var(--freya-slide-wrapper-height) + 16px);
       @apply overflow-hidden;
       @apply cursor-pointer;
       @apply border-solid;
@@ -148,7 +149,7 @@ body {
       & > .freya__slide {
         @apply pointer-events-none;
         @apply select-none;
-        transform: var(--nf-slides-slide-transform);
+        transform: var(--freya-slides-slide-transform);
         transform-origin: 0 0;
       }
 
@@ -230,10 +231,10 @@ body {
 
       &--preview {
         @apply w-250px;
-        height: var(--nf-presenter-slide-preview-height);
+        height: var(--freya-presenter-slide-preview-height);
 
         & > .freya__slide {
-          transform: var(--nf-presenter-slide-preview-transform);
+          transform: var(--freya-presenter-slide-preview-transform);
         }
       }
 
@@ -245,10 +246,10 @@ body {
       &--current {
         @apply w-800px;
         @apply grid-c;
-        height: var(--nf-presenter-slide-current-height);
+        height: var(--freya-presenter-slide-current-height);
 
         & > .freya__slide {
-          transform: var(--nf-presenter-slide-current-transform);
+          transform: var(--freya-presenter-slide-current-transform);
         }
       }
 

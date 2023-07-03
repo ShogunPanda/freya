@@ -41,8 +41,8 @@
 
     const scale = wrapperWidth / context.dimensions.width
 
-    list.style.setProperty('--nf-slide-wrapper-height', `${wrapperWidth / context.aspectRatio}px`)
-    list.style.setProperty('--nf-slides-slide-transform', `scale(${scale})`)
+    list.style.setProperty('--freya-slide-wrapper-height', `${wrapperWidth / context.aspectRatio}px`)
+    list.style.setProperty('--freya-slides-slide-transform', `scale(${scale})`)
 
     // Copy thumbnails and set events
     for (const [index, slide] of context.slides) {
@@ -87,10 +87,10 @@
     const previewScale = previewWidth / context.dimensions.width
     const currentScale = currentWidth / context.dimensions.width
 
-    layout.style.setProperty('--nf-presenter-slide-preview-height', `${previewWidth / context.aspectRatio}px`)
-    layout.style.setProperty('--nf-presenter-slide-current-height', `${currentWidth / context.aspectRatio}px`)
-    layout.style.setProperty('--nf-presenter-slide-preview-transform', `scale(${previewScale})`)
-    layout.style.setProperty('--nf-presenter-slide-current-transform', `scale(${currentScale})`)
+    layout.style.setProperty('--freya-presenter-slide-preview-height', `${previewWidth / context.aspectRatio}px`)
+    layout.style.setProperty('--freya-presenter-slide-current-height', `${currentWidth / context.aspectRatio}px`)
+    layout.style.setProperty('--freya-presenter-slide-preview-transform', `scale(${previewScale})`)
+    layout.style.setProperty('--freya-presenter-slide-current-transform', `scale(${currentScale})`)
 
     // Setup events
     document.querySelector('[data-freya-id="presenter:close"]').addEventListener('click', ev => {
@@ -263,13 +263,36 @@
   function updateSlidesAppearance(context) {
     const currentWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
     const currentHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
+    const currentAspectRatio = currentWidth / currentHeight
 
-    const correction =
-      currentWidth / currentHeight > context.aspectRatio
-        ? currentHeight / context.dimensions.height
-        : currentWidth / context.dimensions.width
+    let correction
 
-    document.body.style.setProperty('--nf-slide-transform', `scale(${(correction * 0.98).toFixed(1)})`)
+    // Landscape
+    if (currentWidth > currentHeight) {
+      /*
+        If the current ratio is smaller than the slides one, it means adapting on the width will not
+        overflow on the height, otherwise let's use vertical black bars.
+      */
+      correction =
+        currentAspectRatio < context.aspectRatio
+          ? currentWidth / context.dimensions.width
+          : currentHeight / context.dimensions.height
+    } else {
+      /*
+        If the current ratio is smaller than the slides one, it means adapting on the height will not
+        overflow on the height, otherwise let's use horizontal black bars.
+      */
+      correction =
+        currentAspectRatio > context.aspectRatio
+          ? currentHeight / context.dimensions.height
+          : currentWidth / context.dimensions.width
+    }
+
+    // Round up to the third decimal
+    let correctionUpped = correction * 100
+    correctionUpped = correctionUpped % 1 < 0.5 ? Math.floor(correctionUpped) + 0.5 : Math.ceil(correctionUpped)
+
+    document.body.style.setProperty('--freya-slide-transform', `scale(${(correctionUpped / 100).toFixed(3)})`)
   }
 
   function updateCurrentSlide(context, current, syncing) {
@@ -289,6 +312,10 @@
     const paddedSlide = context.current.toString().padStart(context.slidesPadding, '0')
     window.history.pushState({}, '', `/${context.id}/${paddedSlide}`)
     document.title = `${paddedSlide} - ${context.title}`
+    document.body.style.setProperty(
+      '--freya-slide-progress',
+      `${((context.current / context.slidesCount) * 100).toFixed(2)}`
+    )
     window.dispatchEvent(new Event('freya:slide:changed'))
 
     if (!syncing && isVisible(context.presenter)) {
