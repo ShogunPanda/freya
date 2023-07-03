@@ -1,3 +1,7 @@
+### 2023-07-03 / 0.23.0
+
+- feat: Use new resize method.
+
 ### 2023-05-29 / 0.22.0
 
 - fix: Fixed broken dependency.
