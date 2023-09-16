@@ -1,3 +1,7 @@
+### 2023-09-16 / 0.24.2
+
+- fix: Minor fix.
+
 ### 2023-09-16 / 0.24.1
 
 - fix: Fixed code compilation.
