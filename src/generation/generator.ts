@@ -15,7 +15,7 @@ import { cacheKey, loadFromCache, saveToCache } from './cache.js'
 import { renderCode } from './code.js'
 import { finalizeCss, transformCSSFile } from './css.js'
 import { getTalk, getTheme, pusherConfig, rootDir } from './loader.js'
-import { ClientContext, Context, Slide, SlideRenderer, Talk, Theme } from './models.js'
+import { BaseSlide, ClientContext, Context, Slide, SlideRenderer, Talk, Theme } from './models.js'
 
 interface Path {
   name: string
@@ -80,6 +80,19 @@ async function getCacheKeyContent(talk: Talk, theme: Theme, files: Record<string
   )
 
   return key.join('\n')
+}
+
+async function ensureRenderedCode(context: Context, target: BaseSlide): Promise<void> {
+  if (target.code && !target.code.rendered) {
+    const cachedCode = await loadFromCache<string>(`code:${target.code.content}`, context.log)
+
+    if (cachedCode) {
+      target.code.rendered = cachedCode
+    } else {
+      target.code.rendered = await renderCode(target.code)
+      await saveToCache(`code:${target.code.content}`, target.code.rendered)
+    }
+  }
 }
 
 export const markdownRenderer = markdownIt({
@@ -172,26 +185,10 @@ export async function generateSlideset(context: Context, theme: Theme, talk: Tal
       slide.classes = {}
     }
 
-    if (slide.code && !slide.code.rendered) {
-      const cachedCode = await loadFromCache<string>(`code:${slide.code.content}`, context.log)
-
-      if (cachedCode) {
-        slide.code.rendered = cachedCode
-      } else {
-        slide.code.rendered = await renderCode(slide.code)
-        await saveToCache(`code:${slide.code.content}`, slide.code.rendered)
-      }
-    }
+    await ensureRenderedCode(context, slide)
 
     for (const item of slide.items ?? []) {
-      const cachedCode = await loadFromCache<string>(`code:${item.code.content}`, context.log)
-
-      if (cachedCode) {
-        item.code.rendered = cachedCode
-      } else {
-        item.code.rendered = await renderCode(item.code)
-        await saveToCache(`code:${item.code.content}`, item.code.rendered)
-      }
+      await ensureRenderedCode(context, item)
     }
 
     const { default: layout }: { default: SlideRenderer<Slide> } = await import(
