@@ -183,6 +183,17 @@ export async function generateSlideset(context: Context, theme: Theme, talk: Tal
       }
     }
 
+    for (const item of slide.items ?? []) {
+      const cachedCode = await loadFromCache<string>(`code:${item.code.content}`, context.log)
+
+      if (cachedCode) {
+        item.code.rendered = cachedCode
+      } else {
+        item.code.rendered = await renderCode(item.code)
+        await saveToCache(`code:${item.code.content}`, item.code.rendered)
+      }
+    }
+
     const { default: layout }: { default: SlideRenderer<Slide> } = await import(
       resolve(rootDir, 'tmp/themes', talk.config.theme, 'layouts', (slide.layout ?? 'default') + '.js')
     )
