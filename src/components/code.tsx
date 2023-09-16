@@ -7,7 +7,7 @@ export function Code({ rendered, className }: Required<Slide>['code'] & { classN
 
   return (
     <div
-      className={`code ${className ?? ''}.trim()`}
+      className={`code ${className ?? ''}`.trim()}
       dangerouslySetInnerHTML={{ __html: rendered.replaceAll('$', '&#36;') }}
     />
   )
