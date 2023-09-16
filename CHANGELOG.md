@@ -1,3 +1,7 @@
+### 2023-09-16 / 0.24.1
+
+- fix: Fixed code compilation.
+
 ### 2023-09-16 / 0.24.0
 
 - feat: Also render code in slide items.
