@@ -1,3 +1,8 @@
+### 2023-09-16 / 0.24.0
+
+- feat: Also render code in slide items.
+- chore: Fixed compilation.
+
 ### 2023-07-03 / 0.23.0
 
 - feat: Use new resize method.
