@@ -5,7 +5,7 @@ type QRCodeGeneratorInterface = typeof QRCodeGenerator
 
 interface QRCodeProps {
   data: string
-  label: string
+  label?: string
   image?: string
   imageRatio?: number
   classes?: {
