@@ -82,6 +82,7 @@ async function getCacheKeyContent(talk: Talk, theme: Theme, files: Record<string
   return key.join('\n')
 }
 
+// TODO@PI: Include the language in the cache key
 async function ensureRenderedCode(context: Context, target: BaseSlide): Promise<void> {
   if (target.code && !target.code.rendered) {
     const cachedCode = await loadFromCache<string>(`code:${target.code.content}`, context.log)

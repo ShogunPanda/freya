@@ -115,6 +115,11 @@ body {
   &__slides {
     @apply z-10003;
 
+    &__contents {
+      @apply h-100vh;
+      @apply overflow-auto;
+    }
+
     &__close {
       @apply fixed;
       @apply top-0_25sp;
