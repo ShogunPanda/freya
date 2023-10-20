@@ -1,3 +1,7 @@
+### 2023-10-20 / 0.27.0
+
+- fix: Fixed exporting.
+
 ### 2023-10-20 / 0.26.0
 
 - feat: Improved client events.
