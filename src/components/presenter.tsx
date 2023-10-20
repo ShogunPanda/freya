@@ -26,10 +26,6 @@ export function Presenter(): JSX.Element {
             </a>
           </div>
 
-          <div
-            data-freya-id="presenter:previous"
-            className="freya__presenter__slide--previous freya__presenter__slide--preview"
-          />
           <div data-freya-id="presenter:current" className="freya__presenter__slide--current" />
           <div
             data-freya-id="presenter:next"

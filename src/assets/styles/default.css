@@ -186,10 +186,10 @@ body {
       @apply gap-x-0_5sp;
       @apply gap-y-0_25sp;
       grid-template:
-        'a a a' min-content
-        'b c d' min-content
-        'e f g' 1fr
-        / 1fr min-content 1fr;
+        'a a' min-content
+        'b c' min-content
+        'd e' 1fr
+        / min-content 1fr;
     }
 
     &__header {
@@ -243,14 +243,16 @@ body {
         }
       }
 
+      /*
       &--previous {
         @apply grid-b;
         @apply justify-self-end;
       }
+      */
 
       &--current {
         @apply w-800px;
-        @apply grid-c;
+        @apply grid-b;
         height: var(--freya-presenter-slide-current-height);
 
         & > .freya__slide {
@@ -259,12 +261,12 @@ body {
       }
 
       &--next {
-        @apply grid-d;
+        @apply grid-c;
       }
     }
 
     &__notes {
-      @apply grid-f;
+      @apply grid-d;
       @apply text-white;
       @apply font-size-10pt;
     }
