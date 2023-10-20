@@ -1,3 +1,7 @@
+### 2023-10-20 / 0.25.0
+
+- feat: Added doubletap for fullscreen.
+
 ### 2023-09-24 / 0.24.6
 
 - fix: Fixed interface.
