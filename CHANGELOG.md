@@ -1,3 +1,7 @@
+### 2023-10-20 / 0.26.0
+
+- feat: Improved client events.
+
 ### 2023-10-20 / 0.25.0
 
 - feat: Added doubletap for fullscreen.
