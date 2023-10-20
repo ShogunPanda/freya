@@ -72,14 +72,14 @@
     context.presenter = document.querySelector('[data-freya-id="presenter:container"]')
     context.presenterProgress = document.querySelector('[data-freya-id="presenter:progress"]')
     context.presenterTime = document.querySelector('[data-freya-id="presenter:time"]')
-    context.presenterPrevious = document.querySelector('[data-freya-id="presenter:previous"]')
+    // context.presenterPrevious = document.querySelector('[data-freya-id="presenter:previous"]')
     context.presenterCurrent = document.querySelector('[data-freya-id="presenter:current"]')
     context.presenterNext = document.querySelector('[data-freya-id="presenter:next"]')
     context.presenterNotes = document.querySelector('[data-freya-id="presenter:notes"]')
 
     // Setup appearance
     const layout = document.querySelector('[data-freya-id="presenter"]')
-    const slidePreviewStyle = window.getComputedStyle(document.querySelector('[data-freya-id="presenter:previous"]'))
+    const slidePreviewStyle = window.getComputedStyle(document.querySelector('[data-freya-id="presenter:next"]'))
     const slideCurrentStyle = window.getComputedStyle(document.querySelector('[data-freya-id="presenter:current"]'))
 
     const previewWidth = Number.parseInt(slidePreviewStyle.width, 10)
@@ -360,7 +360,7 @@
   }
 
   function updatePresenter(context) {
-    context.presenterPrevious.innerHTML = ''
+    // context.presenterPrevious.innerHTML = ''
     context.presenterCurrent.innerHTML = ''
     context.presenterNext.innerHTML = ''
     context.presenterNotes.innerHTML = ''
@@ -368,7 +368,7 @@
     if (context.current > 1) {
       const slide = context.slides.get(context.current - 1).cloneNode(true)
       slide.classList.remove('hidden')
-      context.presenterPrevious.append(slide)
+      // context.presenterPrevious.append(slide)
     }
 
     context.presenterCurrent.append(context.slides.get(context.current).cloneNode(true))
