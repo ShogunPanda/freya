@@ -1,3 +1,7 @@
+### 2023-10-20 / 0.28.0
+
+- feat: Do not show previous slide in presenter mode.
+
 ### 2023-10-20 / 0.27.0
 
 - fix: Fixed exporting.
