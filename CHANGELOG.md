@@ -1,3 +1,7 @@
+### 2023-10-20 / 0.28.1
+
+- fix: Minor client fix.
+
 ### 2023-10-20 / 0.28.0
 
 - feat: Do not show previous slide in presenter mode.
