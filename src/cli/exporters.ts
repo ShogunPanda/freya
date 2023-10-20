@@ -97,7 +97,7 @@ export async function exportAsJPEGs(
     logger.info(`Generated file ${filename} in ${elapsedTime(startTime)} ms.`)
 
     // Go the next slide
-    await page.press('body', 'Enter')
+    await page.press('body', 'ArrowRight')
   }
 
   if (!skipSpeakerNotes) {
@@ -151,7 +151,7 @@ export async function exportAsPDF(
     ctx.drawImage(image, 0, 0)
 
     // Go the next slide
-    await page.press('body', 'Enter')
+    await page.press('body', 'ArrowRight')
   }
 
   await writeFile(resolve(fullOutput, `${id}.pdf`), canvas.toBuffer())
