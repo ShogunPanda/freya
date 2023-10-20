@@ -178,8 +178,9 @@
       ArrowRight: gotoNextSlide,
       ArrowDown: gotoNextSlide,
       ' ': gotoNextSlide,
-      Enter: gotoNextSlide,
+      Enter: toggleFullScreen,
       Escape: closeOverlay,
+      Tab: toggleList,
       g: toggleList,
       l: toggleList,
       p: togglePresenter,
@@ -188,40 +189,66 @@
       f: toggleFullScreen
     }
 
-    const handler = shortcuts[ev.key]
+    const shiftShortcuts = {
+      Tab: togglePresenter,
+      ' ': togglePresenterTimer,
+      Enter: togglePresenterTimer
+    }
+
+    const handler = (ev.shiftKey ? shiftShortcuts : shortcuts)[ev.key]
     if (handler) {
       ev.preventDefault()
       handler(context)
     }
   }
 
-  function handleTouchStart(context, ev) {
-    context.firstTouch = { ...ev.touches[0], timestamp: Date.now() }
+  function serializeTouchEvent(ev) {
+    const touch = ev.touches[0]
+
+    return {
+      timestamp: Date.now(),
+      x: touch.clientX,
+      y: touch.clientY
+    }
   }
 
-  function handleTouchEnd(context, ev) {
-    if (!context.firstTouch) {
-      return
-    }
-
-    const tolerance = 100
+  function handleTouchStart(context, ev) {
+    const speedTolerance = 500
+    const movementTolerance = 100
+    const currentTouch = serializeTouchEvent(ev)
 
     // Detect double tap for full screen toggling
-    if (context.lastTouch && Date.now() - context.lastTouch.timestamp < 300) {
-      const xShift = Math.abs(context.firstTouch.clientX - context.lastTouch.clientX)
-      const yShift = Math.abs(context.firstTouch.clientY - context.lastTouch.clientY)
+    if (context.firstTouch) {
+      const xShift = Math.abs(currentTouch.x - context.firstTouch.x)
+      const yShift = Math.abs(currentTouch.y - context.firstTouch.y)
 
-      if (xShift < tolerance && yShift < tolerance) {
+      if (
+        Date.now() - context.firstTouch.timestamp < speedTolerance &&
+        xShift < movementTolerance &&
+        yShift < movementTolerance
+      ) {
         ev.preventDefault()
+        context.firstTouch = currentTouch
         toggleFullScreen()
         return
       }
     }
 
-    context.lastTouch = { ...ev.touches[0], timestamp: Date.now() }
+    context.firstTouch = currentTouch
+  }
 
-    const xShift = context.firstTouch.clientX - context.lastTouch.clientX
-    const yShift = context.firstTouch.clientY - context.lastTouch.clientY
+  function handleTouchMove(context, ev) {
+    context.lastTouch = serializeTouchEvent(ev)
+  }
+
+  function handleTouchEnd(context) {
+    if (!context.firstTouch || !context.lastTouch) {
+      return
+    }
+
+    const tolerance = 100
+    const xShift = context.firstTouch.x - context.lastTouch.x
+    const yShift = context.firstTouch.y - context.lastTouch.y
     const absoluteXShift = Math.abs(xShift)
     const absoluteYShift = Math.abs(yShift)
     let direction = ''
@@ -448,8 +475,18 @@
     }
   }
 
-  function toggleFullScreen() {
-    document.body.webkitRequestFullscreen()
+  function toggleFullScreen(ev) {
+    if (typeof ev?.preventDefault === 'function') {
+      ev.preventDefault()
+    }
+
+    if (!document.fullscreenElement) {
+      document.documentElement
+        .requestFullscreen()
+        .catch(error => console.error(`Cannot go fullscreen: ${error.message}`))
+    } else {
+      document.exitFullscreen()
+    }
   }
 
   function start(context) {
@@ -483,8 +520,10 @@
     }
 
     // Setup other events
+    document.addEventListener('dblclick', toggleFullScreen, false)
     document.addEventListener('keydown', handleShortcut.bind(null, context), false)
     document.addEventListener('touchstart', handleTouchStart.bind(null, context), false)
+    document.addEventListener('touchmove', handleTouchMove.bind(null, context), false)
     document.addEventListener('touchend', handleTouchEnd.bind(null, context), false)
 
     // Update the UI
