@@ -185,9 +185,7 @@
       p: togglePresenter,
       s: togglePresenterTimer,
       t: startPresenterTimer,
-      f: function () {
-        document.body.webkitRequestFullscreen()
-      }
+      f: toggleFullScreen
     }
 
     const handler = shortcuts[ev.key]
@@ -198,23 +196,34 @@
   }
 
   function handleTouchStart(context, ev) {
-    context.firstTouch = ev.touches[0]
+    context.firstTouch = { ...ev.touches[0], timestamp: Date.now() }
   }
 
-  function handleTouchMove(context, ev) {
-    context.lastTouch = ev.touches[0]
-  }
-
-  function handleTouchEnd(context) {
-    if (!context.firstTouch || !context.lastTouch) {
+  function handleTouchEnd(context, ev) {
+    if (!context.firstTouch) {
       return
     }
+
+    const tolerance = 100
+
+    // Detect double tap for full screen toggling
+    if (context.lastTouch && Date.now() - context.lastTouch.timestamp < 300) {
+      const xShift = Math.abs(context.firstTouch.clientX - context.lastTouch.clientX)
+      const yShift = Math.abs(context.firstTouch.clientY - context.lastTouch.clientY)
+
+      if (xShift < tolerance && yShift < tolerance) {
+        ev.preventDefault()
+        toggleFullScreen()
+        return
+      }
+    }
+
+    context.lastTouch = { ...ev.touches[0], timestamp: Date.now() }
 
     const xShift = context.firstTouch.clientX - context.lastTouch.clientX
     const yShift = context.firstTouch.clientY - context.lastTouch.clientY
     const absoluteXShift = Math.abs(xShift)
     const absoluteYShift = Math.abs(yShift)
-    const tolerance = 100
     let direction = ''
 
     if (absoluteXShift > tolerance && absoluteYShift < tolerance) {
@@ -439,6 +448,10 @@
     }
   }
 
+  function toggleFullScreen() {
+    document.body.webkitRequestFullscreen()
+  }
+
   function start(context) {
     // Extract the current slide from the URL
     let current = Number.parseInt(new URL(location.href).pathname.split('/').at(-1), 10)
@@ -472,7 +485,6 @@
     // Setup other events
     document.addEventListener('keydown', handleShortcut.bind(null, context), false)
     document.addEventListener('touchstart', handleTouchStart.bind(null, context), false)
-    document.addEventListener('touchmove', handleTouchMove.bind(null, context), false)
     document.addEventListener('touchend', handleTouchEnd.bind(null, context), false)
 
     // Update the UI

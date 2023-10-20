@@ -1,4 +1,4 @@
-import { SVGProps } from 'react'
+import { type SVGProps } from 'react'
 import { js2xml, xml2js } from 'xml-js'
 
 export function parseSVG(raw: string): [Record<string, string | undefined>, string] {

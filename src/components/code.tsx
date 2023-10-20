@@ -1,4 +1,4 @@
-import { Slide } from '../generation/models.js'
+import { type Slide } from '../generation/models.js'
 
 export function Code({ rendered, className }: Required<Slide>['code'] & { className?: string }): JSX.Element | null {
   if (!rendered) {

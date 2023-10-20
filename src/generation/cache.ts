@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { BaseLogger } from 'pino'
+import { type BaseLogger } from 'pino'
 
 const cacheRoot = resolve(process.cwd(), 'tmp/cache')
 

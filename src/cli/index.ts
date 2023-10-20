@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { Command, program } from 'commander'
+import { type Command, program } from 'commander'
 import { readFileSync } from 'node:fs'
 import { mkdir, rm } from 'node:fs/promises'
-import { AddressInfo } from 'node:net'
+import { type AddressInfo } from 'node:net'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pino from 'pino'

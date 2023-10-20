@@ -4,9 +4,9 @@ import { existsSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { isMainThread } from 'node:worker_threads'
-import { BaseLogger } from 'pino'
+import { type BaseLogger } from 'pino'
 import { cacheKey, loadFromCache, saveToCache } from './cache.js'
-import { Config, Pusher, RawTheme, Talk, Theme } from './models.js'
+import { type Config, type Pusher, type RawTheme, type Talk, type Theme } from './models.js'
 
 function loadPusherSettings(): Pusher | undefined {
   const { PUSHER_KEY: key, PUSHER_SECRET: secret, PUSHER_CLUSTER: cluster } = process.env

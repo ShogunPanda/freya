@@ -1,5 +1,5 @@
-import { getHighlighter, Highlighter, Lang, renderToHtml } from 'shiki'
-import { Slide } from './models.js'
+import { getHighlighter, type Highlighter, type Lang, renderToHtml } from 'shiki'
+import { type Slide } from './models.js'
 
 const highlightersCache = new Map<string, Highlighter>()
 

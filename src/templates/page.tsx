@@ -1,8 +1,8 @@
-import { ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { Presenter } from '../components/presenter.js'
 import { SlidesList } from '../components/slides-list.js'
 import { resolveImageUrl } from '../generation/loader.js'
-import { Talk, Theme } from '../generation/models.js'
+import { type Talk, type Theme } from '../generation/models.js'
 
 interface BodyProps {
   slides: ReactNode[]
@@ -18,14 +18,14 @@ interface HeaderProps {
 export function body({ slides }: BodyProps): JSX.Element {
   return (
     <>
+      <nav data-freya-id="loading" className="freya__loading">
+        <h1>Loading ...</h1>
+      </nav>
+
       {slides}
 
       <SlidesList count={slides.length} />
       <Presenter />
-
-      <nav data-freya-id="loading" className="freya__loading">
-        <h1>Loading ...</h1>
-      </nav>
     </>
   )
 }

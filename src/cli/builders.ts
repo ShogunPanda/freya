@@ -8,7 +8,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads'
 import pino from 'pino'
-import Pusher, { Channel, ChannelAuthorizationOptions } from 'pusher-js'
+import Pusher, { type Channel, type ChannelAuthorizationOptions } from 'pusher-js'
 import {
   elapsedTime,
   finalizeJs,
@@ -17,7 +17,7 @@ import {
   resolvePusher
 } from '../generation/generator.js'
 import { getTalk, getTalks, pusherConfig, resolveSwc, rootDir } from '../generation/loader.js'
-import { Context } from '../generation/models.js'
+import { type Context } from '../generation/models.js'
 
 let whitelistedTalks = workerData?.whitelistedTalks ?? []
 const listAssets = workerData?.assets ?? false

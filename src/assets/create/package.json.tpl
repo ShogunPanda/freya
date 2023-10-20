@@ -24,7 +24,7 @@
     "jpeg": "freya jpeg",
     "pdf": "freya pdf",
     "format": "prettier -w src",
-    "lint": "eslint src  --ext .ts,.tsx"
+    "lint": "eslint --ext .ts,.tsx src"
   },
   "dependencies": {
     "@unocss/transformer-directives": "^0.46.5",

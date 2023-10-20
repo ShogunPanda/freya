@@ -1,21 +1,24 @@
 {
-  "parser": "@typescript-eslint/parser",
+  "parser": "espree",
   "parserOptions": {
-    "project": "tsconfig.json"
+    "ecmaVersion": 2022
   },
-  "extends": ["@cowtech/eslint-config/react-with-typescript"],
+  "env": {
+    "browser": true
+  },
+  "extends": ["@cowtech/eslint-config"],
   "overrides": [
     {
-      "files": ["*.js"],
-      "parser": "espree",
-      "parserOptions": {
-        "ecmaVersion": 2020
+      "files": ["*.ts", "*.tsx"],
+      "env": {
+        "node": true,
+        "browser": false
       },
-      "extends": ["@cowtech/eslint-config"],
-      "rules": {
-        "@typescript-eslint/typedef": 0,
-        "@typescript-eslint/require-await": 0
-      }
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "project": "tsconfig.json"
+      },
+      "extends": ["@cowtech/eslint-config/typescript"]
     }
   ]
 }

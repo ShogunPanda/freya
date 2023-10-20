@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { SVGProps } from 'react'
+import { type SVGProps } from 'react'
 import { resolveImagePath } from '../generation/loader.js'
 import { normalizeSVGProps, parseSVG } from '../generation/svg.js'
 

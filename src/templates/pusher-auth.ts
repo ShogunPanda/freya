@@ -1,4 +1,4 @@
-// @ts-expect-error
+// @ts-expect-error - This is used within Netlify functions, which use Deno
 import { hmac } from 'https://deno.land/x/hmac@v2.0.1/mod.ts'
 
 const key = '@KEY@'
@@ -22,8 +22,8 @@ export default async function handler(request: Request): Promise<Response> {
   }
 
   const form = await request.formData()
-  const socket = form.get('socket_id')
-  const channel = form.get('channel_name')
+  const socket = form.get('socket_id') as string
+  const channel = form.get('channel_name') as string
 
   if (!socket || !channel) {
     return createResponse(401, { statusCode: 401, error: 'Unauthorized', message: 'Missing authentication data.' })

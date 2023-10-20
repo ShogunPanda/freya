@@ -1,12 +1,12 @@
 import fastifyFormBody from '@fastify/formbody'
 import fastifyStatic from '@fastify/static'
-import fastify, { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
+import fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify'
 import fastifyHttpErrorsEnhanced from 'fastify-http-errors-enhanced'
 import { createHmac } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import pino from 'pino'
+import type pino from 'pino'
 import { pusherConfig, rootDir } from '../generation/loader.js'
 
 interface ServerOptions {

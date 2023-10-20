@@ -1,12 +1,12 @@
 import { minify } from '@swc/core'
 import { createGenerator } from '@unocss/core'
-import { IgnoreLike, glob } from 'glob'
+import { type IgnoreLike, glob } from 'glob'
 import markdownIt from 'markdown-it'
 import { readFile } from 'node:fs/promises'
 import { hostname } from 'node:os'
 import { relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { body as assetsBody, page as assetsPage } from '../templates/assets.js'
 import { page as index, body as indexBody } from '../templates/index.js'
@@ -15,7 +15,15 @@ import { cacheKey, loadFromCache, saveToCache } from './cache.js'
 import { renderCode } from './code.js'
 import { finalizeCss, transformCSSFile } from './css.js'
 import { getTalk, getTheme, pusherConfig, rootDir } from './loader.js'
-import { BaseSlide, ClientContext, Context, Slide, SlideRenderer, Talk, Theme } from './models.js'
+import {
+  type BaseSlide,
+  type ClientContext,
+  type Context,
+  type Slide,
+  type SlideRenderer,
+  type Talk,
+  type Theme
+} from './models.js'
 
 interface Path {
   name: string

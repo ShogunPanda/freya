@@ -1,4 +1,4 @@
-import pino from 'pino'
+import type pino from 'pino'
 
 export interface FontsList {
   ranges: Record<string, string>
@@ -34,9 +34,7 @@ export interface BaseSlide {
   classes: Record<string, any>
 }
 
-export interface Slide extends BaseSlide {
-  [key: string]: any
-}
+export type Slide = BaseSlide & Record<string, any>
 
 export interface Config {
   theme: string
@@ -52,9 +50,7 @@ export interface BaseDocument {
   author: Record<string, any>
 }
 
-export interface Document extends BaseDocument {
-  [key: string]: any
-}
+export type Document = BaseDocument & Record<string, any>
 
 export interface RawTalk {
   config: Config

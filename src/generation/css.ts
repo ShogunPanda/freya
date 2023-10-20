@@ -1,5 +1,5 @@
-import { createGenerator, CSSValue, UserConfig } from '@unocss/core'
-import { Theme as UnoTheme } from '@unocss/preset-mini'
+import { createGenerator, type CSSValue, type UserConfig } from '@unocss/core'
+import { type Theme as UnoTheme } from '@unocss/preset-mini'
 import { transformDirectives } from '@unocss/transformer-directives'
 import MagicString from 'magic-string'
 import { readFile } from 'node:fs/promises'
@@ -76,6 +76,6 @@ export async function transformCSSFile(path: string, config: UserConfig): Promis
   return transformCSS(await readFile(path, 'utf8'), config)
 }
 
-export function defineUnoConfig<Theme extends {} = UnoTheme>(config: UserConfig<Theme>): UserConfig<Theme> {
+export function defineUnoConfig<Theme extends object = UnoTheme>(config: UserConfig<Theme>): UserConfig<Theme> {
   return config
 }
