@@ -1,3 +1,7 @@
+### 2023-10-23 / 0.29.0
+
+- chore: Updated dependencies and toolchain.
+
 ### 2023-10-20 / 0.28.1
 
 - fix: Minor client fix.
