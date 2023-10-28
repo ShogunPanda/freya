@@ -1,3 +1,8 @@
+### 2023-10-28 / 0.30.0
+
+- feat: Replace canvas with pdfjs.
+- feat: Added service worker.
+
 ### 2023-10-23 / 0.29.0
 
 - chore: Updated dependencies and toolchain.
