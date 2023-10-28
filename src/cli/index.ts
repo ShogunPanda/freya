@@ -161,7 +161,13 @@ program
       setWhitelistedTalks(this.optsWithGlobals().only)
 
       await productionBuilder('dist/deploy/site', true)
-      const server = await localServer({ ip: '127.0.0.1', port: 0, logger: false, staticDir: 'dist/deploy/site' })
+      const server = await localServer({
+        ip: '127.0.0.1',
+        port: 0,
+        logger: false,
+        staticDir: 'dist/deploy/site',
+        ssl: false
+      })
       await exportAllAsPDFs((server.server.address() as AddressInfo).port, 'dist/deploy/site/pdfs', true)
       await server.close()
     } catch (error) {
