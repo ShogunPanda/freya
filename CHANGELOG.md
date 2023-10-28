@@ -1,3 +1,6 @@
+### 2023-10-28 / 0.31.0
+
+
 ### 2023-10-28 / 0.30.0
 
 - feat: Replace canvas with pdfjs.
