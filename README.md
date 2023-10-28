@@ -22,9 +22,11 @@ freya dev
 
 Once the installation has been completed, you can start writing your slideset.
 
-Execute `freya dev` and it will start a server listening on `http://localhost:3000`.
+Execute `freya dev` and it will start a server listening on `http://localhost:4200`.
 
-Inside the `src/talks` folder you have to create a folder for each slideset, each slideset will be reachable at `http://localhost:3000/$NAME`.
+If you have a `ssl` folder containing `privkey.pem`, `cert.pem` and `chain.pem` files, then the server will be listening on HTTPS.
+
+Inside the `src/talks` folder you have to create a folder for each slideset, each slideset will be reachable at `http://localhost:4200/$NAME`.
 Each file change will rebuild all the slidesets but the browser must be refreshed manually.
 
 The new folders must contain at least the file `talk.yml`, with a structure similar to the following:
@@ -176,9 +178,11 @@ A theme must contain at least the following files:
       <div key={`slide:${index}`} data-freya-id="slide" data-freya-index={index} className="freya__slide">
         <h1 dangerouslySetInnerHTML={{ __html: parseContent(title) }} />
 
-        {content?.filter(Boolean).map((c: string, contentIndex: number) => (
-          <h4 key={`content:${index}:${contentIndex}`} dangerouslySetInnerHTML={{ __html: parseContent(c) }} />
-        ))}
+        {content
+          ?.filter(Boolean)
+          .map((c: string, contentIndex: number) => (
+            <h4 key={`content:${index}:${contentIndex}`} dangerouslySetInnerHTML={{ __html: parseContent(c) }} />
+          ))}
 
         <template data-freya-id="slide-notes" dangerouslySetInnerHTML={{ __html: notes ?? '' }} />
       </div>

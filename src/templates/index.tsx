@@ -27,9 +27,6 @@ const style = `
 
 body {
   margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 100%;
   min-height: 100%;
 }
@@ -65,7 +62,7 @@ h2 {
 }
 
 h4 {
-  color: #ecb22e;
+  color: #fb7a9c;
   font-size: 18pt;
 }
 
@@ -79,27 +76,69 @@ a:focus {
 }
 
 a:hover, a:hover h4 {
-  color: #fb7a9c;
+  color: #ecb22e;
 }
 `
 
 export function body({ talks }: BodyProps): JSX.Element {
+  const allTalks = Object.entries(talks)
+  const currentTalks = allTalks.filter(([, talk]: [string, Talk]) => !talk.document.archived)
+  const archivedTalks = allTalks.filter(([, talk]: [string, Talk]) => talk.document.archived)
+
   return (
     <main>
-      <h1>Slidesets</h1>
-      <nav>
-        {Object.entries(talks).map(([id, talk]) => (
-          <a href={`/${id}`} key={`talk:${id}`}>
-            <h2>{talk.document.title}</h2>
-            <h4>{talk.document.author.name}</h4>
-          </a>
-        ))}
-      </nav>
+      {currentTalks.length > 0 && (
+        <>
+          <h1>Current Slidesets</h1>
+          <nav>
+            {currentTalks.map(([id, talk]) => (
+              <a href={`/${id}`} key={`talk:${id}`}>
+                <h2>{talk.document.title}</h2>
+                <h4>{talk.document.author.name}</h4>
+              </a>
+            ))}
+          </nav>
+        </>
+      )}
+
+      {archivedTalks.length > 0 && (
+        <>
+          <h1>Archived Slidesets</h1>
+          <nav>
+            {archivedTalks.map(([id, talk]) => (
+              <a href={`/${id}`} key={`talk:${id}`}>
+                <h2>{talk.document.title}</h2>
+                <h4>{talk.document.author.name}</h4>
+              </a>
+            ))}
+          </nav>
+        </>
+      )}
     </main>
   )
 }
 
-export function page(): JSX.Element {
+export function page(version: string): JSX.Element {
+  const registerServiceWorker = `
+    globalThis.__freyaSiteVersion = "${version}";
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Service workers
+      if(navigator.serviceWorker) {
+        navigator.serviceWorker.addEventListener('message', event => {
+          const { type, payload } = event.data;
+    
+          if (type === 'new-version-available' && payload.version !== globalThis.__freyaSiteVersion) {
+            console.log(\`New version available: $\{payload.version}. Reloading the page.\`);
+            location.reload();
+          }
+        });
+
+        navigator.serviceWorker.register('/sw.js').catch(console.error);
+      }
+    });
+  `
+
   return (
     <html lang="en">
       <head>
@@ -112,6 +151,7 @@ export function page(): JSX.Element {
           crossOrigin="anonymous"
           href="https://fonts.gstatic.com/s/poppins/v20/pxiByp8kv8JHgFVrLCz7Z1xlFd2JQEk.woff2"
         />
+        <script defer={true} type="text/javascript" dangerouslySetInnerHTML={{ __html: registerServiceWorker }} />
         <style dangerouslySetInnerHTML={{ __html: style }} />
       </head>
       <body>@BODY@</body>

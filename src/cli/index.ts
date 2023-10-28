@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { type Command, program } from 'commander'
+import { program, type Command } from 'commander'
 import { readFileSync } from 'node:fs'
 import { mkdir, rm } from 'node:fs/promises'
 import { type AddressInfo } from 'node:net'
@@ -29,7 +29,7 @@ program
   .command('development')
   .description('Starts the development server')
   .option('-i, --ip <ip>', 'The IP to listen on', '::')
-  .option('-p, --port <port>', 'The port to listen on', v => Number.parseInt(v, 10), 3000)
+  .option('-p, --port <port>', 'The port to listen on', v => Number.parseInt(v, 10), 4200)
   .alias('dev')
   .alias('d')
   .action(async function devAction(this: Command): Promise<void> {
@@ -69,7 +69,7 @@ program
   .command('server')
   .description('Serve built slides')
   .option('-i, --ip <ip>', 'The IP to listen on', '::')
-  .option('-p, --port <port>', 'The port to listen on', v => Number.parseInt(v, 10), 3000)
+  .option('-p, --port <port>', 'The port to listen on', v => Number.parseInt(v, 10), 4200)
   .alias('serve')
   .alias('s')
   .action(async function serveAction(this: Command): Promise<void> {

@@ -93,6 +93,7 @@ export interface Context {
   log: pino.BaseLogger
   talks: Set<string>
   slidesets: Record<string, string>
+  version: string
 }
 
 export interface SlideProps<T = Slide> {

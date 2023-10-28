@@ -1,6 +1,6 @@
 import { minify } from '@swc/core'
 import { createGenerator } from '@unocss/core'
-import { type IgnoreLike, glob } from 'glob'
+import { glob, type IgnoreLike } from 'glob'
 import markdownIt from 'markdown-it'
 import { readFile } from 'node:fs/promises'
 import { hostname } from 'node:os'
@@ -261,7 +261,7 @@ export async function generateSlidesets(context: Context): Promise<Record<string
   }
 
   // Generate the index file
-  slidesets.index = renderToStaticMarkup(index()).replace(
+  slidesets.index = renderToStaticMarkup(index(version)).replace(
     '@BODY@',
     renderToStaticMarkup(indexBody({ talks: resolvedTalks }))
   )

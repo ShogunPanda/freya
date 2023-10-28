@@ -331,7 +331,12 @@
     document.body.style.setProperty('--freya-slide-transform', `scale(${(correctionUpped / 100).toFixed(3)})`)
   }
 
-  function updateCurrentSlide(context, current, syncing) {
+  function updateCurrentSlide(context, current, syncing, inTransition) {
+    if (!inTransition && typeof document.startViewTransition === 'function') {
+      document.startViewTransition(() => updateCurrentSlide(context, current, syncing, true))
+      return
+    }
+
     // Hide previously visible slide
     if (context.current > 0) {
       context.slides.get(context.current).classList.add('hidden')

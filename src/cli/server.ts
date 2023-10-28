@@ -130,6 +130,15 @@ export async function localServer(options?: Partial<ServerOptions>): Promise<Fas
 
   server.route({
     method: 'GET',
+    url: '/sw.js',
+    handler(this: FastifyInstance, _: FastifyRequest, reply: FastifyReply): void {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      reply.sendFile('sw.js')
+    }
+  })
+
+  server.route({
+    method: 'GET',
     url: '/:talk',
     handler: talkHandler
   })
