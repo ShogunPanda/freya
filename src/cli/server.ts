@@ -15,6 +15,7 @@ interface ServerOptions {
   logger: pino.Logger | false
   staticDir: string
   listAssets: boolean
+  ssl?: boolean
 }
 
 interface TalkHandlerParams {
@@ -69,18 +70,19 @@ function assetsHandler(
 }
 
 export async function localServer(options?: Partial<ServerOptions>): Promise<FastifyInstance> {
-  const { ip, port, logger, staticDir, listAssets } = { ...defaultServerOptions, ...options }
+  const { ip, port, logger, staticDir, listAssets, ssl } = { ...defaultServerOptions, ...options }
 
   const fullOutput = resolve(rootDir, staticDir)
   await mkdir(fullOutput, { recursive: true })
 
-  const https = existsSync(resolve(rootDir, 'ssl'))
-    ? {
-        key: await readFile(resolve(rootDir, 'ssl/privkey.pem')),
-        cert: await readFile(resolve(rootDir, 'ssl/cert.pem')),
-        ca: await readFile(resolve(rootDir, 'ssl/chain.pem'))
-      }
-    : null
+  const https =
+    ssl !== false && existsSync(resolve(rootDir, 'ssl'))
+      ? {
+          key: await readFile(resolve(rootDir, 'ssl/privkey.pem')),
+          cert: await readFile(resolve(rootDir, 'ssl/cert.pem')),
+          ca: await readFile(resolve(rootDir, 'ssl/chain.pem'))
+        }
+      : null
 
   const server = fastify({
     https,

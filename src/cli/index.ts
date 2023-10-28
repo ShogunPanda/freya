@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url'
 import pino from 'pino'
 import { rootDir } from '../generation/loader.js'
 
+const temporaryDistDirectory = '.freya/temp-html'
 const logger = pino({ transport: { target: 'pino-pretty' }, level: process.env.LOG_LEVEL ?? 'info' })
 const packageInfo = JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'))
 
@@ -96,11 +97,17 @@ program
 
       // Prepare the target directory
       setWhitelistedTalks(this.optsWithGlobals().only)
-      await productionBuilder('dist/tmp')
-      const server = await localServer({ ip: '127.0.0.1', port: 0, logger: false, staticDir: 'dist/tmp' })
+      await productionBuilder(temporaryDistDirectory)
+      const server = await localServer({
+        ip: '127.0.0.1',
+        port: 0,
+        logger: false,
+        staticDir: temporaryDistDirectory,
+        ssl: false
+      })
       await exportAllAsJPEGs((server.server.address() as AddressInfo).port)
       await server.close()
-      await rm(resolve(rootDir, 'dist/tmp'), { force: true, recursive: true })
+      await rm(resolve(rootDir, temporaryDistDirectory), { force: true, recursive: true })
     } catch (error) {
       logger.error(error)
       process.exit(1)
@@ -119,11 +126,17 @@ program
 
       // Prepare the target directory
       setWhitelistedTalks(this.optsWithGlobals().only)
-      await productionBuilder('dist/tmp')
-      const server = await localServer({ ip: '127.0.0.1', port: 0, logger: false, staticDir: 'dist/tmp' })
+      await productionBuilder(temporaryDistDirectory)
+      const server = await localServer({
+        ip: '127.0.0.1',
+        port: 0,
+        logger: false,
+        staticDir: temporaryDistDirectory,
+        ssl: false
+      })
       await exportAllAsPDFs((server.server.address() as AddressInfo).port)
       await server.close()
-      await rm(resolve(rootDir, 'dist/tmp'), { force: true, recursive: true })
+      await rm(resolve(rootDir, temporaryDistDirectory), { force: true, recursive: true })
     } catch (error) {
       logger.error(error)
       process.exit(1)

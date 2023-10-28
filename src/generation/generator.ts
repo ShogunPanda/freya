@@ -261,7 +261,7 @@ export async function generateSlidesets(context: Context): Promise<Record<string
   }
 
   // Generate the index file
-  slidesets.index = renderToStaticMarkup(index(version)).replace(
+  slidesets.index = renderToStaticMarkup(index(context.version)).replace(
     '@BODY@',
     renderToStaticMarkup(indexBody({ talks: resolvedTalks }))
   )

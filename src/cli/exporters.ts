@@ -1,8 +1,10 @@
-import { createCanvas, Image } from 'canvas'
+import { createWriteStream } from 'node:fs'
 import { mkdir, rm, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
+import { Document, Image } from 'pdfjs'
+import helvetica from 'pdfjs/font/Helvetica.js'
 import pino, { type BaseLogger } from 'pino'
-import { type Browser, chromium } from 'playwright'
+import { chromium, type Browser } from 'playwright'
 import { renderToStaticMarkup } from 'react-dom/server'
 import waitOn from 'wait-on'
 import { elapsedTime } from '../generation/generator.js'
@@ -124,37 +126,47 @@ export async function exportAsPDF(
   await Promise.all([page.waitForLoadState('load'), page.waitForLoadState('networkidle')])
   await page.waitForSelector('[data-freya-id="loading"]', { state: 'detached' })
 
-  const canvas = createCanvas(talk.config.dimensions.width, talk.config.dimensions.height, 'pdf')
-  const ctx = canvas.getContext('2d')
+  const document = new Document({
+    font: helvetica,
+    width: talk.config.dimensions.width,
+    height: talk.config.dimensions.height,
+    padding: 0,
+    properties: {
+      title: talk.document.title,
+      author: talk.document.author.name
+    }
+  })
+
   const startTime = process.hrtime.bigint()
   for (let i = 1; i <= talk.slides.length; i++) {
     if (i > 1) {
-      canvas.getContext('2d').addPage()
+      document.pageBreak()
     }
 
     const paddedSlide = i.toString().padStart(talk.slidesPadding, '0')
 
     await page.waitForURL(new URL(`/${id}/${paddedSlide}`, baseUrl).toString())
 
-    const image = new Image()
-    image.dataMode = Image.MODE_MIME
-    image.src = await page.screenshot({
-      clip: {
-        x: 0,
-        y: 0,
-        ...talk.config.dimensions
-      },
-      quality: 100,
-      type: 'jpeg'
-    })
-
-    ctx.drawImage(image, 0, 0)
+    document.image(
+      new Image(
+        await page.screenshot({
+          clip: {
+            x: 0,
+            y: 0,
+            ...talk.config.dimensions
+          },
+          quality: 100,
+          type: 'jpeg'
+        })
+      )
+    )
 
     // Go the next slide
     await page.press('body', 'ArrowRight')
   }
 
-  await writeFile(resolve(fullOutput, `${id}.pdf`), canvas.toBuffer())
+  document.pipe(createWriteStream(resolve(fullOutput, `${id}.pdf`)))
+  await document.end()
 
   logger.info(`Generated file ${id}.pdf in ${elapsedTime(startTime)} ms.`)
 

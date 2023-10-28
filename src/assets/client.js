@@ -332,7 +332,7 @@
   }
 
   function updateCurrentSlide(context, current, syncing, inTransition) {
-    if (!inTransition && typeof document.startViewTransition === 'function') {
+    if (!inTransition && !context.export && typeof document.startViewTransition === 'function') {
       document.startViewTransition(() => updateCurrentSlide(context, current, syncing, true))
       return
     }
