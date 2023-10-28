@@ -17,7 +17,7 @@ declare global {
 }
 
 function main(): void {
-  globalThis.importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js')
+  globalThis.importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.0.0/workbox-sw.js')
 
   const rootUrl = self.origin
   const rootUrlHash = Array.from(new Uint8Array(new TextEncoder().encode(self.origin)))
