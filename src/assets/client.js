@@ -109,7 +109,36 @@
     })
   }
 
-  function setupSynchronization(context) {
+  function shouldUpdateSlide(context, current) {
+    if (
+      typeof current !== 'number' ||
+      Number.isNaN(current) ||
+      current < 1 ||
+      current > context.total ||
+      context.current === current
+    ) {
+      return false
+    }
+
+    return true
+  }
+
+  function setupLocalSynchronization(context) {
+    context.localChannel = new BroadcastChannel('freya-slides')
+
+    context.localChannel.addEventListener('message', data => {
+      const { id, current } = data
+
+      if (id !== context.id || !shouldUpdateSlide(context, current)) {
+        return
+      }
+
+      updateCurrentSlide(context, current, true)
+      window.dispatchEvent(new Event('freya:slide:syncReceived:local'))
+    })
+  }
+
+  function setupRemoteSynchronization(context) {
     if (!context.pusher) {
       return
     }
@@ -122,32 +151,26 @@
     })
     const url = new URL(location.href)
 
-    context.channel = pusher.subscribe(
+    context.remoteChannel = pusher.subscribe(
       `private-talks-${url.protocol.replace(':', '')}-${url.hostname}-${url.port}-${context.id}-${context.environment}`
     )
 
-    context.channel.bind('client-update', function (data) {
+    context.remoteChannel.bind('client-update', function (data) {
       const { current } = data
 
-      if (
-        typeof current !== 'number' ||
-        Number.isNaN(current) ||
-        current < 1 ||
-        current > context.total ||
-        context.current === current
-      ) {
+      if (!shouldUpdateSlide(context, current)) {
         return
       }
 
       updateCurrentSlide(context, current, true)
-      window.dispatchEvent(new Event('freya:slide:syncReceived'))
+      window.dispatchEvent(new Event('freya:slide:syncReceived:remote'))
     })
 
-    context.channel.bind('pusher:subscription_error', event => {
+    context.remoteChannel.bind('pusher:subscription_error', event => {
       console.error('Subscription failed', event)
     })
 
-    context.channel.bind('pusher:error', event => {
+    context.remoteChannel.bind('pusher:error', event => {
       console.error('Receiving synchronization failed', event)
     })
 
@@ -159,7 +182,9 @@
       })
 
       buildChannel.bind('client-update', function (data) {
-        if (data.status === 'pending') {
+        if (['success', 'failed'].includes(data.status)) {
+          location.reload()
+        } else if (data.status === 'pending') {
           // Wait for some time before reloading. For most talks this will end up reloading when compilation has ended.
           setTimeout(() => {
             location.reload()
@@ -273,11 +298,12 @@
   }
 
   function sendCurrentSlideUpdate(context) {
-    if (!context.current || !context.channel) {
+    if (!context.current || !context.remoteChannel) {
       return
     }
 
-    context.channel.trigger('client-update', { current: context.current })
+    context.localChannel.postMessage({ id: context.id, current: context.current })
+    context.remoteChannel.trigger('client-update', { current: context.current })
   }
 
   function gotoPreviousSlide(context) {
@@ -509,6 +535,22 @@
     window.dispatchEvent(new Event('freya:ready'))
   }
 
+  document.addEventListener('DOMContentLoaded', function () {
+    // Service workers
+    if (navigator.serviceWorker) {
+      navigator.serviceWorker.addEventListener('message', event => {
+        const { type, payload } = event.data
+
+        if (type === 'new-version-available' && payload.version !== globalThis.__freyaSiteVersion) {
+          console.log(`New version available: ${payload.version}. Reloading the page.`)
+          location.reload()
+        }
+      })
+
+      navigator.serviceWorker.register('/sw.js').catch(console.error)
+    }
+  })
+
   window.addEventListener('load', function () {
     const context = {}
 
@@ -521,7 +563,8 @@
     setupPresenter(context)
 
     if (!context.export) {
-      setupSynchronization(context)
+      setupLocalSynchronization(context)
+      setupRemoteSynchronization(context)
     }
 
     // Setup other events

@@ -166,10 +166,12 @@ export async function developmentBuilder(logger: pino.Logger, ip: string, port: 
   let pusherChannel: Channel
 
   if (pusherConfig) {
+    const protocol = existsSync(resolve(rootDir, 'ssl')) ? 'https' : 'http'
+
     pusherChannel = new Pusher(pusherConfig.key, {
       cluster: pusherConfig.cluster,
       channelAuthorization: {
-        endpoint: `http://${ip === '::' ? '127.0.0.1' : ''}:${port}/pusher/auth`
+        endpoint: `${protocol}://${ip === '::' ? '127.0.0.1' : ''}:${port}/pusher/auth`
       } as unknown as ChannelAuthorizationOptions
     }).subscribe(`private-talks-${hostname()}-build-status`)
 
