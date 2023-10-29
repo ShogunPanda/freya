@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { finalizeJs } from '../generation/generator.js'
-import { Context, type Talk } from '../generation/models.js'
+import { type Context, type Talk } from '../generation/models.js'
 
 interface BodyProps {
   talks: Record<string, Talk>

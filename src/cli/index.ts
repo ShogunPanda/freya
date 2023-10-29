@@ -43,7 +43,7 @@ program
       setWhitelistedTalks(this.optsWithGlobals().only)
 
       await localServer({ ip, port, development: true })
-      await developmentBuilder(logger, ip, port)
+      await developmentBuilder(logger)
     } catch (error) {
       logger.error(error)
       process.exit(1)

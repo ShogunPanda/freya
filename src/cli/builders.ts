@@ -111,7 +111,7 @@ export function setWhitelistedTalks(whitelist: string): void {
   whitelistedTalks = whitelist.split(/\s*,\s*/).map(w => w.trim())
 }
 
-export async function developmentBuilder(logger: pino.Logger, ip: string, port: number): Promise<void> {
+export async function developmentBuilder(logger: pino.Logger): Promise<void> {
   let compiling = false
   let success: () => void
   let fail: (reason?: Error) => void
