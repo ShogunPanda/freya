@@ -42,7 +42,7 @@ program
       const { ip, port } = this.optsWithGlobals()
       setWhitelistedTalks(this.optsWithGlobals().only)
 
-      await localServer({ ip, port, listAssets: true })
+      await localServer({ ip, port, development: true })
       await developmentBuilder(logger, ip, port)
     } catch (error) {
       logger.error(error)

@@ -86,8 +86,8 @@ body {
     &__contents {
       @apply relative;
       @apply flex;
-      @apply flex-col;
-      @apply items-end;
+      @apply items-center;
+      @apply justify-center;
       @apply z-1;
       @apply p-0_25sp;
     }
@@ -182,14 +182,13 @@ body {
 
     &__layout {
       @apply grid;
-      @apply w-full;
-      @apply gap-x-0_5sp;
+      @apply gap-x-0_25sp;
       @apply gap-y-0_25sp;
       grid-template:
         'a a' min-content
         'b c' min-content
         'd e' 1fr
-        / min-content 1fr;
+        / min-content min-content;
     }
 
     &__header {
@@ -234,8 +233,18 @@ body {
         }
       }
 
+      &--current {
+        @apply w-50vw;
+        @apply grid-b;
+        height: var(--freya-presenter-slide-current-height);
+
+        & > .freya__slide {
+          transform: var(--freya-presenter-slide-current-transform);
+        }
+      }
+
       &--preview {
-        @apply w-250px;
+        @apply w-25vw;
         height: var(--freya-presenter-slide-preview-height);
 
         & > .freya__slide {
@@ -249,16 +258,6 @@ body {
         @apply justify-self-end;
       }
       */
-
-      &--current {
-        @apply w-800px;
-        @apply grid-b;
-        height: var(--freya-presenter-slide-current-height);
-
-        & > .freya__slide {
-          transform: var(--freya-presenter-slide-current-transform);
-        }
-      }
 
       &--next {
         @apply grid-c;

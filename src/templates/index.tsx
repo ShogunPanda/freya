@@ -1,4 +1,7 @@
-import { type Talk } from '../generation/models.js'
+import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
+import { finalizeJs } from '../generation/generator.js'
+import { Context, type Talk } from '../generation/models.js'
 
 interface BodyProps {
   talks: Record<string, Talk>
@@ -118,26 +121,19 @@ export function body({ talks }: BodyProps): JSX.Element {
   )
 }
 
-export function page(version: string): JSX.Element {
-  const registerServiceWorker = `
-    globalThis.__freyaSiteVersion = "${version}";
+export async function page(context: Context): Promise<JSX.Element> {
+  const siteVersion = `globalThis.__freyaSiteVersion = "${context.version}"`
+  const hotReload =
+    context.environment === 'development'
+      ? await readFile(fileURLToPath(new URL('../assets/js/hot-reload.js', import.meta.url)), 'utf8')
+      : ''
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // Service workers
-      if(navigator.serviceWorker) {
-        navigator.serviceWorker.addEventListener('message', event => {
-          const { type, payload } = event.data;
-    
-          if (type === 'new-version-available' && payload.version !== globalThis.__freyaSiteVersion) {
-            console.log(\`New version available: $\{payload.version}. Reloading the page.\`);
-            location.reload();
-          }
-        });
+  const serviceWorker =
+    context.environment === 'production'
+      ? await readFile(fileURLToPath(new URL('../assets/js/service-worker.js', import.meta.url)), 'utf8')
+      : ''
 
-        navigator.serviceWorker.register('/sw.js').catch(console.error);
-      }
-    });
-  `
+  const js = await finalizeJs([siteVersion, hotReload, serviceWorker].join('\n;\n'))
 
   return (
     <html lang="en">
@@ -151,7 +147,7 @@ export function page(version: string): JSX.Element {
           crossOrigin="anonymous"
           href="https://fonts.gstatic.com/s/poppins/v20/pxiByp8kv8JHgFVrLCz7Z1xlFd2JQEk.woff2"
         />
-        <script defer={true} type="text/javascript" dangerouslySetInnerHTML={{ __html: registerServiceWorker }} />
+        <script defer={true} type="text/javascript" dangerouslySetInnerHTML={{ __html: js }} />
         <style dangerouslySetInnerHTML={{ __html: style }} />
       </head>
       <body>@BODY@</body>

@@ -1,30 +1,24 @@
+import { minify } from '@swc/core'
 import { watch } from 'chokidar'
 import { glob } from 'glob'
 import { type Element } from 'hast'
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { hostname } from 'node:os'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads'
 import pino from 'pino'
-import Pusher, { type Channel, type ChannelAuthorizationOptions } from 'pusher-js'
 import { rehype } from 'rehype'
 import { type Transformer } from 'unified'
 import { type Node } from 'unist'
 import { visit } from 'unist-util-visit'
 import { loadFromCache, saveToCache } from '../generation/cache.js'
-import {
-  elapsedTime,
-  finalizeJs,
-  generateAssetsListing,
-  generateSlidesets,
-  resolvePusher
-} from '../generation/generator.js'
+import { elapsedTime, generateAssetsListing, generateSlidesets } from '../generation/generator.js'
 import { getTalk, getTalks, pusherConfig, resolveSwc, rootDir } from '../generation/loader.js'
 import { type Context } from '../generation/models.js'
 import { serviceWorker } from '../templates/service-worker.js'
+import { notifyBuildStatus } from './server.js'
 
 let whitelistedTalks = workerData?.whitelistedTalks ?? []
 const listAssets = workerData?.assets ?? false
@@ -81,33 +75,11 @@ function generateNetlifyConfiguration(context: Context): string {
 }
 
 async function generateHotReloadPage(): Promise<string> {
-  let page = await readFile(fileURLToPath(new URL('../assets/status.html', import.meta.url)), 'utf8')
+  const page = await readFile(fileURLToPath(new URL('../assets/status.html', import.meta.url)), 'utf8')
+  const client = await readFile(fileURLToPath(new URL('../assets/js/status.js', import.meta.url)), 'utf8')
 
-  if (pusherConfig) {
-    const client = await readFile(fileURLToPath(new URL('../assets/hot-reload.js', import.meta.url)), 'utf8')
-
-    if (pusherConfig) {
-      const [, pusher] = await resolvePusher()
-
-      page = page.replace(
-        "console.warn('No pusher available. Hot reload disabled.')",
-        await finalizeJs(
-          pusher +
-            '\n' +
-            client.replace(
-              'const context = {}',
-              `const context = ${JSON.stringify({
-                key: pusherConfig.key,
-                cluster: pusherConfig.cluster,
-                hostname: hostname()
-              })}`
-            )
-        )
-      )
-    }
-  }
-
-  return page
+  const minifiedClient = await minify(client, { compress: true, mangle: false })
+  return page.replace('</body>', `<script type="text/javascript">${minifiedClient.code}</script></body>`)
 }
 
 async function generatePusherAuthFunction(context: Context): Promise<string> {
@@ -118,18 +90,6 @@ async function generatePusherAuthFunction(context: Context): Promise<string> {
   context.log.info(`Generated function pusher-auth.js in ${elapsedTime(startTime)} ms`)
 
   return functionFile
-}
-
-function notifyBuildStatus(
-  channel: Channel | undefined,
-  status: 'pending' | 'success' | 'failed',
-  payload?: object
-): void {
-  if (!channel) {
-    return
-  }
-
-  channel.trigger('client-update', { status, ...payload })
 }
 
 export function filterWhitelistedTalks(talks: Set<string>): Set<string> {
@@ -163,25 +123,6 @@ export async function developmentBuilder(logger: pino.Logger, ip: string, port: 
   })
 
   let timeout: NodeJS.Timeout | null
-  let pusherChannel: Channel
-
-  if (pusherConfig) {
-    const protocol = existsSync(resolve(rootDir, 'ssl')) ? 'https' : 'http'
-
-    pusherChannel = new Pusher(pusherConfig.key, {
-      cluster: pusherConfig.cluster,
-      channelAuthorization: {
-        endpoint: `${protocol}://${ip === '::' ? '127.0.0.1' : ''}:${port}/pusher/auth`
-      } as unknown as ChannelAuthorizationOptions
-    }).subscribe(`private-talks-${hostname()}-build-status`)
-
-    pusherChannel.bind('pusher:subscription_error', (event: any) => {
-      console.error('Subscription failed', event)
-    })
-    pusherChannel.bind('pusher:error', (event: any) => {
-      console.error('Sending build synchronization failed', event)
-    })
-  }
 
   function scheduleRun(): void {
     if (timeout) {
@@ -220,7 +161,7 @@ export async function developmentBuilder(logger: pino.Logger, ip: string, port: 
 
         failed = true
         logger.error('Code compilation failed:\n\n  ' + errorString + '\n')
-        notifyBuildStatus(pusherChannel, 'failed', { error: errorString })
+        notifyBuildStatus('failed', { error: errorString })
         return
       }
 
@@ -228,7 +169,7 @@ export async function developmentBuilder(logger: pino.Logger, ip: string, port: 
 
       worker.on('message', message => {
         if (message === 'started') {
-          notifyBuildStatus(pusherChannel, 'pending')
+          notifyBuildStatus('pending')
         }
       })
 
@@ -242,7 +183,7 @@ export async function developmentBuilder(logger: pino.Logger, ip: string, port: 
         const errorString = error.message + errorStack + '\n\n'
 
         failed = true
-        notifyBuildStatus(pusherChannel, 'failed', { error: errorString })
+        notifyBuildStatus('failed', { error: errorString })
         logger.error('Code compilation failed:\n\n  ' + errorString + '\n')
 
         worker.terminate().catch(() => {})
@@ -250,7 +191,7 @@ export async function developmentBuilder(logger: pino.Logger, ip: string, port: 
 
       worker.on('exit', () => {
         if (!failed) {
-          notifyBuildStatus(pusherChannel, 'success')
+          notifyBuildStatus('success')
         }
 
         compiling = false
@@ -264,10 +205,6 @@ export async function developmentBuilder(logger: pino.Logger, ip: string, port: 
 
   process.on('SIGINT', () => {
     watcher.close().then(success).catch(fail)
-
-    if (pusherChannel) {
-      pusherChannel.pusher.disconnect()
-    }
   })
 
   watcher.on('add', scheduleRun).on('change', scheduleRun).on('unlink', scheduleRun).on('error', fail!)

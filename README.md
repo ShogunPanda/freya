@@ -95,6 +95,8 @@ You can enter presenter mode by pressing `p`. In presenter mode, you will also s
 
 All other session of the browser connected to the same slideset will see the same slide that you are presenting.
 
+If you want to enabled a remote based synchronization based on Pusher, define the `PUSHER_ENABLED`, `PUSHER_KEY`, `PUSHER_SECRET` and `PUSHER_CLUSTER` environment variables.
+
 Presenter mode can be exited by pressing `p` or the `Escape` key.
 
 ### Deploying to Netlify

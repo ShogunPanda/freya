@@ -126,8 +126,8 @@
   function setupLocalSynchronization(context) {
     context.localChannel = new BroadcastChannel('freya-slides')
 
-    context.localChannel.addEventListener('message', data => {
-      const { id, current } = data
+    context.localChannel.addEventListener('message', ev => {
+      const { id, current } = ev.data
 
       if (id !== context.id || !shouldUpdateSlide(context, current)) {
         return
@@ -136,13 +136,15 @@
       updateCurrentSlide(context, current, true)
       window.dispatchEvent(new Event('freya:slide:syncReceived:local'))
     })
+
+    window.addEventListener('freya:slide:changed', () => {
+      if (isVisible(context.presenter)) {
+        context.localChannel.postMessage({ id: context.id, current: context.current })
+      }
+    })
   }
 
-  function setupRemoteSynchronization(context) {
-    if (!context.pusher) {
-      return
-    }
-
+  function setupPusherSynchronization(context) {
     Pusher.logToConsole = context.environment === 'development'
 
     const pusher = new Pusher(context.pusher.key, {
@@ -174,24 +176,11 @@
       console.error('Receiving synchronization failed', event)
     })
 
-    if (context.environment === 'development' && context.pusher.hostname) {
-      const buildChannel = pusher.subscribe(`private-talks-${context.pusher.hostname}-build-status`)
-
-      buildChannel.bind('pusher:subscription_error', event => {
-        console.error('Build subscription failed', event)
-      })
-
-      buildChannel.bind('client-update', function (data) {
-        if (['success', 'failed'].includes(data.status)) {
-          location.reload()
-        } else if (data.status === 'pending') {
-          // Wait for some time before reloading. For most talks this will end up reloading when compilation has ended.
-          setTimeout(() => {
-            location.reload()
-          }, 500)
-        }
-      })
-    }
+    window.addEventListener('freya:slide:changed', () => {
+      if (isVisible(context.presenter)) {
+        context.remoteChannel.trigger('client-update', { current: context.current })
+      }
+    })
   }
 
   function handleShortcut(context, ev) {
@@ -297,15 +286,6 @@
     return container.classList.contains('hidden') === false
   }
 
-  function sendCurrentSlideUpdate(context) {
-    if (!context.current || !context.remoteChannel) {
-      return
-    }
-
-    context.localChannel.postMessage({ id: context.id, current: context.current })
-    context.remoteChannel.trigger('client-update', { current: context.current })
-  }
-
   function gotoPreviousSlide(context) {
     if (context.current < 2) {
       return
@@ -384,10 +364,6 @@
       `${((context.current / context.slidesCount) * 100).toFixed(2)}`
     )
     window.dispatchEvent(new Event('freya:slide:changed'))
-
-    if (!syncing && isVisible(context.presenter)) {
-      sendCurrentSlideUpdate(context)
-    }
   }
 
   function updatePresenter(context) {
@@ -457,7 +433,7 @@
     }
 
     if (isVisible(context.presenter)) {
-      sendCurrentSlideUpdate(context)
+      window.dispatchEvent(new Event('freya:slide:changed'))
       startPresenterTimer(context)
     } else {
       stopPresenterTimer(context)
@@ -535,22 +511,6 @@
     window.dispatchEvent(new Event('freya:ready'))
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
-    // Service workers
-    if (navigator.serviceWorker) {
-      navigator.serviceWorker.addEventListener('message', event => {
-        const { type, payload } = event.data
-
-        if (type === 'new-version-available' && payload.version !== globalThis.__freyaSiteVersion) {
-          console.log(`New version available: ${payload.version}. Reloading the page.`)
-          location.reload()
-        }
-      })
-
-      navigator.serviceWorker.register('/sw.js').catch(console.error)
-    }
-  })
-
   window.addEventListener('load', function () {
     const context = {}
 
@@ -563,8 +523,11 @@
     setupPresenter(context)
 
     if (!context.export) {
-      setupLocalSynchronization(context)
-      setupRemoteSynchronization(context)
+      if (context.pusher) {
+        setupPusherSynchronization(context)
+      } else {
+        setupLocalSynchronization(context)
+      }
     }
 
     // Setup other events

@@ -11,10 +11,14 @@ import { type Config, type Pusher, type RawTheme, type Talk, type Theme } from '
 function loadPusherSettings(): Pusher | undefined {
   const { PUSHER_KEY: key, PUSHER_SECRET: secret, PUSHER_CLUSTER: cluster } = process.env
 
+  if (process.env.PUSHER_ENABLED !== 'true') {
+    return undefined
+  }
+
   if (!key || !secret || !cluster) {
     if (!isMainThread) {
-      process.emitWarning(
-        'In order to enable synchronization, please define PUSHER_KEY, PUSHER_SECRET and PUSHER_CLUSTER environment variables.'
+      throw new Error(
+        'In order to enable Pusher based synchronization, you also have to define PUSHER_KEY, PUSHER_SECRET and PUSHER_CLUSTER environment variables.'
       )
     }
 

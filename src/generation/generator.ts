@@ -82,6 +82,10 @@ async function getCacheKeyContent(talk: Talk, theme: Theme, files: Record<string
   key.push(
     ...(await Promise.all(
       Object.entries(files).map(async ([key, file]) => {
+        if (!file) {
+          return `${key}:$EMPTY$`
+        }
+
         return `${key}:${cacheKey(await readFile(file))}`
       })
     ))
@@ -140,11 +144,24 @@ export function renderNotes(slide: Slide): string {
 export async function generateSlideset(context: Context, theme: Theme, talk: Talk): Promise<string> {
   // Gather all files needed for the cache key
   const unoConfigFile = resolve(rootDir, 'tmp/themes', talk.config.theme, 'unocss.config.js')
-  const clientJsFile = fileURLToPath(new URL('../assets/client.js', import.meta.url))
+  const clientJsFile = fileURLToPath(new URL('../assets/js/slideset.js', import.meta.url))
+  const hotReloadFile =
+    context.environment === 'development' ? fileURLToPath(new URL('../assets/js/hot-reload.js', import.meta.url)) : ''
+  const serviceWorkerFile =
+    context.environment === 'production'
+      ? fileURLToPath(new URL('../assets/js/service-worker.js', import.meta.url))
+      : ''
+
   const [pusherFile, pusher] = await resolvePusher()
   const themeStyle = resolve(rootDir, 'src/themes', theme.id, theme.style)
 
-  const key = await getCacheKeyContent(talk, theme, { uno: unoConfigFile, client: clientJsFile, pusher: pusherFile })
+  const key = await getCacheKeyContent(talk, theme, {
+    uno: unoConfigFile,
+    client: clientJsFile,
+    pusher: pusherFile,
+    hotReload: hotReloadFile,
+    serviceWorker: serviceWorkerFile
+  })
 
   const cached = await loadFromCache<string>(key, context.log)
 
@@ -221,6 +238,9 @@ export async function generateSlideset(context: Context, theme: Theme, talk: Tal
   }
 
   // Generate the JS
+  const siteVersion = `globalThis.__freyaSiteVersion = "${context.version}"`
+  const hotReload = hotReloadFile ? await readFile(hotReloadFile, 'utf8') : ''
+  const serviceWorker = serviceWorkerFile ? await readFile(serviceWorkerFile, 'utf8') : ''
   const client = await readFile(clientJsFile, 'utf8')
 
   // Render the page
@@ -233,7 +253,13 @@ export async function generateSlideset(context: Context, theme: Theme, talk: Tal
           theme,
           css: await finalizeCss(unoConfig, themeCss + css, theme.fontsStyles),
           js: await finalizeJs(
-            pusher + '\n' + client.replace('const context = {}', `const context = ${JSON.stringify(clientContext)}`)
+            [
+              siteVersion,
+              hotReload,
+              serviceWorker,
+              pusher,
+              client.replace('const context = {}', `const context = ${JSON.stringify(clientContext)}`)
+            ].join('\n;\n')
           )
         })
       )
@@ -261,7 +287,8 @@ export async function generateSlidesets(context: Context): Promise<Record<string
   }
 
   // Generate the index file
-  slidesets.index = renderToStaticMarkup(index(context.version)).replace(
+  const indexJSX = await index(context)
+  slidesets.index = renderToStaticMarkup(indexJSX).replace(
     '@BODY@',
     renderToStaticMarkup(indexBody({ talks: resolvedTalks }))
   )
