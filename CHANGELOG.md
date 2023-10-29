@@ -1,3 +1,8 @@
+### 2023-10-30 / 0.33.0
+
+- chore: Linted code.
+- feat: Improved synchronization configuration.
+
 ### 2023-10-29 / 0.32.0
 
 - feat: Added local synchronization.
