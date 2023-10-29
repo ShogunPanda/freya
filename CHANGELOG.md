@@ -1,3 +1,8 @@
+### 2023-10-29 / 0.32.0
+
+- feat: Added local synchronization.
+- feat: Update workbox.
+
 ### 2023-10-28 / 0.31.2
 
 
