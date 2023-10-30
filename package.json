@@ -36,7 +36,7 @@
     "format": "prettier -w src",
     "lint": "eslint --cache --ext .js,.jsx,.ts,.tsx src",
     "typecheck": "tsc -p . --emitDeclarationOnly",
-    "ci": "npm run lint",
+    "ci": "npm run build",
     "prepublishOnly": "npm run ci",
     "postpublish": "git push origin && git push origin -f --tags"
   },
