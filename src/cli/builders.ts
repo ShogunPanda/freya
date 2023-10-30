@@ -1,7 +1,6 @@
 import { minify } from '@swc/core'
 import { watch } from 'chokidar'
 import { glob } from 'glob'
-import { type Element } from 'hast'
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
@@ -9,14 +8,11 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads'
 import pino from 'pino'
-import { rehype } from 'rehype'
-import { type Transformer } from 'unified'
-import { type Node } from 'unist'
-import { visit } from 'unist-util-visit'
-import { loadFromCache, saveToCache } from '../generation/cache.js'
 import { elapsedTime, generateAssetsListing, generateSlidesets } from '../generation/generator.js'
 import { getTalk, getTalks, pusherConfig, resolveSwc, rootDir } from '../generation/loader.js'
 import { type Context } from '../generation/models.js'
+// @ts-expect-error This is present in the dist directory
+import { extractImages } from '../lib/images-extractor/images_extractor.js'
 import { serviceWorker } from '../templates/service-worker.js'
 import { notifyBuildStatus } from './server.js'
 
@@ -257,33 +253,12 @@ export async function productionBuilder(output: string = 'dist/html', netlify: b
 
   const toPrecache = new Set<string>()
 
-  // Write slidesets
+  // Write slidesets and track preCache information
   for (const [name, file] of Object.entries(context.slidesets)) {
     toPrecache.add(name === 'index' ? '/' : `/${name}`)
 
-    // Parse the HTML and return all images
-    let imagesToCache = await loadFromCache<string[]>(file, logger)
-
-    if (!imagesToCache) {
-      imagesToCache = [] as string[]
-
-      await rehype()
-        .use(function extractImages(): Transformer {
-          return (tree: Node) => {
-            visit(tree, 'element', (node: Element) => {
-              if (node.tagName === 'img' && node.properties.src) {
-                imagesToCache!.push(node.properties.src as string)
-              }
-            })
-          }
-        })
-        .process(file)
-
-      await saveToCache(file, imagesToCache)
-    }
-
-    for (const file of imagesToCache) {
-      toPrecache.add(file)
+    for (const image of extractImages(file)) {
+      toPrecache.add(image)
     }
 
     await writeFile(resolve(fullOutput, `${name}.html`), file, 'utf8')
