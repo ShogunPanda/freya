@@ -1,3 +1,7 @@
+### 2023-10-30 / 0.34.2
+
+- fix: Removed ignore file.
+
 ### 2023-10-30 / 0.34.1
 
 - fix: Removed ignore file.
