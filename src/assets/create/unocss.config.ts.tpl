@@ -1,7 +1,7 @@
-import { defineUnoConfig, getTalk, getTalks, numericRule, systemFonts, systemMonospaceFonts } from 'freya-slides'
 import { CSSValue, Rule } from '@unocss/core'
 import presetWind from '@unocss/preset-wind'
 import transformerDirectives from '@unocss/transformer-directives'
+import { defineUnoConfig, getTalks, numericRule, systemFonts, systemMonospaceFonts } from 'freya-slides'
 
 function generateSpacing(customUnit: string, ratio: number, unit: string): Array<Rule> {
   const spacings: Array<Rule> = []
@@ -181,17 +181,17 @@ function generateCustomUnits(): Array<Rule> {
 const talks = await getTalks()
 const safelist = new Set<string>()
 
-for (const id of talks) {
-  const talk = await getTalk(id)
+// for (const id of talks) {
+//   const talk = await getTalk(id)
 
-  for (const slide of talk.slides) {
-    for (const value of Object.values(slide.classes ?? {})) {
-      for (const klass of value.split(' ')) {
-        safelist.add(klass)
-      }
-    }
-  }
-}
+//   for (const slide of talk.slides) {
+//     for (const value of Object.values(slide.classes ?? {})) {
+//       for (const klass of value.split(' ')) {
+//         safelist.add(klass)
+//       }
+//     }
+//   }
+// }
 
 export default defineUnoConfig({
   presets: [presetWind()],
@@ -208,9 +208,8 @@ export default defineUnoConfig({
     }
   },
   rules: [
-    [/^flex-(\d+)$/, ([, value]: Array<string>) => ({ flex: `${value} ${value} 0%` })],
-    ['flex-row', { 'flex-direction': 'row' }],
-    [/^grid-([a-z]+)$/, ([, value]: Array<string>) => ({ 'grid-area': value })],
+    [/^flex-(\d+)$/, ([, value]: string[]) => ({ flex: `${value} ${value} 0%` })],
+    ['flex-initial', { flex: 'initial' }], // This rule purposely overrides preset-mini one
     ...generateCustomUnits(),
     ...generateBorders('', 1, 'px'),
     ...generateBorders('', 1, 'px'),
@@ -220,6 +219,23 @@ export default defineUnoConfig({
     [/^font-size-(\d+(?:_\d+)?)pt$/, ([, value]: Array<string>) => numericRule('font-size', value, 'px', 2.7)],
     ['font-system-fonts', { 'font-family': systemFonts }],
     ['font-monospace-system-fonts', { 'font-family': systemMonospaceFonts }]
+  ],
+  layers: { components: 0, utilities: 1, default: 2, 'talks-1': 90 },
+  variants: [
+    {
+      name: 'talks-layer-matcher',
+      match(matcher: string) {
+        const mo = matcher.match(/^(?<layer>talks-(?:\d+))@(?<matcher>.+)$/)
+        if (!mo) {
+          return matcher
+        }
+
+        return {
+          matcher: mo.groups!.matcher,
+          layer: mo.groups!.layer
+        }
+      }
+    }
   ],
   safelist: ['hidden', ...safelist]
 })

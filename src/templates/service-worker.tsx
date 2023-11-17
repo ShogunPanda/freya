@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference lib="webworker" />
 
-import { type Context } from '../generation/models.js'
+import { type BuildContext } from 'dante'
 
 declare let self: ServiceWorkerGlobalScope
 
@@ -39,6 +39,8 @@ function main(): void {
   workbox.precaching.precacheAndRoute(manifest, { cleanUrls: true })
   workbox.precaching.cleanupOutdatedCaches()
 
+  // TODO@PI: Register all routes with SWR
+
   // Cache Google Fonts
   workbox.routing.registerRoute(
     /^(https:\/\/fonts\.gstatic\.com)/,
@@ -50,14 +52,25 @@ function main(): void {
 
   // Application assets
   workbox.routing.registerRoute(
-    /.+\.(?:png|svg|webp)$/,
+    /\/images\/(?:.*\/)?.*\.(?:png|svg|webp)/,
     new workbox.strategies.CacheFirst({
+      cacheName: 'assets',
       plugins: [new workbox.cacheableResponse.CacheableResponsePlugin({ statuses: [0, 200] })]
     })
   )
+
+  workbox.routing.registerRoute(
+    /\/fonts\/(?:.*\/)?.*\.woff2/,
+    new workbox.strategies.CacheFirst({
+      cacheName: 'assets',
+      plugins: [new workbox.cacheableResponse.CacheableResponsePlugin({ statuses: [0, 200] })]
+    })
+  )
+
   workbox.routing.registerRoute(
     /.+\.(?:js|mjs|json)$/,
     new workbox.strategies.CacheFirst({
+      cacheName: 'data',
       plugins: [new workbox.cacheableResponse.CacheableResponsePlugin({ statuses: [0, 200] })]
     })
   )
@@ -71,11 +84,11 @@ function main(): void {
   })
 }
 
-export function serviceWorker(context: Context, precache: string[]): string {
+export function serviceWorker(context: BuildContext, precache: string[]): string {
   return `
 ${main};
 
-globalThis.debug = ${context.environment === 'development'};
+globalThis.debug = ${!context.isProduction};
 globalThis.version = "${context.version}";
 globalThis.precache = ${JSON.stringify(precache)};
 

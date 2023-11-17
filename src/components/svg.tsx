@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { type SVGProps } from 'react'
-import { resolveImagePath } from '../generation/loader.js'
-import { normalizeSVGProps, parseSVG } from '../generation/svg.js'
+import { normalizeSVGProps, parseSVG } from '../rendering/svg.js'
+import { resolveImagePath } from '../slidesets/loaders.js'
 
 interface SvgProps extends SVGProps<SVGSVGElement> {
   contents: string

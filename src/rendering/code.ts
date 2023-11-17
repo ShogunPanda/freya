@@ -1,5 +1,5 @@
-import { getHighlighter, type Highlighter, type Lang, renderToHtml } from 'shiki'
-import { type Slide } from './models.js'
+import { getHighlighter, renderToHtml, type Highlighter, type Lang } from 'shiki'
+import { type Slide } from '../slidesets/models.js'
 
 const highlightersCache = new Map<string, Highlighter>()
 
@@ -101,12 +101,13 @@ export async function renderCode(
       line({ className, children }: Record<string, unknown>): string {
         i++
         const nextRange = ranges[0]
+        let baseClass = 'code__line'
 
         // There is a range to higlight
         if (nextRange) {
           // We have to highlight
           if (nextRange[0] <= i && nextRange[1] >= i) {
-            ;(className as string) += ' highlighted'
+            baseClass += ' code__line__highlighted'
 
             // If it was a single line, make sure we move to the next range
             if (nextRange[0] === nextRange[1]) {
@@ -117,12 +118,12 @@ export async function renderCode(
             ranges.shift()
           }
         }
-        const lineNumberSpan = numbers !== false ? `<span class="line-number">${i}</span>` : ''
-        return `<span class="${className}">${lineNumberSpan}${children}</span>`
+        const lineNumberSpan = numbers !== false ? `<span class="code__line__number">${i}</span>` : ''
+        return `<span class="${className} ${baseClass}">${lineNumberSpan}${children}</span>`
       }
     },
     fg,
     bg,
     themeName: theme
-  })
+  }).replace('<pre class="', '<pre class="code__root ')
 }

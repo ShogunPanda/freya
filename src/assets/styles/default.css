@@ -40,13 +40,10 @@ body {
     @apply p-0_5sp;
     @apply overflow-hidden;
     transform: var(--freya-slide-transform);
+    @apply bg-white;
 
     & > * {
       @apply z-1;
-    }
-
-    &:not([class^='bg-']):not([class*=' bg-']) {
-      @apply bg-white;
     }
 
     &--with-half {

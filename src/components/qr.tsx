@@ -1,5 +1,5 @@
 import QRCodeGenerator from 'qrcode-generator'
-import { getAlignments, getCover, isAlignment, isCovered, isFinder } from '../generation/qr.js'
+import { getAlignments, getCover, isAlignment, isCovered, isFinder } from '../rendering/qr.js'
 
 type QRCodeGeneratorInterface = typeof QRCodeGenerator
 

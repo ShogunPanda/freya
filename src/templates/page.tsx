@@ -1,8 +1,8 @@
 import { type ReactNode } from 'react'
 import { Presenter } from '../components/presenter.js'
 import { SlidesList } from '../components/slides-list.js'
-import { resolveImageUrl } from '../generation/loader.js'
-import { type Talk, type Theme } from '../generation/models.js'
+import { resolveImageUrl } from '../slidesets/loaders.js'
+import { type Talk, type Theme } from '../slidesets/models.js'
 
 interface BodyProps {
   slides: ReactNode[]
@@ -43,7 +43,7 @@ export function header({ talk, theme, css, js }: HeaderProps): JSX.Element {
       <link rel="icon" href={faviconImageUrl} type="image/webp" sizes="192x192" />
       <link rel="apple-touch-icon" type="image/webp" href={faviconImageUrl} />
 
-      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <style data-dante-placeholder="style" dangerouslySetInnerHTML={{ __html: css }} />
 
       {fontsUrls.map(url => (
         <link key={url} rel="preload" as="font" href={url} crossOrigin="anonymous" />
@@ -52,7 +52,7 @@ export function header({ talk, theme, css, js }: HeaderProps): JSX.Element {
         <link key={url} rel="preload" as="image" href={url} />
       ))}
 
-      <script type="module" dangerouslySetInnerHTML={{ __html: js }} />
+      <script defer={true} type="module" dangerouslySetInnerHTML={{ __html: js }} />
     </>
   )
 }

@@ -1,7 +1,8 @@
+import { type BuildContext } from 'dante'
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import { finalizeJs } from '../generation/generator.js'
-import { type Context, type Talk } from '../generation/models.js'
+import { finalizeJs } from '../slidesets/generators.js'
+import { type Talk } from '../slidesets/models.js'
 
 interface BodyProps {
   talks: Record<string, Talk>
@@ -121,17 +122,15 @@ export function body({ talks }: BodyProps): JSX.Element {
   )
 }
 
-export async function page(context: Context): Promise<JSX.Element> {
+export async function page(context: BuildContext): Promise<JSX.Element> {
   const siteVersion = `globalThis.__freyaSiteVersion = "${context.version}"`
-  const hotReload =
-    context.environment === 'development'
-      ? await readFile(fileURLToPath(new URL('../assets/js/hot-reload.js', import.meta.url)), 'utf8')
-      : ''
+  const hotReload = !context.isProduction
+    ? await readFile(fileURLToPath(new URL('../assets/js/hot-reload.js', import.meta.url)), 'utf8')
+    : ''
 
-  const serviceWorker =
-    context.environment === 'production'
-      ? await readFile(fileURLToPath(new URL('../assets/js/service-worker.js', import.meta.url)), 'utf8')
-      : ''
+  const serviceWorker = context.isProduction
+    ? await readFile(fileURLToPath(new URL('../assets/js/service-worker.js', import.meta.url)), 'utf8')
+    : ''
 
   const js = await finalizeJs([siteVersion, hotReload, serviceWorker].join('\n;\n'))
 

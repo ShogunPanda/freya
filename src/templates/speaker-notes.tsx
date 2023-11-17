@@ -1,6 +1,6 @@
 import { Fragment } from 'react'
-import { renderNotes } from '../generation/generator.js'
-import { type Talk } from '../generation/models.js'
+import { renderNotes } from '../slidesets/generators.js'
+import { type Talk } from '../slidesets/models.js'
 
 const style = `
 *,

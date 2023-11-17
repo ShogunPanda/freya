@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 
 import { program } from 'commander'
+import { rootDir } from 'dante'
 import { readFileSync } from 'node:fs'
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pino from 'pino'
-import { rootDir } from '../generation/loader.js'
 
+// TODO@PI: Update me to use dante
 const packageInfo = JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'))
 
 const templates = {

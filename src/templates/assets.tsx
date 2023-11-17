@@ -1,4 +1,4 @@
-import { type Talk } from '../generation/models.js'
+import { type Talk } from '../slidesets/models.js'
 
 interface BodyProps {
   talk: Talk
