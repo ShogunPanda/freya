@@ -1,13 +1,26 @@
 import { minify } from '@swc/core'
-import { baseTemporaryDirectory, elapsed, prepareStyles, rootDir, type BuildContext } from 'dante'
+import {
+  baseTemporaryDirectory,
+  compressCSSClasses,
+  danteDir,
+  elapsed,
+  expandClasses,
+  loadClassesExpansion,
+  prepareStyles,
+  rootDir,
+  type BuildContext,
+  type ClassesExpansions
+} from 'dante'
 import { glob, type IgnoreLike } from 'glob'
 import markdownIt from 'markdown-it'
+import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { hostname } from 'node:os'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { safelist } from '../build.js'
 import { pusherConfig } from '../configuration.js'
 import { renderCode } from '../rendering/code.js'
 import { body as assetsBody, page as assetsPage } from '../templates/assets.js'
@@ -19,6 +32,8 @@ import { type BaseSlide, type ClientContext, type Slide, type SlideRenderer, typ
 interface Path {
   name: string
 }
+
+const codeCache = new Map<string, string>()
 
 const ignore: IgnoreLike = {
   ignored(p: Path): boolean {
@@ -50,6 +65,22 @@ function assetsSorter(left: string, right: string): number {
   return left.localeCompare(right)
 }
 
+function prepareClientClasses(context: BuildContext, talk: string, safelist: Set<string>, klasses: string): string {
+  const compressedClasses = context.extensions.css.compressedClasses[talk]
+  const generator = context.extensions.css.generator[talk]
+
+  if (context.css.keepExpanded) {
+    return context.extensions.expandClasses(klasses)
+  }
+
+  return compressCSSClasses(
+    context.extensions.expandClasses(klasses).split(' '),
+    compressedClasses,
+    safelist,
+    generator
+  ).join(' ')
+}
+
 export function renderNotes(slide: Slide): string {
   return slide.notes ? markdownRenderer.render(slide.notes) : ''
 }
@@ -68,13 +99,30 @@ export function parseContent(raw?: string): string {
     .trim()
 }
 
-// TODO@PI: LRU for the code
-async function ensureRenderedCode(_context: BuildContext, target: BaseSlide): Promise<void> {
-  if (target.code && !target.code.rendered) {
-    // const cacheKey = `code:${target.code.language}:${target.code.content}`
-
-    target.code.rendered = await renderCode(target.code)
+async function ensureRenderedCode(context: BuildContext, target: BaseSlide): Promise<void> {
+  if (!target.code || target.code?.rendered) {
+    return
   }
+
+  const cacheKey = `code:${target.code.language}:${target.code.content}`
+  const renderedCode = codeCache.get(cacheKey)
+
+  if (renderedCode) {
+    target.code.rendered = renderedCode
+    return
+  }
+
+  const classes: Record<string, string> = {}
+
+  if (typeof context.extensions.expandClasses === 'function') {
+    classes.root = context.extensions.expandClasses('freya@code__wrapper')
+    classes.line = context.extensions.expandClasses('freya@code__line')
+    classes.lineHighlighted = context.extensions.expandClasses('freya@code__line--highlighted')
+    classes.lineNumber = context.extensions.expandClasses('freya@code__line-number')
+  }
+
+  target.code.rendered = await renderCode(target.code, classes)
+  codeCache.set(cacheKey, target.code.rendered)
 }
 
 export async function generateAssetsListing(context: BuildContext): Promise<Record<string, string>> {
@@ -123,20 +171,32 @@ export async function generateAssetsListing(context: BuildContext): Promise<Reco
   return pages
 }
 
+function expandPageClasses(expansions: ClassesExpansions, klasses?: string): string {
+  return expandClasses(expansions, klasses)
+}
+
 export async function generateSlideset(context: BuildContext, theme: Theme, talk: Talk): Promise<string> {
   // Gather all files needed for the cache key
   const clientJsFile = fileURLToPath(new URL('../assets/js/slideset.js', import.meta.url))
-  const hotReloadFile = !context.isProduction
-    ? fileURLToPath(new URL('../assets/js/hot-reload.js', import.meta.url))
-    : ''
+  const hotReloadFile = !context.isProduction ? resolve(danteDir, 'dist/assets/hot-reload-trigger.js') : ''
   const serviceWorkerFile = context.isProduction
     ? fileURLToPath(new URL('../assets/js/service-worker.js', import.meta.url))
     : ''
 
   const [, pusher] = await resolvePusher()
-  const environment = context.isProduction ? 'production' : 'development'
+
+  // Loaded theme classes, if any
+  const themeClassesFile = resolve(rootDir, 'src/themes', theme.id, 'classes.css')
+  const themeClasses = existsSync(themeClassesFile) ? await readFile(themeClassesFile, 'utf-8') : ''
+
+  context.currentPage = talk.id
+  context.extensions.css.classesExpansions[talk.id] = await loadClassesExpansion(
+    (await readFile(new URL('../assets/styles/classes.css', import.meta.url), 'utf-8')) + themeClasses
+  )
+  context.extensions.expandClasses = expandPageClasses.bind(null, context.extensions.css.classesExpansions[talk.id])
 
   // Prepare the client
+  const finalSafelist = new Set(await safelist(context))
   const title = talk.document.title
   const clientContext: ClientContext = {
     id: talk.id,
@@ -146,7 +206,12 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
     slidesPadding: talk.slidesPadding,
     aspectRatio: talk.aspectRatio,
     current: 0,
-    environment,
+    isProduction: context.isProduction,
+    classes: {
+      hidden: prepareClientClasses(context, talk.id, finalSafelist, 'js@hidden'),
+      wrapped: prepareClientClasses(context, talk.id, finalSafelist, `js@slide js@${talk.id}`),
+      listActive: prepareClientClasses(context, talk.id, finalSafelist, 'js@slides__wrapper--active')
+    },
     pusher: pusherConfig
       ? {
           key: pusherConfig.key,
@@ -191,11 +256,11 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
       )
     )
 
-    slides.push({ ...layout({ environment, theme, talk, slide, index: i + 1 }), key: `slide:${i + 1}` })
+    slides.push({ ...layout({ context, theme, talk, slide, index: i + 1 }), key: `slide:${i + 1}` })
   }
 
   // Render the page body
-  const contents = renderToStaticMarkup(body({ slides }))
+  const contents = renderToStaticMarkup(body({ context, slides }))
 
   // Extract the CSS
   const css = await prepareStyles(context, contents)
@@ -249,6 +314,7 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
 
     resolvedTalks[id] = talk
     slidesets[id] = await generateSlideset(context, theme, talk)
+
     const progress = `[${i.toString().padStart(padding, '0')}/${totalPadded}]`
     context.logger.info(`${progress} Generated slideset ${id} in ${elapsed(startTime)} ms.`)
   }

@@ -82,6 +82,7 @@ export function parseRanges(highlight: any): number[][] {
 
 export async function renderCode(
   { content, language, numbers, highlight }: Required<Slide>['code'],
+  classes: Record<string, string>,
   theme: string = 'one-dark-pro'
 ): Promise<string> {
   if (!language) {
@@ -90,7 +91,7 @@ export async function renderCode(
 
   const highlighter = await createHighlighter(language, theme)
 
-  const tokens = highlighter.codeToThemedTokens(content.trim(), language, 'one-dark-pro')
+  const tokens = highlighter.codeToThemedTokens(content.trim(), language, theme)
   const { fg, bg } = highlighter.getTheme(theme)
 
   let i = 0
@@ -101,13 +102,13 @@ export async function renderCode(
       line({ className, children }: Record<string, unknown>): string {
         i++
         const nextRange = ranges[0]
-        let baseClass = 'code__line'
+        let baseClass = classes.line ?? ''
 
         // There is a range to higlight
         if (nextRange) {
           // We have to highlight
           if (nextRange[0] <= i && nextRange[1] >= i) {
-            baseClass += ' code__line__highlighted'
+            baseClass += ` ${classes.lineHighlighted}`
 
             // If it was a single line, make sure we move to the next range
             if (nextRange[0] === nextRange[1]) {
@@ -118,12 +119,12 @@ export async function renderCode(
             ranges.shift()
           }
         }
-        const lineNumberSpan = numbers !== false ? `<span class="code__line__number">${i}</span>` : ''
-        return `<span class="${className} ${baseClass}">${lineNumberSpan}${children}</span>`
+        const lineNumberSpan = numbers !== false ? `<span class="${classes.lineNumber ?? ''}">${i}</span>` : ''
+        return `<span class="${className} ${baseClass.trim()}">${lineNumberSpan}${children}</span>`
       }
     },
     fg,
     bg,
     themeName: theme
-  }).replace('<pre class="', '<pre class="code__root ')
+  }).replace('<pre class="', `<pre class="${classes.root ?? ''} `)
 }

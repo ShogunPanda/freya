@@ -43,7 +43,7 @@ export function SvgIcon(props: SvgIconProps): JSX.Element {
   )
 }
 
-export function SvgCloseIcon(): JSX.Element {
+export function SvgCloseIcon(props: Partial<SvgProps>): JSX.Element {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -53,6 +53,7 @@ export function SvgCloseIcon(): JSX.Element {
       fill="none"
       strokeLinecap="round"
       strokeLinejoin="round"
+      {...props}
     >
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <line x1="18" y1="6" x2="6" y2="18" />

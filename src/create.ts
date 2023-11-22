@@ -1,19 +1,20 @@
 #!/usr/bin/env node
 
-import { program } from 'commander'
+import { type Command } from 'commander'
 import { rootDir } from 'dante'
 import { readFileSync } from 'node:fs'
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import pino from 'pino'
+import { pino } from 'pino'
 
-// TODO@PI: Update me to use dante
-const packageInfo = JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'))
+const packageInfo = JSON.parse(readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8'))
 
 const templates = {
-  'src/talks/@NAME@/talk.yml': 'talk.yml',
+  'src/talks/@NAME@/info.yml': 'info.yml',
+  'src/talks/@NAME@/slides.yml': 'slides.yml',
   'src/themes/main/theme.yml': 'theme.yml',
+  'src/themes/main/classes.css': 'classes.css',
   'src/themes/main/style.css': 'style.css',
   'src/themes/main/unocss.config.ts': 'unocss.config.ts',
   'src/themes/main/layouts/default.tsx': 'layout.tsx',
@@ -31,7 +32,6 @@ function compile(template: string, variables: Record<string, string>): string {
 }
 
 export async function initializeSlideset(name: string, directory: string): Promise<void> {
-  const packageJson = JSON.parse(await readFile(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'))
   const logger = pino({ transport: { target: 'pino-pretty' }, level: process.env.LOG_LEVEL ?? 'info' })
   const fullOutput = resolve(rootDir, directory)
 
@@ -66,7 +66,7 @@ export async function initializeSlideset(name: string, directory: string): Promi
 
   const variables = {
     NAME: name,
-    VERSION: packageJson.version
+    VERSION: packageInfo.version
   }
 
   // Create all files
@@ -75,28 +75,25 @@ export async function initializeSlideset(name: string, directory: string): Promi
 
     logger.info(`Creating file ${relative(fullOutput, destination)} ...`)
     const template = await readFile(
-      fileURLToPath(new URL(`../assets/create/${templateFile}.tpl`, import.meta.url)),
+      fileURLToPath(new URL(`./assets/create/${templateFile}.tpl`, import.meta.url)),
       'utf8'
     )
     await writeFile(destination, compile(template.trim(), variables), 'utf8')
   }
 }
 
-program
-  .name('create'.trim())
-  .arguments('<name> [directory>')
-  .description('Initializes a freya slideset.')
-  .version(packageInfo.version, '-V, --version', 'Show version number')
-  .helpOption('-h, --help', 'Show this help')
-  .addHelpCommand(false)
-  .showSuggestionAfterError(true)
-  .allowUnknownOption(false)
-  .action(async (name: string, directory: string) => {
-    try {
-      await initializeSlideset(name, directory ?? name)
-    } catch (error) {
-      console.error(error)
-    }
-  })
-
-program.parse()
+export function createSetupCLI(program: Command, logger: pino.Logger): void {
+  program
+    .name('create-freya-slideset')
+    .description('Initializes a freya slideset.')
+    .version(packageInfo.version, '-V, --version', 'Show version number')
+    .action(async (name: string, directory: string) => {
+      try {
+        console.log('THIS IS ME')
+        await initializeSlideset(name, directory ?? name)
+      } catch (error) {
+        logger.error(error)
+        process.exit(1)
+      }
+    })
+}

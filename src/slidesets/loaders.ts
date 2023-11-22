@@ -7,6 +7,11 @@ import { resolve } from 'node:path'
 import { pusherConfig } from '../configuration.js'
 import { type Config, type RawTheme, type Slide, type Talk, type Theme } from './models.js'
 
+let commonCache: Record<string, object> | undefined
+let allTalksCache: Set<string> | undefined
+const themesCache = new Map<string, Theme>()
+const talksCache = new Map<string, Talk>()
+
 export async function resolvePusher(): Promise<[string, string]> {
   let pusherFile = ''
   let pusher = ''
@@ -40,20 +45,29 @@ export function resolveImageUrl(theme: string, talk: string, url?: string): stri
   return (url ?? '').replace('@talk', `/assets/talks/${talk}`).replace('@theme', `/assets/themes/${theme}`)
 }
 
-// TODO@PI: LRU CACHE
 export async function getCommon(): Promise<Record<string, object>> {
-  let common: Record<string, object> = {}
+  if (commonCache) {
+    return commonCache
+  }
+
+  let loaded: Record<string, object> = {}
   const commonPath = resolve(rootDir, 'src/talks', 'common.yml')
 
   if (existsSync(commonPath)) {
-    common = (await load(await readFile(commonPath, 'utf8'))) as Record<string, object>
+    loaded = (await load(await readFile(commonPath, 'utf8'))) as Record<string, object>
   }
 
-  return common
+  commonCache = loaded
+  return loaded
 }
 
-// TODO@PI: LRU CACHE
 export async function getTheme(themeName: string): Promise<Theme> {
+  const cached = themesCache.get(themeName)
+
+  if (cached) {
+    return cached
+  }
+
   let fontsStyles = ''
   const fontsUrls: string[] = []
 
@@ -95,11 +109,17 @@ export async function getTheme(themeName: string): Promise<Theme> {
     fontsUrls
   }
 
+  themesCache.set(themeName, theme)
   return theme
 }
 
-// TODO@PI: LRU CACHE
 export async function getTalk(id: string): Promise<Talk> {
+  const cached = talksCache.get(id)
+
+  if (cached) {
+    return cached
+  }
+
   let talk: Talk
 
   if (existsSync(resolve(rootDir, 'src/talks', id, 'slides.yml'))) {
@@ -147,13 +167,17 @@ export async function getTalk(id: string): Promise<Talk> {
   talk.aspectRatio = talk.config.dimensions.width / talk.config.dimensions.height
   talk.images = images
 
+  talksCache.set(id, talk)
   return talk
 }
 
-// TODO@PI: LRU CACHE
 export async function getAllTalks(): Promise<Set<string>> {
+  if (allTalksCache) {
+    return allTalksCache
+  }
+
   const allFiles = await readdir(resolve(rootDir, 'src/talks'))
-  return new Set(
+  allTalksCache = new Set(
     allFiles.filter((talk: string) => {
       return (
         existsSync(resolve(rootDir, 'src/talks', talk, 'talk.yml')) ||
@@ -161,4 +185,6 @@ export async function getAllTalks(): Promise<Set<string>> {
       )
     })
   )
+
+  return allTalksCache
 }

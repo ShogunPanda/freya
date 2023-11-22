@@ -1,3 +1,4 @@
+import { type BuildContext } from 'dante'
 import { type Pusher } from '../configuration.js'
 
 export interface FontsList {
@@ -76,12 +77,13 @@ export interface ClientContext {
   slidesPadding: number
   aspectRatio: number
   current: number
-  environment: 'development' | 'production'
+  isProduction: boolean
+  classes: Record<string, string>
   pusher?: Omit<Pusher, 'secret'> & { hostname?: string }
 }
 
 export interface SlideProps<T = Slide> {
-  environment: ClientContext['environment']
+  context: BuildContext
   theme: Theme
   talk: Talk
   slide: T

@@ -50,40 +50,36 @@ export async function exportAsJPEGs(
 
   // Open the page and wait for it to be completely loaded
   await page.goto(new URL(`/${id}?export=true`, baseUrl).toString())
-  await Promise.all([page.waitForLoadState('load'), page.waitForLoadState('networkidle')])
+  await Promise.all([page.waitForLoadState('load')])
   await page.waitForSelector('[data-freya-id="loading"]', { state: 'detached' })
 
   await mkdir(resolve(fullOutput, id))
 
+  // Now make a screenshot of the entire page
+  await page.screenshot({
+    path: resolve(fullOutput, id, 'all.jpg'),
+    clip: {
+      x: 0,
+      y: 0,
+      width: talk.config.dimensions.width,
+      height: talk.config.dimensions.height * talk.slides.length
+    },
+    fullPage: true,
+    type: 'jpeg',
+    quality: 100
+  })
+
+  // Split the images using imagemagick
+  await exec(
+    `convert all.jpg -crop ${talk.config.dimensions.width}x${talk.config.dimensions.height} +repage %02d.jpg`,
+    { cwd: resolve(fullOutput, id) }
+  )
+
+  await rm(resolve(fullOutput, id, 'all.jpg'))
+
   const totalPadding = total.toString().length
   const progress = `[${current.toString().padStart(totalPadding, '0')}/${total}]`
   const startTime = process.hrtime.bigint()
-  const slidesTotal = talk.slides.length
-  const slidesPadding = slidesTotal.toString().length
-
-  for (let i = 1; i <= slidesTotal; i++) {
-    const slidesProgress = `[${i.toString().padStart(slidesPadding, '0')}/${slidesTotal}]`
-    const slideStartTime = process.hrtime.bigint()
-    const paddedSlide = i.toString().padStart(talk.slidesPadding, '0')
-    const filename = join(id, paddedSlide + '.jpg')
-
-    await page.waitForURL(new URL(`/${id}/${paddedSlide}`, baseUrl).toString())
-    await page.screenshot({
-      path: resolve(fullOutput, filename),
-      clip: {
-        x: 0,
-        y: 0,
-        ...talk.config.dimensions
-      },
-      type: 'jpeg',
-      quality: 100
-    })
-
-    logger.debug(`${slidesProgress} Generated file for slide ${id}/${paddedSlide} in ${elapsed(slideStartTime)} ms.`)
-
-    // Go the next slide
-    await page.press('body', 'ArrowRight')
-  }
 
   logger.info(`${progress} Generated files for slideset ${id} in ${elapsed(startTime)} ms.`)
 
@@ -117,6 +113,15 @@ export async function createPDF(
 }
 
 export async function exportAllAsJPEGs(logger: pino.Logger, staticDir: string, port: number): Promise<void> {
+  try {
+    await exec('magick --help')
+    await exec('convert --help')
+  } catch (e) {
+    throw new Error(
+      'The magick or convert utilities could not be executed. Please make sure you have imagemagick installed.'
+    )
+  }
+
   const operationStart = process.hrtime.bigint()
 
   const fullOutput = resolve(rootDir, staticDir, 'jpeg')

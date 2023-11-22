@@ -1,9 +1,11 @@
+import { type BuildContext } from 'dante'
 import QRCodeGenerator from 'qrcode-generator'
 import { getAlignments, getCover, isAlignment, isCovered, isFinder } from '../rendering/qr.js'
 
 type QRCodeGeneratorInterface = typeof QRCodeGenerator
 
 interface QRCodeProps {
+  context: BuildContext
   data: string
   label?: string
   image?: string
@@ -66,7 +68,7 @@ export function generateQR(
   return qr
 }
 
-export function QRCode({ data, image, imageRatio, label, classes }: QRCodeProps): JSX.Element {
+export function QRCode({ context, data, image, imageRatio, label, classes }: QRCodeProps): JSX.Element {
   const { code: codeClassName, qr: qrClassName, label: labelClassName, image: imageClassName } = classes ?? {}
 
   // Generate the QR Code
@@ -118,11 +120,11 @@ export function QRCode({ data, image, imageRatio, label, classes }: QRCodeProps)
   }
 
   return (
-    <div className={`qr ${codeClassName ?? ''}`.trim()}>
-      <div className="relative">
+    <div className={context.extensions.expandClasses(`freya@qr ${codeClassName ?? ''}`.trim())}>
+      <div className={context.extensions.expandClasses('relative')}>
         <svg
           data-url={data}
-          className={`w-full h-auto ${qrClassName ?? ''}`.trim()}
+          className={context.extensions.expandClasses(`w-full h-auto ${qrClassName ?? ''}`.trim())}
           dangerouslySetInnerHTML={{ __html: svgContents }}
           width={dimension}
           height={dimension}
@@ -130,13 +132,22 @@ export function QRCode({ data, image, imageRatio, label, classes }: QRCodeProps)
         />
 
         {image && (
-          <div className="absolute w-full h-full top-0 left-0 flex items-center justify-center">
-            <img src={image} className={imageClassName ?? ''} />
+          <div
+            className={context.extensions.expandClasses(
+              'absolute w-full h-full top-0 left-0 flex items-center justify-center'
+            )}
+          >
+            <img src={image} className={context.extensions.expandClasses(imageClassName ?? '')} />
           </div>
         )}
       </div>
       {label && (
-        <a href={data} target="_blank" rel="noopener noreferrer" className={labelClassName}>
+        <a
+          href={data}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={context.extensions.expandClasses(labelClassName)}
+        >
           {label}
         </a>
       )}

@@ -5,8 +5,11 @@ import {
   elapsed,
   rootDir,
   transformCSS,
-  type BuildContext
+  type BuildContext,
+  type CSSClassGeneratorContext,
+  type ValueOrCallback
 } from 'dante'
+import { extractImages } from 'dante/html-utils'
 import { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify'
 import { glob } from 'glob'
 import { existsSync } from 'node:fs'
@@ -14,11 +17,10 @@ import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { filterWhitelistedTalks, pusherConfig } from './configuration.js'
-// @ts-expect-error This is present in the dist directory
-import { extractImages } from './lib/images-extractor/images_extractor.js'
 import { assetsHandler, pusherAuthHandler, talkHandler } from './server.js'
 import { generateAllSlidesets, generateAssetsListing } from './slidesets/generators.js'
 import { getAllTalks, getTalk, getTheme } from './slidesets/loaders.js'
+import { serviceWorker } from './templates/service-worker.js'
 
 declare module 'fastify' {
   interface FastifyReply {
@@ -67,6 +69,16 @@ async function generatePusherAuthFunction(context: BuildContext): Promise<string
   return functionFile
 }
 
+function getPageCssAttribute<T>(existing: Record<string, T>, createFactory: () => T, context: BuildContext): T {
+  const id = basename(context.currentPage ?? '', '.html')
+
+  if (!existing[id]) {
+    existing[id] = createFactory()
+  }
+
+  return existing[id]
+}
+
 export async function createStylesheet(context: BuildContext, page: string, minify: boolean): Promise<string> {
   const id = basename(page, '.html')
   if (id === '404' || id === 'index' || id.endsWith('_assets')) {
@@ -82,9 +94,12 @@ export async function createStylesheet(context: BuildContext, page: string, mini
     resolve(rootDir, baseTemporaryDirectory, 'themes', theme.id, 'unocss.config.js')
   )
 
+  const cssClasses =
+    typeof context.css.classes === 'function' ? await context.css.classes(context) : context.css.classes
+
   return createCSS(
     unoConfig,
-    context.cssClasses,
+    cssClasses,
     minify,
     async (id: string) => {
       return resolveCSS(id, unoConfig, theme.fontsStyles)
@@ -95,9 +110,6 @@ export async function createStylesheet(context: BuildContext, page: string, mini
 
 export async function build(context: BuildContext): Promise<void> {
   context.logger.info(`Building site (version ${context.version}) ...`)
-  if (!context.extensions) {
-    context.extensions = {}
-  }
 
   // Clean up the directory
   const baseDir = resolve(rootDir, 'dist/html')
@@ -109,14 +121,37 @@ export async function build(context: BuildContext): Promise<void> {
   // Copy file 404.html
   await cp(fileURLToPath(new URL('assets/404.html', import.meta.url)), resolve(baseDir, '404.html'))
 
-  // Generate the slidesets
+  // Prepare the context
   context.extensions.talks = filterWhitelistedTalks(await getAllTalks())
+
+  context.extensions.css = {
+    classes: Object.fromEntries([...context.extensions.talks].map(t => [t, new Set()])),
+    classesExpansions: Object.fromEntries([...context.extensions.talks].map(t => [t, []])),
+    generator: Object.fromEntries([...context.extensions.talks].map(t => [t, { name: '', counter: 0 }])),
+    compressedClasses: Object.fromEntries([...context.extensions.talks].map(t => [t, new Map()]))
+  }
+
+  context.css.classes = getPageCssAttribute.bind(
+    null,
+    context.extensions.css.classes,
+    () => new Set()
+  ) as ValueOrCallback<Set<string>>
+  context.css.compressedClasses = getPageCssAttribute.bind(
+    null,
+    context.extensions.css.compressedClasses,
+    () => new Map()
+  ) as ValueOrCallback<Map<string, string>>
+  context.css.generator = getPageCssAttribute.bind(null, context.extensions.css.generator, () => {
+    return { name: '', counter: 0 }
+  }) as ValueOrCallback<CSSClassGeneratorContext>
+
+  // Generate the slidesets
   context.extensions.slidesets = await generateAllSlidesets(context)
 
   // Write slidesets and track preCache information
   const toPrecache = new Set<string>()
 
-  for (const [name, file] of Object.entries(context.extensions.slidesets as Record<string, string>)) {
+  for (const [name, file] of Object.entries<string>(context.extensions.slidesets)) {
     toPrecache.add(name === 'index' ? '/' : `/${name}`)
 
     for (const image of extractImages(file)) {
@@ -139,6 +174,7 @@ export async function build(context: BuildContext): Promise<void> {
   // Copy themes and talks assets
   let fileOperations: Promise<void>[] = []
   const themes = new Set()
+
   for (const talk of context.extensions.talks) {
     const {
       config: { theme }
@@ -162,10 +198,9 @@ export async function build(context: BuildContext): Promise<void> {
     themes.add(theme)
   }
 
-  // TODO@PI
-  // if (context.environment === 'production') {
-  //   await writeFile(resolve(baseDir, 'sw.js'), serviceWorker(context, Array.from(toPrecache)), 'utf8')
-  // }
+  if (context.isProduction) {
+    await writeFile(resolve(baseDir, 'sw.js'), serviceWorker(context, Array.from(toPrecache)), 'utf8')
+  }
 
   await Promise.all(fileOperations)
   fileOperations = []
@@ -233,9 +268,9 @@ export function setupServer(server: FastifyInstance, isProduction: boolean): voi
   })
 }
 
-export async function safelist(_context: BuildContext, page: string): Promise<string[]> {
-  const id = basename(page, '.html')
-  if (id === '404' || id === 'index' || id.endsWith('_assets')) {
+export async function safelist(context: BuildContext): Promise<string[]> {
+  const id = basename(context.currentPage ?? '', '.html')
+  if (!id || id === '404' || id === 'index' || id.endsWith('_assets')) {
     return []
   }
 

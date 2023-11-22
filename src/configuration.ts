@@ -1,3 +1,6 @@
+import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 export interface Pusher {
   key: string
   secret: string
@@ -41,6 +44,7 @@ export function filterWhitelistedTalks(talks: Set<string>): Set<string> {
   return new Set([...talks].filter(t => whitelistedTalks.includes(t)))
 }
 
+export const freyaDir = resolve(fileURLToPath(import.meta.url), '../..')
 export let whitelistedTalks: string[]
 export const pusherConfig = loadPusherSettings()
 setWhitelistedTalks('')

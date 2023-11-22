@@ -1,12 +1,39 @@
 /* globals Pusher */
 
 {
+  function splitClasses(klasses) {
+    return klasses.split(/\s+/).map(k => k.trim())
+  }
+
+  function addClasses(el, klasses) {
+    el.classList.add(...splitClasses(klasses))
+  }
+
+  function removeClasses(el, klasses) {
+    el.classList.remove(...splitClasses(klasses))
+  }
+
+  function toggleClasses(el, klasses, force) {
+    const classList = el.classList
+
+    for (const klass of splitClasses(klasses)) {
+      classList.toggle(klass, force)
+    }
+  }
+
+  function hasClasses(el, klasses) {
+    const classList = el.classList
+    return splitClasses(klasses).every(k => classList.contains(k))
+  }
+
   function setupSlides(context) {
     // Load all the slides
     context.slidesNotes = new Map()
     context.slides = new Map(
       [...document.querySelectorAll('[data-freya-id="slide"]')].map(e => {
-        e.classList.add('hidden')
+        if (!context.export) {
+          addClasses(e, context.classes.hidden)
+        }
 
         const index = Number.parseInt(e.dataset.freyaIndex, 10)
         context.slidesNotes.set(index, e.querySelector('[data-freya-id="slide-notes"]'))
@@ -14,7 +41,7 @@
       })
     )
 
-    if (context.environment === 'development') {
+    if (!context.isProduction) {
       console.log('freya-slides context', context)
     }
 
@@ -23,11 +50,15 @@
       window.addEventListener('resize', boundUpdatesSlidesAppearance)
       document.addEventListener('fullscreenchange', boundUpdatesSlidesAppearance)
       setTimeout(boundUpdatesSlidesAppearance, 10)
+    } else {
+      document.body.style.display = 'block'
+      document.body.style.overflow = 'auto'
     }
   }
 
   function setupList(context) {
     context.list = document.querySelector('[data-freya-id="list:container"]')
+    context.listScrollView = document.querySelector('[data-freya-id="list:scrollview"]')
     context.listSlides = new Map()
 
     // Setup appearance
@@ -49,8 +80,11 @@
       const target = document.querySelector(`[data-freya-id="list:slide-wrapper"][data-freya-index="${index}"]`)
 
       const clone = slide.cloneNode(true)
-      clone.classList.remove('hidden')
-      target.prepend(clone)
+      removeClasses(clone, context.classes.hidden)
+      removeClasses(target, context.classes.listActive)
+      addClasses(clone, context.classes.wrapped)
+      clone.querySelector('[data-freya-id="progress"]').remove()
+      target.querySelector('[data-freya-id="list:slide-placeholder"]').replaceWith(clone)
 
       target.addEventListener('click', ev => {
         ev.preventDefault()
@@ -89,8 +123,9 @@
 
     layout.style.setProperty('--freya-presenter-slide-preview-height', `${previewWidth / context.aspectRatio}px`)
     layout.style.setProperty('--freya-presenter-slide-current-height', `${currentWidth / context.aspectRatio}px`)
-    layout.style.setProperty('--freya-presenter-slide-preview-transform', `scale(${previewScale})`)
-    layout.style.setProperty('--freya-presenter-slide-current-transform', `scale(${currentScale})`)
+    // context.presenterPrevious.style.setProperty('--freya-slides-slide-transform', `scale(${previewScale})`)
+    context.presenterCurrent.style.setProperty('--freya-slides-slide-transform', `scale(${currentScale})`)
+    context.presenterNext.style.setProperty('--freya-slides-slide-transform', `scale(${previewScale})`)
 
     // Setup events
     document.querySelector('[data-freya-id="presenter:close"]').addEventListener('click', ev => {
@@ -138,14 +173,14 @@
     })
 
     window.addEventListener('freya:slide:changed', () => {
-      if (isVisible(context.presenter)) {
+      if (isVisible(context, context.presenter)) {
         context.localChannel.postMessage({ id: context.id, current: context.current })
       }
     })
   }
 
   function setupPusherSynchronization(context) {
-    Pusher.logToConsole = context.environment === 'development'
+    Pusher.logToConsole = !context.isProduction
 
     const pusher = new Pusher(context.pusher.key, {
       cluster: context.pusher.cluster,
@@ -153,8 +188,9 @@
     })
     const url = new URL(location.href)
 
+    const environment = context.isProduction ? 'production' : 'development'
     context.remoteChannel = pusher.subscribe(
-      `private-talks-${url.protocol.replace(':', '')}-${url.hostname}-${url.port}-${context.id}-${context.environment}`
+      `private-talks-${url.protocol.replace(':', '')}-${url.hostname}-${url.port}-${context.id}-${environment}`
     )
 
     context.remoteChannel.bind('client-update', function (data) {
@@ -177,7 +213,7 @@
     })
 
     window.addEventListener('freya:slide:changed', () => {
-      if (isVisible(context.presenter)) {
+      if (isVisible(context, context.presenter)) {
         context.remoteChannel.trigger('client-update', { current: context.current })
       }
     })
@@ -282,8 +318,8 @@
     }
   }
 
-  function isVisible(container) {
-    return container.classList.contains('hidden') === false
+  function isVisible(context, container) {
+    return hasClasses(container, context.classes.hidden) === false
   }
 
   function gotoPreviousSlide(context) {
@@ -345,14 +381,15 @@
 
     // Hide previously visible slide
     if (context.current > 0) {
-      context.slides.get(context.current).classList.add('hidden')
-      context.listSlides.get(context.current).classList.remove('active')
+      addClasses(context.slides.get(context.current), context.classes.hidden)
+      removeClasses(context.listSlides.get(context.current), context.classes.listActive)
     }
 
     // Update the current visible slide, the list and the presenter
     context.current = current
-    context.slides.get(context.current).classList.remove('hidden')
-    context.listSlides.get(context.current).classList.add('active')
+    context.listScrollView.scrollTop = context.listSlides.get(context.current).offsetTop - 50
+    removeClasses(context.slides.get(context.current), context.classes.hidden)
+    addClasses(context.listSlides.get(context.current), context.classes.listActive)
     updatePresenter(context)
 
     // Update title and URL
@@ -372,19 +409,23 @@
     context.presenterNext.innerHTML = ''
     context.presenterNotes.innerHTML = ''
 
-    if (context.current > 1) {
-      const slide = context.slides.get(context.current - 1).cloneNode(true)
-      slide.classList.remove('hidden')
-      // context.presenterPrevious.append(slide)
-    }
+    // if (context.current > 1) {
+    //   const prevSlide = context.slides.get(context.current - 1).cloneNode(true)
+    //   addClasses(prevSlide, context.classes.wrapped)
+    //   removeClasses(prevSlide, context.classes.hidden)
+    //   context.presenterPrevious.append(prevSlide)
+    // }
 
-    context.presenterCurrent.append(context.slides.get(context.current).cloneNode(true))
+    const currentSlide = context.slides.get(context.current).cloneNode(true)
+    addClasses(currentSlide, context.classes.wrapped)
+    context.presenterCurrent.append(currentSlide)
     context.presenterNotes.append(context.slidesNotes.get(context.current).content.cloneNode(true))
 
     if (context.current < context.slidesCount) {
-      const slide = context.slides.get(context.current + 1).cloneNode(true)
-      slide.classList.remove('hidden')
-      context.presenterNext.append(slide)
+      const nextSlide = context.slides.get(context.current + 1).cloneNode(true)
+      addClasses(nextSlide, context.classes.wrapped)
+      removeClasses(nextSlide, context.classes.hidden)
+      context.presenterNext.append(nextSlide)
     }
 
     const paddedSlide = context.current.toString().padStart(context.slidesPadding, '0')
@@ -404,7 +445,7 @@
   }
 
   function closeOverlay(context) {
-    if (isVisible(context.list)) {
+    if (isVisible(context, context.list)) {
       toggleList(context, false)
     } else {
       togglePresenter(context, false)
@@ -413,26 +454,26 @@
 
   function toggleList(context, visible) {
     if (typeof visible === 'boolean') {
-      context.list.classList.toggle('hidden', !visible)
+      toggleClasses(context.list, context.classes.hidden, !visible)
     } else {
-      context.list.classList.toggle('hidden')
+      toggleClasses(context.list, context.classes.hidden)
     }
 
     window.dispatchEvent(new Event('freya:list:toggled'))
   }
 
   function togglePresenter(context, visible) {
-    if (isVisible(context.list) && visible !== false) {
+    if (isVisible(context, context.list) && visible !== false) {
       return
     }
 
     if (typeof visible === 'boolean') {
-      context.presenter.classList.toggle('hidden', !visible)
+      toggleClasses(context.presenter, context.classes.hidden, !visible)
     } else {
-      context.presenter.classList.toggle('hidden')
+      toggleClasses(context.presenter, context.classes.hidden)
     }
 
-    if (isVisible(context.presenter)) {
+    if (isVisible(context, context.presenter)) {
       window.dispatchEvent(new Event('freya:slide:changed'))
       startPresenterTimer(context)
     } else {
@@ -443,7 +484,7 @@
   }
 
   function startPresenterTimer(context, reset = true) {
-    if (!isVisible(context.presenter)) {
+    if (!isVisible(context, context.presenter)) {
       return
     }
 
@@ -461,7 +502,7 @@
   }
 
   function stopPresenterTimer(context) {
-    if (!isVisible(context.presenter)) {
+    if (!isVisible(context, context.presenter)) {
       return
     }
 
@@ -471,7 +512,7 @@
   }
 
   function togglePresenterTimer(context) {
-    if (!isVisible(context.presenter)) {
+    if (!isVisible(context, context.presenter)) {
       return
     }
 

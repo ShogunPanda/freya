@@ -1,5 +1,4 @@
 #!/bin/bash
 
-# TODO@PI: Customize this for freya
 ROOT=$(dirname $(realpath $0))
-DANTE_BASE_TEMPORARY_DIRECTORY=".freya" create-dante-site $@
+DANTE_BASE_TEMPORARY_DIRECTORY=".freya" DANTE_CREATE_PATH=$ROOT/../dist/create.js create-dante-site $@

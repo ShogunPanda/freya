@@ -11,6 +11,8 @@ declare global {
   // eslint-disable-next-line no-var
   var precache: string[]
   // eslint-disable-next-line no-var
+  var talks: string[]
+  // eslint-disable-next-line no-var
   var debug: boolean
   // eslint-disable-next-line no-var
   var version: string
@@ -39,12 +41,19 @@ function main(): void {
   workbox.precaching.precacheAndRoute(manifest, { cleanUrls: true })
   workbox.precaching.cleanupOutdatedCaches()
 
-  // TODO@PI: Register all routes with SWR
+  // Register all routes with SWR
+  workbox.routing.registerRoute(
+    new RegExp(`^/(?:${globalThis.talks.join('|')})(/\\d{1,2})?`),
+    new workbox.strategies.StaleWhileRevalidate({
+      cacheName: 'pages',
+      plugins: [new workbox.cacheableResponse.CacheableResponsePlugin({ statuses: [0, 200] })]
+    })
+  )
 
   // Cache Google Fonts
   workbox.routing.registerRoute(
     /^(https:\/\/fonts\.gstatic\.com)/,
-    new workbox.strategies.CacheFirst({
+    new workbox.strategies.StaleWhileRevalidate({
       cacheName: 'google-fonts',
       plugins: [new workbox.cacheableResponse.CacheableResponsePlugin({ statuses: [0, 200] })]
     })
@@ -53,7 +62,7 @@ function main(): void {
   // Application assets
   workbox.routing.registerRoute(
     /\/images\/(?:.*\/)?.*\.(?:png|svg|webp)/,
-    new workbox.strategies.CacheFirst({
+    new workbox.strategies.StaleWhileRevalidate({
       cacheName: 'assets',
       plugins: [new workbox.cacheableResponse.CacheableResponsePlugin({ statuses: [0, 200] })]
     })
@@ -61,7 +70,7 @@ function main(): void {
 
   workbox.routing.registerRoute(
     /\/fonts\/(?:.*\/)?.*\.woff2/,
-    new workbox.strategies.CacheFirst({
+    new workbox.strategies.StaleWhileRevalidate({
       cacheName: 'assets',
       plugins: [new workbox.cacheableResponse.CacheableResponsePlugin({ statuses: [0, 200] })]
     })
@@ -69,7 +78,7 @@ function main(): void {
 
   workbox.routing.registerRoute(
     /.+\.(?:js|mjs|json)$/,
-    new workbox.strategies.CacheFirst({
+    new workbox.strategies.StaleWhileRevalidate({
       cacheName: 'data',
       plugins: [new workbox.cacheableResponse.CacheableResponsePlugin({ statuses: [0, 200] })]
     })
@@ -88,9 +97,10 @@ export function serviceWorker(context: BuildContext, precache: string[]): string
   return `
 ${main};
 
-globalThis.debug = ${!context.isProduction};
+globalThis.debug = true; //${!context.isProduction};
 globalThis.version = "${context.version}";
 globalThis.precache = ${JSON.stringify(precache)};
+globalThis.talks = ${JSON.stringify(Array.from(context.extensions.talks))};
 
 main()
 `

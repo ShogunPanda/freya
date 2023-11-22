@@ -1,7 +1,7 @@
 import { CSSValue, Rule } from '@unocss/core'
 import presetWind from '@unocss/preset-wind'
 import transformerDirectives from '@unocss/transformer-directives'
-import { defineUnoConfig, getTalks, numericRule, systemFonts, systemMonospaceFonts } from 'freya-slides'
+import { defineUnoConfig, numericRule, systemFonts, systemMonospaceFonts } from 'freya-slides'
 
 function generateSpacing(customUnit: string, ratio: number, unit: string): Array<Rule> {
   const spacings: Array<Rule> = []
@@ -178,21 +178,6 @@ function generateCustomUnits(): Array<Rule> {
   return rules
 }
 
-const talks = await getTalks()
-const safelist = new Set<string>()
-
-// for (const id of talks) {
-//   const talk = await getTalk(id)
-
-//   for (const slide of talk.slides) {
-//     for (const value of Object.values(slide.classes ?? {})) {
-//       for (const klass of value.split(' ')) {
-//         safelist.add(klass)
-//       }
-//     }
-//   }
-// }
-
 export default defineUnoConfig({
   presets: [presetWind()],
   transformers: [transformerDirectives()],
@@ -210,6 +195,12 @@ export default defineUnoConfig({
   rules: [
     [/^flex-(\d+)$/, ([, value]: string[]) => ({ flex: `${value} ${value} 0%` })],
     ['flex-initial', { flex: 'initial' }], // This rule purposely overrides preset-mini one
+    [
+      /^transform-(.+)/,
+      ([, value]: string[]) => {
+        return { transform: transformCSSValue(value) }
+      }
+    ],
     ...generateCustomUnits(),
     ...generateBorders('', 1, 'px'),
     ...generateBorders('', 1, 'px'),
@@ -220,12 +211,24 @@ export default defineUnoConfig({
     ['font-system-fonts', { 'font-family': systemFonts }],
     ['font-monospace-system-fonts', { 'font-family': systemMonospaceFonts }]
   ],
-  layers: { components: 0, utilities: 1, default: 2, 'talks-1': 90 },
+  layers: {
+    components: 10,
+    utilities: 11,
+    default: 12,
+    freya: 21,
+    theme: 41,
+    talk: 61,
+    'freya-important': 91,
+    'theme-important': 92,
+    'talk-important': 93,
+    js: 99
+  },
   variants: [
     {
       name: 'talks-layer-matcher',
       match(matcher: string) {
-        const mo = matcher.match(/^(?<layer>talks-(?:\d+))@(?<matcher>.+)$/)
+        const mo = matcher.match(/^(?<layer>([^@]+))@(?<matcher>.+)$/)
+
         if (!mo) {
           return matcher
         }
@@ -237,5 +240,5 @@ export default defineUnoConfig({
       }
     }
   ],
-  safelist: ['hidden', ...safelist]
+  safelist: []
 })

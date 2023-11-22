@@ -47,6 +47,19 @@ slides:
   - title: 'Hello world!'
 ```
 
+Or you can split the file above in `info.yml` and `slide.yml`. The first file should contain all the keys of `talk.yml` but `slides`.
+The other file should instead be formatted as follows:
+
+```
+---
+title: 'Hello world!'
+
+---
+title: 'Another greeting!'
+
+# ...
+```
+
 The `config.theme` value must point to a folder in the `src/themes` folder (see below).
 
 The `document` value can contain additional keys.
@@ -83,7 +96,9 @@ resolveImageUrl('theme', 'id', '@talk/logo.jpg')
 
 Once you have done editing, you should execute `freya build`. Slides will be exported in the `dist/html` folder, along with a Netlify configuration file.
 
-If you want to export as JPEG or PDF you can execute `freya jpeg` or `freya pdf`. In both cases, speaker notes will be exported as separated HTML file in the same folder.
+If you want to export as JPEG and PDF you can execute `freya export`. Speaker notes will be exported as separated HTML file in the same folder.
+
+In order to use the exporting feature you need [imagemagick](https://imagemagick.org) to be installed.
 
 ### Presenting
 
@@ -177,7 +192,12 @@ A theme must contain at least the following files:
     const { title, content, notes } = slide
 
     return (
-      <div key={`slide:${index}`} data-freya-id="slide" data-freya-index={index} className="freya__slide">
+      <div
+        key={`slide:${index}`}
+        data-freya-id="slide"
+        data-freya-index={index}
+        className={context.extensions.expandClasses('freya@slide')}
+      >
         <h1 dangerouslySetInnerHTML={{ __html: parseContent(title) }} />
 
         {content

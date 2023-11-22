@@ -10,5 +10,3 @@ document:
     name:
     description:
     email:
-slides:
-  - title: 'Hello world!'

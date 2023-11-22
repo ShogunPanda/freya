@@ -1,3 +1,4 @@
+import { type BuildContext } from 'dante'
 import { type ReactNode } from 'react'
 import { Presenter } from '../components/presenter.js'
 import { SlidesList } from '../components/slides-list.js'
@@ -5,6 +6,7 @@ import { resolveImageUrl } from '../slidesets/loaders.js'
 import { type Talk, type Theme } from '../slidesets/models.js'
 
 interface BodyProps {
+  context: BuildContext
   slides: ReactNode[]
 }
 
@@ -15,17 +17,17 @@ interface HeaderProps {
   js: string
 }
 
-export function body({ slides }: BodyProps): JSX.Element {
+export function body({ context, slides }: BodyProps): JSX.Element {
   return (
     <>
-      <nav data-freya-id="loading" className="freya__loading">
-        <h1>Loading ...</h1>
+      <nav data-freya-id="loading" className={context.extensions.expandClasses('freya@loading')}>
+        <h1 className={context.extensions.expandClasses('freya@loading__contents')}>Loading ...</h1>
       </nav>
 
       {slides}
 
-      <SlidesList count={slides.length} />
-      <Presenter />
+      <SlidesList context={context} count={slides.length} />
+      <Presenter context={context} />
     </>
   )
 }

@@ -20,7 +20,7 @@ async function performExport(command: Command, logger: pino.Logger, netlify: boo
     setWhitelistedTalks(only)
     const absoluteStaticDir = resolve(rootDir, staticDir)
     const buildContext = createBuildContext(logger, true, absoluteStaticDir)
-    buildContext.extensions = { netlify }
+    buildContext.extensions.netlify = netlify
 
     await compileSourceCode(logger)
     await builder(buildContext)
@@ -64,7 +64,6 @@ export function setupCLI(program: Command, logger: pino.Logger): void {
     }
   }
 
-  // TODO@PI: Replace with a single export command
   program
     .command('export')
     .description('Builds all the slidesets as a set of JPEG images files and a combined PDF file')

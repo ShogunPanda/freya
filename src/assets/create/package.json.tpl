@@ -20,11 +20,13 @@
   "scripts": {
     "dev": "freya development",
     "build": "freya build",
+    "postbuild": "concurrently npm:lint npm:typecheck",
     "serve": "freya server",
     "jpeg": "freya jpeg",
     "pdf": "freya pdf",
     "format": "prettier -w src",
-    "lint": "eslint --ext .ts,.tsx src"
+    "lint": "eslint --cache --ext .js,.jsx,.ts,.tsx src",
+    "typecheck": "tsc -p . --emitDeclarationOnly"
   },
   "dependencies": {
     "@unocss/transformer-directives": "^0.46.5",
@@ -35,6 +37,7 @@
   "devDependencies": {
     "@cowtech/eslint-config": "^8.7.5",
     "@types/react": "^18.0.25",
+    "concurrently": "^8.2.2",
     "eslint": "^8.26.0",
     "prettier": "^2.7.1"
   }

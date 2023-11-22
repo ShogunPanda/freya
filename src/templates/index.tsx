@@ -1,5 +1,6 @@
-import { type BuildContext } from 'dante'
+import { danteDir, type BuildContext } from 'dante'
 import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { finalizeJs } from '../slidesets/generators.js'
 import { type Talk } from '../slidesets/models.js'
@@ -123,9 +124,9 @@ export function body({ talks }: BodyProps): JSX.Element {
 }
 
 export async function page(context: BuildContext): Promise<JSX.Element> {
-  const siteVersion = `globalThis.__freyaSiteVersion = "${context.version}"`
+  const siteVersion = `globalThis.__freyaSiteVersion = "${context.extensions.version}"`
   const hotReload = !context.isProduction
-    ? await readFile(fileURLToPath(new URL('../assets/js/hot-reload.js', import.meta.url)), 'utf8')
+    ? await readFile(resolve(danteDir, 'dist/assets/hot-reload-trigger.js'), 'utf8')
     : ''
 
   const serviceWorker = context.isProduction

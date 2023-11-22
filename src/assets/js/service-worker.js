@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(location.search)
+  const exporting = params.get('export') === 'true'
+
   // Service workers
-  if (navigator.serviceWorker) {
+  if (navigator.serviceWorker && !exporting) {
     navigator.serviceWorker.addEventListener('message', event => {
       const { type, payload } = event.data
 
