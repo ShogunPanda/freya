@@ -1,6 +1,6 @@
 {
   "name": "freya-slides",
-  "version": "0.34.2",
+  "version": "0.35.0",
   "description": "Opinionated JSX based slides generator.",
   "homepage": "https://sw.cowtech.it/freya-slides",
   "repository": "github:ShogunPanda/freya-slides",
