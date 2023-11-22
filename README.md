@@ -188,7 +188,7 @@ A theme must contain at least the following files:
   ```tsx
   import { Slide, SlideProps, parseContent } from 'freya-slides'
 
-  export default function DefaultLayout({ slide, index }: SlideProps<Slide>): JSX.Element {
+  export default function DefaultLayout({ context, slide, index }: SlideProps<Slide>): JSX.Element {
     const { title, content, notes } = slide
 
     return (
