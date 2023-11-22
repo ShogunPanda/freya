@@ -1,3 +1,10 @@
+### 2023-11-22 / 0.35.0
+
+- chore: Updated documentation.
+- feat: Improved CSS handling.
+- feat: Rewritten using dante.
+- chore: Fixed CI script.
+
 ### 2023-10-30 / 0.34.2
 
 - fix: Removed ignore file.
