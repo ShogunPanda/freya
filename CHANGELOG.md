@@ -1,3 +1,7 @@
+### 2023-11-23 / 0.35.1
+
+- fix: Only enable service worker in production.
+
 ### 2023-11-22 / 0.35.0
 
 - chore: Updated documentation.
