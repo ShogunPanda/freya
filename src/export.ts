@@ -41,6 +41,7 @@ export async function exportAsPNGs(
   current: number,
   total: number
 ): Promise<void> {
+  const startTime = process.hrtime.bigint()
   const context = await browser.newContext({ ignoreHTTPSErrors: true })
   const page = await context.newPage()
   const talk = await getTalk(id)
@@ -78,7 +79,6 @@ export async function exportAsPNGs(
 
   const totalPadding = total.toString().length
   const progress = `[${current.toString().padStart(totalPadding, '0')}/${total}]`
-  const startTime = process.hrtime.bigint()
 
   logger.info(`${progress} Generated files for slideset ${id} in ${elapsed(startTime)} ms.`)
 
