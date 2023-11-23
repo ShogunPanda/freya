@@ -5,7 +5,7 @@ import { type AddressInfo } from 'node:net'
 import { resolve } from 'node:path'
 import type pino from 'pino'
 import { pusherConfig, setWhitelistedTalks } from './configuration.js'
-import { createAllPDFs, exportAllAsJPEGs } from './export.js'
+import { createAllPDFs, exportAllAsPNGs } from './export.js'
 
 function applyOnlyOption(command: Command): void {
   command.hook('preAction', () => {
@@ -34,8 +34,8 @@ async function performExport(command: Command, logger: pino.Logger, netlify: boo
       staticDir: resolve(rootDir, staticDir)
     })
 
-    // Export as JPEGs
-    await exportAllAsJPEGs(logger, staticDir, (server.server.address() as AddressInfo).port)
+    // Export as PNGs
+    await exportAllAsPNGs(logger, staticDir, (server.server.address() as AddressInfo).port)
     await server.close()
 
     // Create PDFs
@@ -66,7 +66,7 @@ export function setupCLI(program: Command, logger: pino.Logger): void {
 
   program
     .command('export')
-    .description('Builds all the slidesets as a set of JPEG images files and a combined PDF file')
+    .description('Builds all the slidesets as a set of PNG images files and a combined PDF file')
     .option('-d, --directory <dir>', 'The directory where to build and serve files from', 'dist')
     .alias('e')
     .action(async function exportAction(this: Command): Promise<void> {

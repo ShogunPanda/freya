@@ -22,7 +22,7 @@
     "build": "freya build",
     "postbuild": "concurrently npm:lint npm:typecheck",
     "serve": "freya server",
-    "jpeg": "freya jpeg",
+    "png": "freya png",
     "pdf": "freya pdf",
     "format": "prettier -w src",
     "lint": "eslint --cache --ext .js,.jsx,.ts,.tsx src",

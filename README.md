@@ -96,7 +96,7 @@ resolveImageUrl('theme', 'id', '@talk/logo.jpg')
 
 Once you have done editing, you should execute `freya build`. Slides will be exported in the `dist/html` folder, along with a Netlify configuration file.
 
-If you want to export as JPEG and PDF you can execute `freya export`. Speaker notes will be exported as separated HTML file in the same folder.
+If you want to export as PNG and PDF you can execute `freya export`. Speaker notes will be exported as separated HTML file in the same folder.
 
 In order to use the exporting feature you need [imagemagick](https://imagemagick.org) to be installed.
 

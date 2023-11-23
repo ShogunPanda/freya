@@ -32,7 +32,7 @@ async function exportNotes(
   logger.info(`${progress} Generated speaker notes for slideset ${talk.id} in ${elapsed(startTime)} ms.`)
 }
 
-export async function exportAsJPEGs(
+export async function exportAsPNGs(
   logger: pino.Logger,
   id: string,
   fullOutput: string,
@@ -57,7 +57,7 @@ export async function exportAsJPEGs(
 
   // Now make a screenshot of the entire page
   await page.screenshot({
-    path: resolve(fullOutput, id, 'all.jpg'),
+    path: resolve(fullOutput, id, 'all.png'),
     clip: {
       x: 0,
       y: 0,
@@ -65,17 +65,16 @@ export async function exportAsJPEGs(
       height: talk.config.dimensions.height * talk.slides.length
     },
     fullPage: true,
-    type: 'jpeg',
-    quality: 100
+    type: 'png'
   })
 
   // Split the images using imagemagick
   await exec(
-    `convert all.jpg -crop ${talk.config.dimensions.width}x${talk.config.dimensions.height} +repage %02d.jpg`,
+    `convert all.png -crop ${talk.config.dimensions.width}x${talk.config.dimensions.height} +repage %02d.png`,
     { cwd: resolve(fullOutput, id) }
   )
 
-  await rm(resolve(fullOutput, id, 'all.jpg'))
+  await rm(resolve(fullOutput, id, 'all.png'))
 
   const totalPadding = total.toString().length
   const progress = `[${current.toString().padStart(totalPadding, '0')}/${total}]`
@@ -98,13 +97,13 @@ export async function createPDF(
   const startTime = process.hrtime.bigint()
 
   try {
-    await exec(`magick *.jpg ../../pdf/${id}.pdf`, { cwd: resolve(rootDir, staticDir, 'jpeg', id) })
+    await exec(`magick *.png ../../pdf/${id}.pdf`, { cwd: resolve(rootDir, staticDir, 'PNG', id) })
   } catch (error) {
     logger.fatal({ e: error }, 'Creating PDF failed.')
     process.exit(1)
   }
 
-  const notesPath = resolve(rootDir, staticDir, 'jpeg', id, 'speaker-notes.html')
+  const notesPath = resolve(rootDir, staticDir, 'PNG', id, 'speaker-notes.html')
   if (existsSync(notesPath)) {
     await cp(notesPath, resolve(rootDir, staticDir, 'pdf', `${id}-speaker-notes.html`))
   }
@@ -112,7 +111,7 @@ export async function createPDF(
   logger.info(`${progress} Created PDF for slideset ${id} in ${elapsed(startTime)} ms.`)
 }
 
-export async function exportAllAsJPEGs(logger: pino.Logger, staticDir: string, port: number): Promise<void> {
+export async function exportAllAsPNGs(logger: pino.Logger, staticDir: string, port: number): Promise<void> {
   try {
     await exec('magick --help')
     await exec('convert --help')
@@ -124,11 +123,11 @@ export async function exportAllAsJPEGs(logger: pino.Logger, staticDir: string, p
 
   const operationStart = process.hrtime.bigint()
 
-  const fullOutput = resolve(rootDir, staticDir, 'jpeg')
+  const fullOutput = resolve(rootDir, staticDir, 'PNG')
   const protocol = existsSync(resolve(rootDir, 'ssl')) ? 'https' : 'http'
   const baseUrl = new URL(`${protocol}://127.0.0.1:${port}`)
 
-  logger.info(`Exporting JPEG files into directory ${staticDir}/jpeg ...`)
+  logger.info(`Exporting PNG files into directory ${staticDir}/png ...`)
 
   // Prepare the output directory
   await rm(fullOutput, { recursive: true, force: true })
@@ -143,7 +142,7 @@ export async function exportAllAsJPEGs(logger: pino.Logger, staticDir: string, p
   const talksArray = [...talks]
   const talksArrayLength = talksArray.length
   for (let i = 0; i < talksArrayLength; i++) {
-    await exportAsJPEGs(logger, talksArray[i], fullOutput, baseUrl, browser, i + 1, talksArrayLength)
+    await exportAsPNGs(logger, talksArray[i], fullOutput, baseUrl, browser, i + 1, talksArrayLength)
   }
 
   await browser.close()
