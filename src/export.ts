@@ -97,13 +97,13 @@ export async function createPDF(
   const startTime = process.hrtime.bigint()
 
   try {
-    await exec(`magick *.png ../../pdf/${id}.pdf`, { cwd: resolve(rootDir, staticDir, 'PNG', id) })
+    await exec(`magick *.png ../../pdf/${id}.pdf`, { cwd: resolve(rootDir, staticDir, 'png', id) })
   } catch (error) {
     logger.fatal({ e: error }, 'Creating PDF failed.')
     process.exit(1)
   }
 
-  const notesPath = resolve(rootDir, staticDir, 'PNG', id, 'speaker-notes.html')
+  const notesPath = resolve(rootDir, staticDir, 'png', id, 'speaker-notes.html')
   if (existsSync(notesPath)) {
     await cp(notesPath, resolve(rootDir, staticDir, 'pdf', `${id}-speaker-notes.html`))
   }
@@ -123,7 +123,7 @@ export async function exportAllAsPNGs(logger: pino.Logger, staticDir: string, po
 
   const operationStart = process.hrtime.bigint()
 
-  const fullOutput = resolve(rootDir, staticDir, 'PNG')
+  const fullOutput = resolve(rootDir, staticDir, 'png')
   const protocol = existsSync(resolve(rootDir, 'ssl')) ? 'https' : 'http'
   const baseUrl = new URL(`${protocol}://127.0.0.1:${port}`)
 
