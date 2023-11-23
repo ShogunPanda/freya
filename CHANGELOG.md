@@ -1,3 +1,7 @@
+### 2023-11-23 / 0.36.1
+
+- fix: Fixed timer.
+
 ### 2023-11-23 / 0.36.0
 
 - feat: Use PNG instead of JPEG.
