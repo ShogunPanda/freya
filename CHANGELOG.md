@@ -1,3 +1,7 @@
+### 2023-11-23 / 0.36.0
+
+- feat: Use PNG instead of JPEG.
+
 ### 2023-11-23 / 0.35.1
 
 - fix: Only enable service worker in production.
