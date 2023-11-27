@@ -26,20 +26,6 @@
     @apply overflow-hidden;
     @apply transform-[var(--freya-slide-transform)];
     @apply bg-white;
-
-    &--with-half {
-      @apply freya-important@flex-row;
-      @apply freya-important@p-0;
-      @apply items-center;
-      @apply justify-center;
-    }
-
-    &__half {
-      @apply relative;
-      @apply flex;
-      @apply w-full;
-      @apply h-full;
-    }
   }
 
   &slides,
