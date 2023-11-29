@@ -1,5 +1,12 @@
 import { type Command } from 'commander'
-import { builder, compileSourceCode, createBuildContext, localServer, rootDir } from 'dante'
+import {
+  builder,
+  compileSourceCode,
+  createBuildContext,
+  initializeSyntaxHighlighting,
+  localServer,
+  rootDir
+} from 'dante'
 import { cp, rm } from 'node:fs/promises'
 import { type AddressInfo } from 'node:net'
 import { resolve } from 'node:path'
@@ -23,6 +30,7 @@ async function performExport(command: Command, logger: pino.Logger, netlify: boo
     buildContext.extensions.netlify = netlify
 
     await compileSourceCode(logger)
+    await initializeSyntaxHighlighting(logger)
     await builder(buildContext)
 
     // Start the server

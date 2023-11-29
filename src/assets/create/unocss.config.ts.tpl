@@ -1,7 +1,7 @@
 import { CSSValue, Rule } from '@unocss/core'
 import presetWind from '@unocss/preset-wind'
 import transformerDirectives from '@unocss/transformer-directives'
-import { defineUnoConfig, numericRule, systemFonts, systemMonospaceFonts } from 'freya-slides'
+import { compressLayers, defineUnoConfig, numericRule, systemFonts, systemMonospaceFonts, layersVariant } from 'freya-slides'
 
 function generateSpacing(customUnit: string, ratio: number, unit: string): Array<Rule> {
   const spacings: Array<Rule> = []
@@ -178,6 +178,22 @@ function generateCustomUnits(): Array<Rule> {
   return rules
 }
 
+const layers: Record<string, number> = {
+  components: 10,
+  utilities: 11,
+  default: 12,
+  freya: 21,
+  theme: 41,
+  talk: 61,
+  'freya-override': 81,
+  'theme-override': 82,
+  'talk-override': 83,
+  'freya-important': 91,
+  'theme-important': 92,
+  'talk-important': 93,
+  js: 99
+}
+
 export default defineUnoConfig({
   presets: [presetWind()],
   transformers: [transformerDirectives()],
@@ -211,34 +227,9 @@ export default defineUnoConfig({
     ['font-system-fonts', { 'font-family': systemFonts }],
     ['font-monospace-system-fonts', { 'font-family': systemMonospaceFonts }]
   ],
-  layers: {
-    components: 10,
-    utilities: 11,
-    default: 12,
-    freya: 21,
-    theme: 41,
-    talk: 61,
-    'freya-important': 91,
-    'theme-important': 92,
-    'talk-important': 93,
-    js: 99
-  },
-  variants: [
-    {
-      name: 'talks-layer-matcher',
-      match(matcher: string) {
-        const mo = matcher.match(/^(?<layer>([^@]+))@(?<matcher>.+)$/)
-
-        if (!mo) {
-          return matcher
-        }
-
-        return {
-          matcher: mo.groups!.matcher,
-          layer: mo.groups!.layer
-        }
-      }
-    }
-  ],
+  layers,
+  variants: [layersVariant],
   safelist: []
 })
+
+export const compressedLayers = compressLayers(layers)

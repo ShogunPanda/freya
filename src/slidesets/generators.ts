@@ -1,16 +1,17 @@
 import { minify } from '@swc/core'
 import {
   baseTemporaryDirectory,
-  compressCSSClasses,
   danteDir,
   elapsed,
   expandClasses,
   loadClassesExpansion,
   prepareStyles,
+  renderCode,
   rootDir,
   type BuildContext,
   type ClassesExpansions
 } from 'dante'
+import { compressCSSClasses } from 'dante/html-utils'
 import { glob, type IgnoreLike } from 'glob'
 import markdownIt from 'markdown-it'
 import { existsSync } from 'node:fs'
@@ -22,7 +23,6 @@ import { type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { safelist } from '../build.js'
 import { pusherConfig } from '../configuration.js'
-import { renderCode } from '../rendering/code.js'
 import { body as assetsBody, page as assetsPage } from '../templates/assets.js'
 import { page as index, body as indexBody } from '../templates/index.js'
 import { body, header, page } from '../templates/page.js'
@@ -67,18 +67,24 @@ function assetsSorter(left: string, right: string): number {
 
 function prepareClientClasses(context: BuildContext, talk: string, safelist: Set<string>, klasses: string): string {
   const compressedClasses = context.extensions.css.compressedClasses[talk]
+  const compressedLayers = context.extensions.css.compressedLayers[talk]
   const generator = context.extensions.css.generator[talk]
 
   if (context.css.keepExpanded) {
     return context.extensions.expandClasses(klasses)
   }
 
-  return compressCSSClasses(
+  const [counter, ...compressed] = compressCSSClasses(
     context.extensions.expandClasses(klasses).split(' '),
     compressedClasses,
+    compressedLayers,
     safelist,
-    generator
-  ).join(' ')
+    generator.counter,
+    generator.prefix ?? ''
+  )
+
+  generator.counter = counter
+  return compressed.join(' ')
 }
 
 export function renderNotes(slide: Slide): string {
@@ -121,7 +127,8 @@ async function ensureRenderedCode(context: BuildContext, target: BaseSlide): Pro
     classes.lineNumber = context.extensions.expandClasses('freya@code__line-number')
   }
 
-  target.code.rendered = await renderCode(target.code, classes)
+  const { content, language, numbers, highlight } = target.code
+  target.code.rendered = await renderCode(content, language ?? '', numbers ?? false, highlight ?? '', classes)
   codeCache.set(cacheKey, target.code.rendered)
 }
 
@@ -185,14 +192,16 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
 
   const [, pusher] = await resolvePusher()
 
-  // Loaded theme classes, if any
+  // Load theme classes and layers, if any
   const themeClassesFile = resolve(rootDir, 'src/themes', theme.id, 'classes.css')
   const themeClasses = existsSync(themeClassesFile) ? await readFile(themeClassesFile, 'utf-8') : ''
+  const { compressedLayers } = await import(resolve(baseTemporaryDirectory, 'themes', theme.id, 'unocss.config.js'))
 
   context.currentPage = talk.id
   context.extensions.css.classesExpansions[talk.id] = await loadClassesExpansion(
     (await readFile(new URL('../assets/styles/classes.css', import.meta.url), 'utf-8')) + themeClasses
   )
+  context.extensions.css.compressedLayers[talk.id] = compressedLayers
   context.extensions.expandClasses = expandPageClasses.bind(null, context.extensions.css.classesExpansions[talk.id])
 
   // Prepare the client

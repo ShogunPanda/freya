@@ -50,7 +50,7 @@
     "@unocss/preset-mini": "^0.57.5",
     "chokidar": "^3.5.3",
     "commander": "^11.1.0",
-    "dante": "^0.26.1",
+    "dante": "^0.27.0",
     "glob": "^10.3.10",
     "js-yaml": "^4.1.0",
     "markdown-it": "^13.0.2",
@@ -60,7 +60,6 @@
     "qrcode-generator": "^1.4.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "shiki": "^0.14.5",
     "wait-on": "^7.0.1",
     "xml-js": "^1.6.11"
   },

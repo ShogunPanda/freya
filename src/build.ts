@@ -128,7 +128,8 @@ export async function build(context: BuildContext): Promise<void> {
     classes: Object.fromEntries([...context.extensions.talks].map(t => [t, new Set()])),
     classesExpansions: Object.fromEntries([...context.extensions.talks].map(t => [t, []])),
     generator: Object.fromEntries([...context.extensions.talks].map(t => [t, { name: '', counter: 0 }])),
-    compressedClasses: Object.fromEntries([...context.extensions.talks].map(t => [t, new Map()]))
+    compressedClasses: Object.fromEntries([...context.extensions.talks].map(t => [t, new Map()])),
+    compressedLayers: Object.fromEntries([...context.extensions.talks].map(t => [t, new Map()]))
   }
 
   context.css.classes = getPageCssAttribute.bind(
@@ -139,6 +140,11 @@ export async function build(context: BuildContext): Promise<void> {
   context.css.compressedClasses = getPageCssAttribute.bind(
     null,
     context.extensions.css.compressedClasses,
+    () => new Map()
+  ) as ValueOrCallback<Map<string, string>>
+  context.css.compressedLayers = getPageCssAttribute.bind(
+    null,
+    context.extensions.css.compressedLayers,
     () => new Map()
   ) as ValueOrCallback<Map<string, string>>
   context.css.generator = getPageCssAttribute.bind(null, context.extensions.css.generator, () => {

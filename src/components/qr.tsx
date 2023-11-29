@@ -20,8 +20,9 @@ interface QRCodeProps {
 
 const padding = 1
 const radius = 5
-const diameter = radius * 2
-const size = diameter + padding * 2
+const diameter = radius * 2 // This is also the stroke width - Consider that all the strokes consider the origin its middle point
+const unit = diameter + padding * 2 // This is the grid unit
+const rectCornerSize = diameter + radius // Because you specify the diameter in the paths and then have to consider half the stroke width, which is the radius
 
 /*
   Draw the corners and aligments.
@@ -29,31 +30,88 @@ const size = diameter + padding * 2
   For all this consider the stroke is radius * 2 to align with dots, and that the stroke is
   drawn half inside and half outside the border (and the boundaries).
 */
-function drawFinder(x: number, y: number): string {
-  const opx = size * x + padding + radius
-  const opy = size * y + padding + radius
-  const osize = size * 5 + padding * 2 + radius * 2
-  const ipx = size * (x + 2) + padding
-  const ipy = size * (y + 2) + padding
-  const isize = size * 3 - padding * 2
+function drawFinder(x: number, y: number, size: number = 7, innerSizeModifier: number = 4): string {
+  const outerTotalSize = size * unit - padding * 2
+  const outerSideSize = outerTotalSize - rectCornerSize * 2
+  const outerPositionX = unit * x + padding + radius + diameter // Move right to exclude the top-left corner
+  const outerPositionY = unit * y + padding + radius
+
+  const innerTotalSize = (size - innerSizeModifier) * unit + diameter - padding * 2 // Add the diameter manually as stroke is not used here
+  const innerSideSize = innerTotalSize - rectCornerSize * 2
+  const innerPositionX = unit * (x + innerSizeModifier / 2) + padding + diameter // Move right to exclude the top-left corner
+  const innerPositionY = unit * (y + innerSizeModifier / 2) + padding
+
+  const outer = [
+    `M${outerPositionX},${outerPositionY}`, // Move to the origin of the outer rectangle
+    `h${outerSideSize}`, // Draw the top line
+    `s${diameter},0,${diameter},${diameter}`, // Draw the top right border -> Parameters are the control point and the ending point
+    `v${outerSideSize}`, // Draw the right line
+    `s0,${diameter},-${diameter},${diameter}`, // Draw the top right border
+    `h-${outerSideSize}`, // Draw the bottom line
+    `s-${diameter},0,${-diameter},${-diameter}`, // Draw the top right border
+    `v-${outerSideSize}`, // Draw the top line
+    `s0,-${diameter},${diameter},-${diameter}`, // Draw the top left border
+    ''
+  ]
+
+  const inner = [
+    `M${innerPositionX},${innerPositionY}`, // Move to the origin of the inner rectangle
+    `h${innerSideSize}`, // Draw the top line
+    `s${diameter},0,${diameter},${diameter}`, // Draw the top right border -> Parameters are the control point and the ending point
+    `v${innerSideSize}`, // Draw the right line
+    `s0,${diameter},-${diameter},${diameter}`, // Draw the top right border
+    `h-${innerSideSize}`, // Draw the bottom line
+    `s-${diameter},0,${-diameter},${-diameter}`, // Draw the top right border
+    `v-${innerSideSize}`, // Draw the top line
+    `s0,-${diameter},${diameter},-${diameter}`, // Draw the top left border
+    ''
+  ]
 
   return `
-    <rect x="${opx}" y="${opy}" width="${osize}" height="${osize}" stroke="currentColor" stroke-width="${diameter}" fill="none" rx="${diameter}" ry="${diameter}"/>
-     <rect x="${ipx}" y="${ipy}" width="${isize}" height="${isize}" stroke="none" fill="currentColor" fill="transparent" rx="${diameter}" ry="${diameter}"/>   
-    `
+    <path d="${outer.join(' ')}" fill="none" stroke="currentColor" stroke-width=${diameter} />
+    <path d="${inner.join(' ')}" fill="currentColor" stroke="none" />
+  `
 }
 
-function drawAlignment(x: number, y: number): string {
-  const opx = size * x + padding + radius
-  const opy = size * y + padding + radius
-  const osize = size * 3 + padding * 2 + radius * 2
-  const ipx = size * (x + 2) + padding + radius
-  const ipy = size * (y + 2) + padding + radius
+function drawAlignment(x: number, y: number, size: number = 5): string {
+  const outerTotalSize = size * unit - padding * 2
+  const outerSideSize = outerTotalSize - rectCornerSize * 2
+  const outerPositionX = unit * x + padding + radius + diameter // Move right to exclude the top-left corner
+  const outerPositionY = unit * y + padding + radius
+
+  const circlePositionX = unit * (x + 2) + padding
+  const circlePositionY = unit * (y + 2) + padding + radius
+
+  // const circlePosition =
+  const outer = [
+    `M${outerPositionX},${outerPositionY}`, // Move to the origin of the outer rectangle
+    `h${outerSideSize}`, // Draw the top line
+    `s${diameter},0,${diameter},${diameter}`, // Draw the top right border -> Parameters are the control point and the ending point
+    `v${outerSideSize}`, // Draw the right line
+    `s0,${diameter},-${diameter},${diameter}`, // Draw the top right border
+    `h-${outerSideSize}`, // Draw the bottom line
+    `s-${diameter},0,${-diameter},${-diameter}`, // Draw the top right border
+    `v-${outerSideSize}`, // Draw the top line
+    `s0,-${diameter},${diameter},-${diameter}`, // Draw the top left border
+    ''
+  ]
+
+  const circle = [
+    `M${circlePositionX},${circlePositionY}`, // Move to the origin of the inner rectangle
+    `a${radius},${radius},0,1,0,${diameter},0 a${radius},${radius},0,1,0,${-diameter},0` // Draw the circle
+  ]
 
   return `
-    <rect x="${opx}" y="${opy}" width="${osize}" height="${osize}" stroke="currentColor" stroke-width="${diameter}" fill="none" rx="${diameter}" ry="${diameter}"/>
-    <circle cx="${ipx}" cy="${ipy}" r="${radius}" stroke="none" fill="currentColor"/>
+    <path d="${outer.join(' ')}" fill="none" stroke="currentColor" stroke-width=${diameter} />
+    <path d="${circle.join(' ')}" fill="currentColor" stroke="none" />
   `
+}
+
+function drawCircle(x: number, y: number): string {
+  const positionX = padding + x * unit
+  const positionY = padding + y * unit + radius
+
+  return `M${positionX},${positionY} a${radius},${radius},0,1,0,${diameter},0 a${radius},${radius},0,1,0,${-diameter},0 `
 }
 
 export function generateQR(
@@ -76,7 +134,7 @@ export function QRCode({ context, data, image, imageRatio, label, classes }: QRC
 
   // Get some QR parameters
   const moduleCount = qr.getModuleCount()
-  const dimension = moduleCount * size + padding
+  const dimension = moduleCount * unit + padding
   const aligments = getAlignments(moduleCount)
 
   // Mask the image, if asked to
@@ -93,8 +151,8 @@ export function QRCode({ context, data, image, imageRatio, label, classes }: QRC
     })
   }).flat()
 
-  let svgContents = ''
-
+  let svgPath = ''
+  let svgPoints = ''
   // Draw the modules
   for (let i = 0; i < modules.length; i++) {
     if (modules[i] === 0) {
@@ -104,40 +162,35 @@ export function QRCode({ context, data, image, imageRatio, label, classes }: QRC
     const y = Math.floor(i / moduleCount)
     const x = i % moduleCount
 
-    const cx = padding + x * size + radius
-    const cy = padding + y * size + radius
-    svgContents += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="currentColor" stroke="none" />`
+    svgPoints += drawCircle(x, y)
   }
+  svgPath += `<path d="${svgPoints}" fill="currentColor" stroke="none" />`
 
   // Draw the finders
-  svgContents += drawFinder(0, 0)
-  svgContents += drawFinder(moduleCount - 7, 0)
-  svgContents += drawFinder(0, moduleCount - 7)
+  svgPath += drawFinder(0, 0)
+  svgPath += drawFinder(moduleCount - 7, 0)
+  svgPath += drawFinder(0, moduleCount - 7)
 
   // Draw the aligments
   for (const aligment of aligments) {
-    svgContents += drawAlignment(aligment[0], aligment[1])
+    svgPath += drawAlignment(aligment[0], aligment[1])
   }
 
   return (
-    <div className={context.extensions.expandClasses(`freya@qr ${codeClassName ?? ''}`.trim())}>
-      <div className={context.extensions.expandClasses('relative')}>
+    <div className={context.extensions.expandClasses(`freya@qr ${codeClassName ?? ''}`)}>
+      <div className={context.extensions.expandClasses('freya@qr__wrapper')}>
         <svg
           data-url={data}
-          className={context.extensions.expandClasses(`w-full h-auto ${qrClassName ?? ''}`.trim())}
-          dangerouslySetInnerHTML={{ __html: svgContents }}
+          className={context.extensions.expandClasses(`freya@qr__code ${qrClassName ?? ''}`)}
+          dangerouslySetInnerHTML={{ __html: svgPath }}
           width={dimension}
           height={dimension}
           viewBox={`0 0 ${dimension} ${dimension}`}
-        />
+        ></svg>
 
         {image && (
-          <div
-            className={context.extensions.expandClasses(
-              'absolute w-full h-full top-0 left-0 flex items-center justify-center'
-            )}
-          >
-            <img src={image} className={context.extensions.expandClasses(imageClassName ?? '')} />
+          <div className={context.extensions.expandClasses('freya@qr__image-wrapper')}>
+            <img src={image} className={context.extensions.expandClasses(`freya@qr__image ${imageClassName ?? ''}`)} />
           </div>
         )}
       </div>

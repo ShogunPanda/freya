@@ -206,6 +206,32 @@
       @apply font-size-10pt;
     }
   }
+
+  &qr {
+    &__wrapper {
+      @apply relative;
+    }
+
+    &__code {
+      @apply w-full;
+      @apply h-auto;
+    }
+
+    &__image-wrapper {
+      @apply absolute;
+      @apply w-full;
+      @apply h-full;
+      @apply top-0;
+      @apply left-0;
+      @apply flex;
+      @apply items-center;
+      @apply justify-center;
+    }
+
+    &__image {
+      @apply bg-white;
+    }
+  }
 }
 
 .js@hidden {

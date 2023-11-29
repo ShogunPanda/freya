@@ -89,7 +89,6 @@ export function createSetupCLI(program: Command, logger: pino.Logger): void {
     .version(packageInfo.version, '-V, --version', 'Show version number')
     .action(async (name: string, directory: string) => {
       try {
-        console.log('THIS IS ME')
         await initializeSlideset(name, directory ?? name)
       } catch (error) {
         logger.error(error)

@@ -11,7 +11,7 @@ export function Code({
 
   return (
     <div
-      className={context.extensions.expandClasses(`freya@code ${className ?? ''}`.trim())}
+      className={context.extensions.expandClasses(`freya@code ${className ?? ''}`)}
       dangerouslySetInnerHTML={{ __html: rendered.replaceAll('$', '&#36;') }}
     />
   )
