@@ -68,7 +68,7 @@ export function page(title: string): JSX.Element {
         <title>{title}</title>
         @HEAD@
       </head>
-      @BODY@
+      <body>@BODY@</body>
     </html>
   )
 }

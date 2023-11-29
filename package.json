@@ -27,14 +27,19 @@
   "type": "module",
   "exports": {
     ".": "./dist/index.js",
-    "./cli": "./dist/cli.js"
+    "./cli": "./dist/cli.js",
+    "./html-utils": {
+      "import": "./dist/lib/html-utils/html_utils.js",
+      "types": "./dist/lib/html-utils/html_utils.d.ts"
+    }
   },
   "types": "./dist/index.d.ts",
   "scripts": {
     "predev": "npm run prebuild",
     "dev": "swc -s -w -d dist src",
-    "prebuild": "rm -rf dist && mkdir dist && cp -a src/assets dist",
+    "prebuild": "rm -rf dist && mkdir dist && cp -a src/assets dist && npm run build:html-utils",
     "build": "swc -d dist src",
+    "build:html-utils": "cd lib/html-utils && make",
     "postbuild": "concurrently npm:lint npm:typecheck",
     "format": "prettier -w src",
     "lint": "eslint --cache --ext .js,.jsx,.ts,.tsx src",

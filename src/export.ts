@@ -5,13 +5,19 @@ import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { promisify } from 'node:util'
 import type pino from 'pino'
-import { chromium, type Browser } from 'playwright'
+import { chromium } from 'playwright'
 import { renderToStaticMarkup } from 'react-dom/server'
 import waitOn from 'wait-on'
 import { filterWhitelistedTalks } from './configuration.js'
 import { getAllTalks, getTalk } from './slidesets/loaders.js'
 import { type Talk } from './slidesets/models.js'
 import { speakerNotes } from './templates/speaker-notes.js'
+
+interface Progress {
+  current: number
+  total: number
+  padding: number
+}
 
 const exec = promisify(execCB)
 
@@ -37,10 +43,12 @@ export async function exportAsPNGs(
   id: string,
   fullOutput: string,
   baseUrl: URL,
-  browser: Browser,
-  current: number,
-  total: number
+  progress: Progress
 ): Promise<void> {
+  const browser = await chromium.launch({
+    headless: !(process.env.FREYA_DEBUG_EXPORT === 'true'),
+    args: ['--use-gl=egl']
+  })
   const startTime = process.hrtime.bigint()
   const context = await browser.newContext({ ignoreHTTPSErrors: true })
   const page = await context.newPage()
@@ -50,50 +58,39 @@ export async function exportAsPNGs(
   await page.setViewportSize(talk.config.dimensions)
 
   // Open the page and wait for it to be completely loaded
-  await page.goto(new URL(`/${id}?export=true`, baseUrl).toString())
-  await Promise.all([page.waitForLoadState('load')])
-  await page.waitForSelector('[data-freya-id="loading"]', { state: 'detached' })
-
   await mkdir(resolve(fullOutput, id))
 
-  // Now make a screenshot of the entire page
-  await page.screenshot({
-    path: resolve(fullOutput, id, 'all.png'),
-    clip: {
-      x: 0,
-      y: 0,
-      width: talk.config.dimensions.width,
-      height: talk.config.dimensions.height * talk.slides.length
-    },
-    fullPage: true,
-    type: 'png'
-  })
+  for (let i = 0; i < talk.slidesCount; i++) {
+    const paddedSlide = i.toString().padStart(talk.slidesPadding, '0')
 
-  // Split the images using imagemagick
-  await exec(
-    `convert all.png -crop ${talk.config.dimensions.width}x${talk.config.dimensions.height} +repage %02d.png`,
-    { cwd: resolve(fullOutput, id) }
-  )
+    await page.goto(new URL(`/${id}/${paddedSlide}?export=true`, baseUrl).toString())
+    await Promise.all([page.waitForLoadState('load')])
 
-  await rm(resolve(fullOutput, id, 'all.png'))
+    // Now make a screenshot of the entire page
+    await page.screenshot({
+      path: resolve(fullOutput, id, paddedSlide + '.png'),
+      clip: {
+        x: 0,
+        y: 0,
+        width: talk.config.dimensions.width,
+        height: talk.config.dimensions.height
+      },
+      fullPage: true,
+      type: 'png'
+    })
+  }
 
-  const totalPadding = total.toString().length
-  const progress = `[${current.toString().padStart(totalPadding, '0')}/${total}]`
+  await browser.close()
 
-  logger.info(`${progress} Generated files for slideset ${id} in ${elapsed(startTime)} ms.`)
+  progress.current++
+  const progressString = `[${progress.current.toString().padStart(progress.padding, '0')}/${progress.total}]`
 
-  await exportNotes(logger, talk, fullOutput, join(id, 'speaker-notes.html'), progress)
+  logger.info(`${progressString} Generated files for slideset ${id} in ${elapsed(startTime)} ms.`)
+
+  await exportNotes(logger, talk, fullOutput, join(id, 'speaker-notes.html'), progressString)
 }
 
-export async function createPDF(
-  logger: pino.Logger,
-  id: string,
-  staticDir: string,
-  current: number,
-  total: number
-): Promise<void> {
-  const totalPadding = total.toString().length
-  const progress = `[${current.toString().padStart(totalPadding, '0')}/${total}]`
+export async function createPDF(logger: pino.Logger, id: string, staticDir: string, progress: Progress): Promise<void> {
   const startTime = process.hrtime.bigint()
 
   try {
@@ -108,7 +105,9 @@ export async function createPDF(
     await cp(notesPath, resolve(rootDir, staticDir, 'pdf', `${id}-speaker-notes.html`))
   }
 
-  logger.info(`${progress} Created PDF for slideset ${id} in ${elapsed(startTime)} ms.`)
+  progress.current++
+  const progressString = `[${progress.current.toString().padStart(progress.padding, '0')}/${progress.total}]`
+  logger.info(`${progressString} Created PDF for slideset ${id} in ${elapsed(startTime)} ms.`)
 }
 
 export async function exportAllAsPNGs(logger: pino.Logger, staticDir: string, port: number): Promise<void> {
@@ -136,16 +135,17 @@ export async function exportAllAsPNGs(logger: pino.Logger, staticDir: string, po
   // Await for the website to be reachable
   await waitOn({ resources: [`tcp:127.0.0.1:${port}`], timeout: 30_000 })
 
-  const browser = await chromium.launch({ headless: !(process.env.FREYA_DEBUG_EXPORT === 'true') })
   const talks = filterWhitelistedTalks(await getAllTalks())
 
   const talksArray = [...talks]
   const talksArrayLength = talksArray.length
-  for (let i = 0; i < talksArrayLength; i++) {
-    await exportAsPNGs(logger, talksArray[i], fullOutput, baseUrl, browser, i + 1, talksArrayLength)
+  const progress = {
+    current: 0,
+    total: talksArrayLength,
+    padding: talksArrayLength.toString().length
   }
 
-  await browser.close()
+  await Promise.all(talksArray.map(t => exportAsPNGs(logger, t, fullOutput, baseUrl, progress)))
 
   logger.info(`Exporting completed in ${elapsed(operationStart)} ms.`)
 }
@@ -163,9 +163,13 @@ export async function createAllPDFs(logger: pino.Logger, staticDir: string): Pro
 
   const talksArray = [...talks]
   const talksArrayLength = talksArray.length
-  for (let i = 0; i < talksArrayLength; i++) {
-    await createPDF(logger, talksArray[i], staticDir, i + 1, talksArrayLength)
+  const progress = {
+    current: 0,
+    total: talksArrayLength,
+    padding: talksArrayLength.toString().length
   }
+
+  await Promise.all(talksArray.map(t => createPDF(logger, t, staticDir, progress)))
 
   logger.info(`Created all PDF files in ${elapsed(operationStart)} ms.`)
 }

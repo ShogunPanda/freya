@@ -31,9 +31,7 @@
     context.slidesNotes = new Map()
     context.slides = new Map(
       [...document.querySelectorAll('[data-freya-id="slide"]')].map(e => {
-        if (!context.export) {
-          addClasses(e, context.classes.hidden)
-        }
+        addClasses(e, context.classes.hidden)
 
         const index = Number.parseInt(e.dataset.freyaIndex, 10)
         context.slidesNotes.set(index, e.querySelector('[data-freya-id="slide-notes"]'))
@@ -45,15 +43,10 @@
       console.log('freya-slides context', context)
     }
 
-    if (!context.export) {
-      const boundUpdatesSlidesAppearance = updateSlidesAppearance.bind(null, context)
-      window.addEventListener('resize', boundUpdatesSlidesAppearance)
-      document.addEventListener('fullscreenchange', boundUpdatesSlidesAppearance)
-      setTimeout(boundUpdatesSlidesAppearance, 10)
-    } else {
-      document.body.style.display = 'block'
-      document.body.style.overflow = 'auto'
-    }
+    const boundUpdatesSlidesAppearance = updateSlidesAppearance.bind(null, context)
+    window.addEventListener('resize', boundUpdatesSlidesAppearance)
+    document.addEventListener('fullscreenchange', boundUpdatesSlidesAppearance)
+    setTimeout(boundUpdatesSlidesAppearance, 10)
   }
 
   function setupList(context) {
@@ -374,7 +367,7 @@
   }
 
   function updateCurrentSlide(context, current, syncing, inTransition) {
-    if (!inTransition && !context.export && typeof document.startViewTransition === 'function') {
+    if (!inTransition && typeof document.startViewTransition === 'function') {
       document.startViewTransition(() => updateCurrentSlide(context, current, syncing, true))
       return
     }
@@ -553,22 +546,22 @@
   }
 
   window.addEventListener('load', function () {
-    const context = {}
-
     const params = new URLSearchParams(location.search)
-    context.export = params.get('export') === 'true'
+    if (params.get('export') === 'true') {
+      return
+    }
+
+    const context = {}
 
     // Setup elements
     setupSlides(context)
     setupList(context)
     setupPresenter(context)
 
-    if (!context.export) {
-      if (context.pusher) {
-        setupPusherSynchronization(context)
-      } else {
-        setupLocalSynchronization(context)
-      }
+    if (context.pusher) {
+      setupPusherSynchronization(context)
+    } else {
+      setupLocalSynchronization(context)
     }
 
     // Setup other events
