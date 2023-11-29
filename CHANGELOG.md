@@ -1,3 +1,8 @@
+### 2023-11-29 / 0.37.0
+
+- feat: Improved rendering.
+- fix: Removed specific style.
+
 ### 2023-11-23 / 0.36.2
 
 - fix: Fixed paths.
