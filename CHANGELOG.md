@@ -1,3 +1,7 @@
+### 2023-11-29 / 0.38.0
+
+- feat: Make exporting parallel.
+
 ### 2023-11-29 / 0.37.0
 
 - feat: Improved rendering.
