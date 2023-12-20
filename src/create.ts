@@ -86,7 +86,7 @@ export function createSetupCLI(program: Command, logger: pino.Logger): void {
   program
     .name('create-freya-slideset')
     .description('Initializes a freya slideset.')
-    .version(packageInfo.version, '-V, --version', 'Show version number')
+    .version(packageInfo.version as string, '-V, --version', 'Show version number')
     .action(async (name: string, directory: string) => {
       try {
         await initializeSlideset(name, directory ?? name)

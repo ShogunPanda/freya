@@ -9,6 +9,7 @@ import {
   renderCode,
   rootDir,
   type BuildContext,
+  type CSSClassGeneratorContext,
   type ClassesExpansions
 } from 'dante'
 import { compressCSSClasses } from 'dante/html-utils'
@@ -66,16 +67,16 @@ function assetsSorter(left: string, right: string): number {
 }
 
 function prepareClientClasses(context: BuildContext, talk: string, safelist: Set<string>, klasses: string): string {
-  const compressedClasses = context.extensions.css.compressedClasses[talk]
-  const compressedLayers = context.extensions.css.compressedLayers[talk]
-  const generator = context.extensions.css.generator[talk]
+  const compressedClasses: Map<string, string> = context.extensions.css.compressedClasses[talk]
+  const compressedLayers: Map<string, string> = context.extensions.css.compressedLayers[talk]
+  const generator: CSSClassGeneratorContext = context.extensions.css.generator[talk]
 
   if (context.css.keepExpanded) {
     return context.extensions.expandClasses(klasses)
   }
 
   const [counter, ...compressed] = compressCSSClasses(
-    context.extensions.expandClasses(klasses).split(' '),
+    context.extensions.expandClasses(klasses).split(' ') as string[],
     compressedClasses,
     compressedLayers,
     safelist,
@@ -138,11 +139,11 @@ export async function generateAssetsListing(context: BuildContext): Promise<Reco
 
   // For each talk, generate all the slideset
   const total = context.extensions.talks.size
-  const totalPadded = total.toString()
+  const totalPadded = total.toString() as string
   let i = 0
   const padding = totalPadded.length
 
-  for (const id of context.extensions.talks) {
+  for (const id of context.extensions.talks as string[]) {
     i++
     const startTime = process.hrtime.bigint()
     const talk = await getTalk(id)
@@ -202,7 +203,10 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
     (await readFile(new URL('../assets/styles/classes.css', import.meta.url), 'utf-8')) + themeClasses
   )
   context.extensions.css.compressedLayers[talk.id] = compressedLayers
-  context.extensions.expandClasses = expandPageClasses.bind(null, context.extensions.css.classesExpansions[talk.id])
+  context.extensions.expandClasses = expandPageClasses.bind(
+    null,
+    context.extensions.css.classesExpansions[talk.id] as ClassesExpansions
+  )
 
   // Prepare the client
   const finalSafelist = new Set(await safelist(context))
@@ -250,7 +254,7 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
 
     await ensureRenderedCode(context, slide)
 
-    for (const item of slide.items ?? []) {
+    for (const item of (slide.items as BaseSlide[]) ?? []) {
       await ensureRenderedCode(context, item)
     }
 
@@ -312,10 +316,10 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
 
   // For each talk, generate all the slideset
   const total = context.extensions.talks.size
-  const totalPadded = total.toString()
+  const totalPadded = total.toString() as string
   let i = 0
   const padding = totalPadded.length
-  for (const id of context.extensions.talks) {
+  for (const id of context.extensions.talks as string[]) {
     i++
     const startTime = process.hrtime.bigint()
     const talk = await getTalk(id)

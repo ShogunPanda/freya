@@ -16,14 +16,14 @@ import { createAllPDFs, exportAllAsPNGs } from './export.js'
 
 function applyOnlyOption(command: Command): void {
   command.hook('preAction', () => {
-    setWhitelistedTalks(command.optsWithGlobals().only)
+    setWhitelistedTalks(command.optsWithGlobals().only as string)
   })
 }
 
 async function performExport(command: Command, logger: pino.Logger, netlify: boolean): Promise<void> {
   try {
     // Build in production mode
-    const { directory: staticDir, only } = command.optsWithGlobals()
+    const { directory: staticDir, only }: Record<string, string> = command.optsWithGlobals()
     setWhitelistedTalks(only)
     const absoluteStaticDir = resolve(rootDir, staticDir)
     const buildContext = createBuildContext(logger, true, absoluteStaticDir)
@@ -89,7 +89,7 @@ export function setupCLI(program: Command, logger: pino.Logger): void {
     .action(async function deployAction(this: Command): Promise<void> {
       await performExport(this, logger, true)
 
-      const { directory: staticDir } = this.optsWithGlobals()
+      const { directory: staticDir }: Record<string, string> = this.optsWithGlobals()
 
       await rm(resolve(rootDir, staticDir, 'deploy'), { force: true, recursive: true })
       await cp(resolve(rootDir, staticDir, 'html'), resolve(rootDir, staticDir, 'deploy/site'), { recursive: true })

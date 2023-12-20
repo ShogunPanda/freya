@@ -151,7 +151,7 @@ export async function getTalk(id: string): Promise<Talk> {
   for (const slide of talk.slides) {
     // Track the included images
     for (const property of ['image']) {
-      const image = slide[property]
+      const image = slide[property] as string
 
       if (image) {
         images.push(resolveImageUrl(talk.config.theme, id, image)!)

@@ -1,4 +1,5 @@
 import { type UserConfig } from '@unocss/core'
+import { type Theme } from '@unocss/preset-mini'
 import {
   baseTemporaryDirectory,
   createStylesheet as createCSS,
@@ -90,9 +91,9 @@ export async function createStylesheet(context: BuildContext, page: string, mini
   // Load the theme file and config
   const theme = await getTheme(talk.config.theme)
   const themeFile = await readFile(resolve(rootDir, 'src/themes', theme.id, 'style.css'), 'utf-8')
-  const { default: unoConfig } = await import(
+  const { default: unoConfig } = (await import(
     resolve(rootDir, baseTemporaryDirectory, 'themes', theme.id, 'unocss.config.js')
-  )
+  )) as { default: UserConfig<Theme> }
 
   const cssClasses =
     typeof context.css.classes === 'function' ? await context.css.classes(context) : context.css.classes
@@ -134,22 +135,26 @@ export async function build(context: BuildContext): Promise<void> {
 
   context.css.classes = getPageCssAttribute.bind(
     null,
-    context.extensions.css.classes,
+    context.extensions.css.classes as Record<string, unknown>,
     () => new Set()
   ) as ValueOrCallback<Set<string>>
   context.css.compressedClasses = getPageCssAttribute.bind(
     null,
-    context.extensions.css.compressedClasses,
+    context.extensions.css.compressedClasses as Record<string, unknown>,
     () => new Map()
   ) as ValueOrCallback<Map<string, string>>
   context.css.compressedLayers = getPageCssAttribute.bind(
     null,
-    context.extensions.css.compressedLayers,
+    context.extensions.css.compressedLayers as Record<string, unknown>,
     () => new Map()
   ) as ValueOrCallback<Map<string, string>>
-  context.css.generator = getPageCssAttribute.bind(null, context.extensions.css.generator, () => {
-    return { name: '', counter: 0 }
-  }) as ValueOrCallback<CSSClassGeneratorContext>
+  context.css.generator = getPageCssAttribute.bind(
+    null,
+    context.extensions.css.generator as Record<string, unknown>,
+    () => {
+      return { name: '', counter: 0 }
+    }
+  ) as ValueOrCallback<CSSClassGeneratorContext>
 
   // Generate the slidesets
   context.extensions.slidesets = await generateAllSlidesets(context)
@@ -157,7 +162,7 @@ export async function build(context: BuildContext): Promise<void> {
   // Write slidesets and track preCache information
   const toPrecache = new Set<string>()
 
-  for (const [name, file] of Object.entries<string>(context.extensions.slidesets)) {
+  for (const [name, file] of Object.entries(context.extensions.slidesets as Record<string, string>)) {
     toPrecache.add(name === 'index' ? '/' : `/${name}`)
 
     for (const image of extractImages(file)) {
@@ -181,7 +186,7 @@ export async function build(context: BuildContext): Promise<void> {
   let fileOperations: Promise<void>[] = []
   const themes = new Set()
 
-  for (const talk of context.extensions.talks) {
+  for (const talk of context.extensions.talks as string[]) {
     const {
       config: { theme }
     } = await getTalk(talk)
