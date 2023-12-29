@@ -3,7 +3,7 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "node",
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "declaration": true,
     "outDir": "dist",
     "allowJs": false,
