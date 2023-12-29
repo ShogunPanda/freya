@@ -1,133 +1,58 @@
-import { danteDir, type BuildContext } from 'dante'
+import { danteDir, serializeCSSClasses, type BuildContext } from 'dante'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { Fragment } from 'react'
 import { finalizeJs } from '../slidesets/generators.js'
 import { type Talk } from '../slidesets/models.js'
 
 interface BodyProps {
+  context: BuildContext
   talks: Record<string, Talk>
 }
 
-const style = `
-*,
-*:hover,
-*:focus,
-*:active,
-*::before,
-*::after {
-  box-sizing: border-box;
-  outline: none;
-}
-
-@font-face {
-  font-family: 'Poppins';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url(https://fonts.gstatic.com/s/poppins/v20/pxiByp8kv8JHgFVrLCz7Z1xlFd2JQEk.woff2) format(woff2);
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074,
-    U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-body {
-  margin: 0;
-  width: 100%;
-  min-height: 100%;
-}
-
-main {
-  display: flex;
-  flex-direction: column;
-  width: 80%;
-  max-width: 80vw;
-  row-gap: 5ch;
-  margin: 40pt;
-}
-
-nav {
-  display: flex;
-  flex-direction: column;
-  row-gap: 6ch;
-}
-
-h1, h2, h4 {
-  font-family: Poppins, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
-    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
-  margin: 0;
-  line-height: 1.4em;
-}
-
-h1 {
-  font-size: 35pt;
-}
-
-h2 {
-  font-size: 25pt;
-}
-
-h4 {
-  color: #fb7a9c;
-  font-size: 18pt;
-}
-
-a,
-a:hover,
-a:active,
-a:visited,
-a:focus {
-  color: #2165e3;
-  text-decoration: none;
-}
-
-a:hover, a:hover h4 {
-  color: #ecb22e;
-}
-`
-
-export function body({ talks }: BodyProps): JSX.Element {
+export function body({ context, talks }: BodyProps): JSX.Element {
+  const resolveClasses = context.extensions.freya.resolveClasses
   const allTalks = Object.entries(talks)
   const currentTalks = allTalks.filter(([, talk]: [string, Talk]) => !talk.document.archived)
   const archivedTalks = allTalks.filter(([, talk]: [string, Talk]) => talk.document.archived)
 
   return (
-    <main>
+    <main className={resolveClasses('freya@index')}>
       {currentTalks.length > 0 && (
         <>
-          <h1>Current Slidesets</h1>
-          <nav>
-            {currentTalks.map(([id, talk]) => (
-              <a href={`/${id}`} key={`talk:${id}`}>
-                <h2>{talk.document.title}</h2>
-                <h4>{talk.document.author.name}</h4>
+          <h1 className={resolveClasses('freya@index__header')}>Current Slidesets</h1>
+          {currentTalks.map(([id, talk]) => (
+            <Fragment key={`talk:${id}`}>
+              <a href={`/${id}`} className={resolveClasses('freya@index__talk')}>
+                {talk.document.title}
               </a>
-            ))}
-          </nav>
+              <h4 className={resolveClasses('freya@index__talk__author')}>{talk.document.author.name}</h4>
+            </Fragment>
+          ))}
         </>
       )}
 
       {archivedTalks.length > 0 && (
         <>
-          <h1>Archived Slidesets</h1>
-          <nav>
-            {archivedTalks.map(([id, talk]) => (
-              <a href={`/${id}`} key={`talk:${id}`}>
-                <h2>{talk.document.title}</h2>
-                <h4>{talk.document.author.name}</h4>
+          <h1 className={resolveClasses('freya@index__header', 'freya@index__header--next')}>Archived Slidesets</h1>
+          {archivedTalks.map(([id, talk]) => (
+            <Fragment key={`talk:${id}`}>
+              <a href={`/${id}`} className={resolveClasses('freya@index__talk')}>
+                {talk.document.title}
               </a>
-            ))}
-          </nav>
+              <h4 className={resolveClasses('freya@index__talk__author')}>{talk.document.author.name}</h4>
+            </Fragment>
+          ))}
         </>
       )}
     </main>
   )
 }
 
-export async function page(context: BuildContext): Promise<JSX.Element> {
-  const siteVersion = `globalThis.__freyaSiteVersion = "${context.extensions.version}"`
-  const hotReload = !context.isProduction
-    ? await readFile(resolve(danteDir, 'dist/assets/hot-reload-trigger.js'), 'utf8')
-    : ''
+export async function page(context: BuildContext, bodyClassName: string): Promise<JSX.Element> {
+  const siteVersion = `globalThis.__freyaSiteVersion = "${context.version}"`
+  const hotReload = !context.isProduction ? await readFile(resolve(danteDir, 'dist/assets/hot-reload.js'), 'utf8') : ''
 
   const serviceWorker = context.isProduction
     ? await readFile(fileURLToPath(new URL('../assets/js/service-worker.js', import.meta.url)), 'utf8')
@@ -145,12 +70,12 @@ export async function page(context: BuildContext): Promise<JSX.Element> {
           rel="preload"
           as="font"
           crossOrigin="anonymous"
-          href="https://fonts.gstatic.com/s/poppins/v20/pxiByp8kv8JHgFVrLCz7Z1xlFd2JQEk.woff2"
+          href="https://fonts.gstatic.com/s/varelaround/v20/w8gdH283Tvk__Lua32TysjIfp8uPLdshZg.woff2"
         />
         <script defer={true} type="text/javascript" dangerouslySetInnerHTML={{ __html: js }} />
-        <style dangerouslySetInnerHTML={{ __html: style }} />
+        <style {...serializeCSSClasses(context)} />
       </head>
-      <body>@BODY@</body>
+      <body className={bodyClassName}>@BODY@</body>
     </html>
   )
 }

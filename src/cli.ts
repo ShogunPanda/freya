@@ -27,7 +27,7 @@ async function performExport(command: Command, logger: pino.Logger, netlify: boo
     setWhitelistedTalks(only)
     const absoluteStaticDir = resolve(rootDir, staticDir)
     const buildContext = createBuildContext(logger, true, absoluteStaticDir)
-    buildContext.extensions.netlify = netlify
+    buildContext.extensions.freya = { netlify }
 
     await compileSourceCode(logger)
     await initializeSyntaxHighlighting(logger)

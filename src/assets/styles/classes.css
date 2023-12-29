@@ -232,6 +232,115 @@
       @apply bg-white;
     }
   }
+
+  &index {
+    @apply width-80p;
+    @apply max-w-1000px;
+    @apply mx-auto;
+
+    &__body {
+      @apply font-varela;
+      @apply p-2rem;
+      @apply w-full;
+      @apply min-h-full;
+      @apply bg-[rgb(242,242,247)];
+    }
+
+    &__header {
+      @apply line-height-1_4em;
+      @apply text-fs-2;
+
+      &--next {
+        @apply mt-3ch;
+      }
+    }
+
+    &__talk {
+      @apply block;
+      @apply mt-3rem;
+      @apply text-fs-1;
+      @apply visited:text-fs-1;
+      @apply hover:text-fs-3;
+      @apply active:text-fs-3;
+      @apply font-size-2_5em;
+
+      &__author {
+        @apply text-fs-2;
+      }
+    }
+  }
+
+  &assets {
+    @apply flex;
+    @apply flex-col;
+    @apply w-95p;
+    @apply m-20pt;
+
+    &__body {
+      @apply font-varela;
+      @apply flex;
+      @apply justify-center;
+      @apply m-0;
+      @apply w-full;
+      @apply min-h-full;
+      @apply bg-[rgb(242,242,247)];
+    }
+
+    &__title {
+      @apply font-bold;
+      @apply line-height-1_4em;
+      @apply text-fs-1;
+    }
+
+    &__header {
+      @apply line-height-1_4em;
+      @apply text-fs-2;
+      @apply mt-3ch;
+    }
+
+    &__section {
+      @apply grid;
+      @apply grid-cols-[repeat(4,minmax(200px,1fr))];
+      @apply gap-2ch;
+    }
+
+    &__figure {
+      @apply flex;
+      @apply flex-col;
+      @apply align-center;
+      @apply justify-between;
+      @apply border-solid;
+      @apply border-width-2px;
+      @apply border-#e0e0e0;
+      @apply rounded-5px;
+      @apply p-2ch;
+      @apply shadow-assets;
+      @apply shadow-#C0C0C0;
+      @apply hover:bg-fs-3;
+      @apply hover:border-#404040;
+
+      &__image {
+        @apply min-w-200px;
+        @apply min-h-100px;
+        @apply max-w-100%;
+        @apply max-h-200px;
+
+        &-wrapper {
+          @apply flex;
+          @apply flex-col;
+          @apply flex-1;
+          @apply items-center;
+          @apply justify-center;
+          @apply p-2ch;
+        }
+      }
+
+      &__caption {
+        @apply whitespace-nowrap;
+        @apply text-center;
+      }
+    }
+  }
 }
 
 .js@hidden {

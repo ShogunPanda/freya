@@ -1,4 +1,6 @@
+export * from './classes-resolver.js'
 export { Code } from './code.js'
+export { Image } from './image.js'
 export { Presenter } from './presenter.js'
 export { QRCode } from './qr.js'
 export { SlidesList } from './slides-list.js'

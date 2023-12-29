@@ -8,4 +8,4 @@ else
   DANTE=$ROOT/../node_modules/dante/bin/dante
 fi
 
-DANTE_BASE_TEMPORARY_DIRECTORY=".freya" DANTE_CLI_PATH=$ROOT/../dist/cli.js DANTE_BUILD_FILE_PATH=$ROOT/../dist/build.js $DANTE $@
+DANTE_BASE_TEMPORARY_DIRECTORY=".freya" DANTE_CLI_PATH=$ROOT/../dist/cli.js DANTE_BUILD_FILE_PATH=$ROOT/../dist/build.js DANTE_SERVER_FILE_PATH=$ROOT/../dist/server.js $DANTE $@

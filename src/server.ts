@@ -1,11 +1,10 @@
+import { type ServerResult } from 'dante'
 import { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify'
 import { createHmac } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { pusherConfig } from './configuration.js'
-// @ts-expect-error This will be present at runtime
-import { singleSlide } from './lib/html-utils/html_utils.js'
 
 interface TalkHandlerParams {
   Params: {
@@ -50,9 +49,9 @@ export async function talkHandler(
   }
 
   if (request.query.export === 'true') {
-    let page = await readFile(resolve(this.rootDir, `${talk}.html`), 'utf-8')
+    const page = await readFile(resolve(this.rootDir, `${talk}.html`), 'utf-8')
 
-    page = singleSlide(page, parseInt(request.params.slide, 10))
+    // page = singleSlide(page, parseInt(request.params.slide, 10))
 
     return reply.type('text/html').send(page)
   }
@@ -74,4 +73,54 @@ export function assetsHandler(
   }
 
   void reply.sendFile(`${talk}_assets.html`)
+}
+
+export function setupServer(server: FastifyInstance, isProduction: boolean): ServerResult {
+  if (pusherConfig) {
+    server.route({
+      method: 'POST',
+      url: '/pusher/auth',
+      handler: pusherAuthHandler
+    })
+  }
+
+  server.route({
+    method: 'GET',
+    url: '/',
+    handler(this: FastifyInstance, _: FastifyRequest, reply: FastifyReply): void {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      reply.sendFile('index.html')
+    }
+  })
+
+  server.route({
+    method: 'GET',
+    url: '/sw.js',
+    handler(this: FastifyInstance, _: FastifyRequest, reply: FastifyReply): void {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      reply.sendFile('sw.js')
+    }
+  })
+
+  server.route({
+    method: 'GET',
+    url: '/:talk',
+    handler: talkHandler
+  })
+
+  if (!isProduction) {
+    server.route({
+      method: 'GET',
+      url: '/:talk/assets',
+      handler: assetsHandler
+    })
+  }
+
+  server.route({
+    method: 'GET',
+    url: '/:talk/:slide(^\\d+)',
+    handler: talkHandler
+  })
+
+  return { directory: 'html' }
 }

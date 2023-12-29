@@ -1,6 +1,9 @@
 import { type BuildContext } from 'dante'
 import QRCodeGenerator from 'qrcode-generator'
+import { useContext } from 'react'
 import { getAlignments, getCover, isAlignment, isCovered, isFinder } from '../rendering/qr.js'
+import { CSSClassesResolverContext } from './classes-resolver.js'
+import { Image } from './image.js'
 
 type QRCodeGeneratorInterface = typeof QRCodeGenerator
 
@@ -127,6 +130,8 @@ export function generateQR(
 }
 
 export function QRCode({ context, data, image, imageRatio, label, classes }: QRCodeProps): JSX.Element {
+  const resolveClasses = useContext(CSSClassesResolverContext)
+
   const { code: codeClassName, qr: qrClassName, label: labelClassName, image: imageClassName } = classes ?? {}
 
   // Generate the QR Code
@@ -177,11 +182,11 @@ export function QRCode({ context, data, image, imageRatio, label, classes }: QRC
   }
 
   return (
-    <div className={context.extensions.expandClasses(`freya@qr ${codeClassName ?? ''}`)}>
-      <div className={context.extensions.expandClasses('freya@qr__wrapper')}>
+    <div className={resolveClasses('freya@qr', codeClassName)}>
+      <div className={resolveClasses('freya@qr__wrapper')}>
         <svg
           data-url={data}
-          className={context.extensions.expandClasses(`freya@qr__code ${qrClassName ?? ''}`)}
+          className={resolveClasses('freya@qr__code', qrClassName)}
           dangerouslySetInnerHTML={{ __html: svgPath }}
           width={dimension}
           height={dimension}
@@ -189,18 +194,13 @@ export function QRCode({ context, data, image, imageRatio, label, classes }: QRC
         ></svg>
 
         {image && (
-          <div className={context.extensions.expandClasses('freya@qr__image-wrapper')}>
-            <img src={image} className={context.extensions.expandClasses(`freya@qr__image ${imageClassName ?? ''}`)} />
+          <div className={resolveClasses('freya@qr__image-wrapper')}>
+            <Image context={context} src={image} className={resolveClasses('freya@qr__image', imageClassName)} />
           </div>
         )}
       </div>
       {label && (
-        <a
-          href={data}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={context.extensions.expandClasses(labelClassName)}
-        >
+        <a href={data} target="_blank" rel="noopener noreferrer" className={resolveClasses(labelClassName)}>
           {label}
         </a>
       )}

@@ -1,46 +1,21 @@
 import { type UserConfig } from '@unocss/core'
-import { type Theme } from '@unocss/preset-mini'
-import {
-  baseTemporaryDirectory,
-  createStylesheet as createCSS,
-  elapsed,
-  rootDir,
-  transformCSS,
-  type BuildContext,
-  type CSSClassGeneratorContext,
-  type ValueOrCallback
-} from 'dante'
-import { extractImages } from 'dante/html-utils'
-import { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify'
+import { baseTemporaryDirectory, elapsed, rootDir, type BuildContext, type BuildResult } from 'dante'
 import { glob } from 'glob'
 import { existsSync } from 'node:fs'
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { filterWhitelistedTalks, pusherConfig } from './configuration.js'
-import { assetsHandler, pusherAuthHandler, talkHandler } from './server.js'
+import { config as freyaCssConfig } from './rendering/unocss.config.js'
 import { generateAllSlidesets, generateAssetsListing } from './slidesets/generators.js'
 import { getAllTalks, getTalk, getTheme } from './slidesets/loaders.js'
+import { type Theme } from './slidesets/models.js'
 import { serviceWorker } from './templates/service-worker.js'
 
 declare module 'fastify' {
   interface FastifyReply {
     sendFile: (filename: string) => FastifyReply
   }
-}
-
-async function resolveCSS(id: string, config: UserConfig, fonts: string): Promise<string> {
-  id = id.replace(/^\/handled\//, '')
-
-  if (id === 'virtual:theme-fonts') {
-    return fonts
-  } else if (id.startsWith('@freya')) {
-    const url = new URL(`./assets/styles/${id.replace('@freya/', '')}`, import.meta.url)
-
-    return transformCSS(config, await readFile(fileURLToPath(url), 'utf8'))
-  }
-
-  return `/*!!! not-found: ${id} */`
 }
 
 function generateNetlifyConfiguration(context: BuildContext): string {
@@ -70,47 +45,74 @@ async function generatePusherAuthFunction(context: BuildContext): Promise<string
   return functionFile
 }
 
-function getPageCssAttribute<T>(existing: Record<string, T>, createFactory: () => T, context: BuildContext): T {
+async function cssConfig(context: BuildContext): Promise<UserConfig<object>> {
   const id = basename(context.currentPage ?? '', '.html')
-
-  if (!existing[id]) {
-    existing[id] = createFactory()
-  }
-
-  return existing[id]
-}
-
-export async function createStylesheet(context: BuildContext, page: string, minify: boolean): Promise<string> {
-  const id = basename(page, '.html')
-  if (id === '404' || id === 'index' || id.endsWith('_assets')) {
-    return ''
+  if (!id || id === '404' || id === 'index' || id.endsWith('_assets')) {
+    return freyaCssConfig
   }
 
   const talk = await getTalk(id)
-
-  // Load the theme file and config
   const theme = await getTheme(talk.config.theme)
-  const themeFile = await readFile(resolve(rootDir, 'src/themes', theme.id, 'style.css'), 'utf-8')
-  const { default: unoConfig } = (await import(
+
+  const { default: unoConfig } = await import(
     resolve(rootDir, baseTemporaryDirectory, 'themes', theme.id, 'unocss.config.js')
-  )) as { default: UserConfig<Theme> }
-
-  const cssClasses =
-    typeof context.css.classes === 'function' ? await context.css.classes(context) : context.css.classes
-
-  return createCSS(
-    unoConfig,
-    cssClasses,
-    minify,
-    async (id: string) => {
-      return resolveCSS(id, unoConfig, theme.fontsStyles)
-    },
-    themeFile
   )
+
+  return unoConfig
 }
 
-export async function build(context: BuildContext): Promise<void> {
+async function css(context: BuildContext): Promise<string> {
+  const id = basename(context.currentPage ?? '', '.html')
+  let themeFile: string
+  let theme: Theme | undefined
+
+  if (!id || id === '404' || id === 'index' || id.endsWith('_assets')) {
+    themeFile = await readFile(fileURLToPath(new URL('./assets/styles/freya.css', import.meta.url)), 'utf-8')
+  } else {
+    const talk = await getTalk(id)
+    theme = await getTheme(talk.config.theme)
+
+    themeFile = await readFile(resolve(rootDir, 'src/themes', theme.id, 'style.css'), 'utf-8')
+  }
+
+  const matcher = /^@import (['"])(.+)(\1);$/m
+  let mo: RegExpMatchArray | null = ['']
+  while (mo) {
+    mo = themeFile.match(matcher)
+
+    if (!mo) {
+      break
+    }
+
+    const id = mo[2]
+    let replacement: string = ''
+
+    if (id === 'virtual:theme-fonts' && theme) {
+      replacement = theme.fontsStyles
+    } else if (id.startsWith('@freya')) {
+      const url = new URL(`./assets/styles/${id.replace('@freya/', '')}`, import.meta.url)
+
+      replacement = await readFile(fileURLToPath(url), 'utf8')
+    }
+
+    themeFile = themeFile.replaceAll(mo[0], replacement)
+  }
+
+  // Before returning, also swap the context CSS with the subcontext CSS
+  if (!id || id === '404' || id === 'index') {
+    context.css = context.extensions.freya.css.__index
+  } else if (id.endsWith('_assets')) {
+    context.css = context.extensions.freya.css.__assets
+  } else {
+    context.css = context.extensions.freya.css[id]
+  }
+
+  return themeFile
+}
+
+export async function build(context: BuildContext): Promise<BuildResult> {
   context.logger.info(`Building site (version ${context.version}) ...`)
+  context.css.keepExpanded = false
 
   // Clean up the directory
   const baseDir = resolve(rootDir, 'dist/html')
@@ -123,57 +125,28 @@ export async function build(context: BuildContext): Promise<void> {
   await cp(fileURLToPath(new URL('assets/404.html', import.meta.url)), resolve(baseDir, '404.html'))
 
   // Prepare the context
-  context.extensions.talks = filterWhitelistedTalks(await getAllTalks())
-
-  context.extensions.css = {
-    classes: Object.fromEntries([...context.extensions.talks].map(t => [t, new Set()])),
-    classesExpansions: Object.fromEntries([...context.extensions.talks].map(t => [t, []])),
-    generator: Object.fromEntries([...context.extensions.talks].map(t => [t, { name: '', counter: 0 }])),
-    compressedClasses: Object.fromEntries([...context.extensions.talks].map(t => [t, new Map()])),
-    compressedLayers: Object.fromEntries([...context.extensions.talks].map(t => [t, new Map()]))
+  if (typeof context.extensions.freya === 'undefined') {
+    context.extensions.freya = {}
   }
 
-  context.css.classes = getPageCssAttribute.bind(
-    null,
-    context.extensions.css.classes as Record<string, unknown>,
-    () => new Set()
-  ) as ValueOrCallback<Set<string>>
-  context.css.compressedClasses = getPageCssAttribute.bind(
-    null,
-    context.extensions.css.compressedClasses as Record<string, unknown>,
-    () => new Map()
-  ) as ValueOrCallback<Map<string, string>>
-  context.css.compressedLayers = getPageCssAttribute.bind(
-    null,
-    context.extensions.css.compressedLayers as Record<string, unknown>,
-    () => new Map()
-  ) as ValueOrCallback<Map<string, string>>
-  context.css.generator = getPageCssAttribute.bind(
-    null,
-    context.extensions.css.generator as Record<string, unknown>,
-    () => {
-      return { name: '', counter: 0 }
-    }
-  ) as ValueOrCallback<CSSClassGeneratorContext>
+  context.extensions.freya.css = {}
+  context.extensions.freya.images = new Set()
+  context.extensions.freya.talks = filterWhitelistedTalks(await getAllTalks())
 
   // Generate the slidesets
-  context.extensions.slidesets = await generateAllSlidesets(context)
+  context.extensions.freya.slidesets = await generateAllSlidesets(context)
 
   // Write slidesets and track preCache information
-  const toPrecache = new Set<string>()
+  const toPrecache = new Set<string>(context.extensions.freya.images as Set<string>)
 
-  for (const [name, file] of Object.entries(context.extensions.slidesets as Record<string, string>)) {
+  for (const [name, file] of Object.entries(context.extensions.freya.slidesets as Record<string, string>)) {
     toPrecache.add(name === 'index' ? '/' : `/${name}`)
-
-    for (const image of extractImages(file)) {
-      toPrecache.add(image)
-    }
 
     await writeFile(resolve(baseDir, `${name}.html`), file, 'utf8')
   }
 
   // Generate Netlify and Pusher, if needed
-  if (context.extensions.netlify) {
+  if (context.extensions.freya.netlify) {
     await writeFile(resolve(baseDir, '../netlify.toml'), generateNetlifyConfiguration(context), 'utf8')
   }
 
@@ -186,7 +159,7 @@ export async function build(context: BuildContext): Promise<void> {
   let fileOperations: Promise<void>[] = []
   const themes = new Set()
 
-  for (const talk of context.extensions.talks as string[]) {
+  for (const talk of context.extensions.freya.talks as string[]) {
     const {
       config: { theme }
     } = await getTalk(talk)
@@ -209,12 +182,12 @@ export async function build(context: BuildContext): Promise<void> {
     themes.add(theme)
   }
 
+  await Promise.all(fileOperations)
+  fileOperations = []
+
   if (context.isProduction) {
     await writeFile(resolve(baseDir, 'sw.js'), serviceWorker(context, Array.from(toPrecache)), 'utf8')
   }
-
-  await Promise.all(fileOperations)
-  fileOperations = []
 
   // Remove all file and directory starting with a double underscore
   for (const p of await glob(resolve(baseDir, 'assets/**/__*'))) {
@@ -229,70 +202,6 @@ export async function build(context: BuildContext): Promise<void> {
   }
 
   await Promise.all(fileOperations)
+
+  return { cssConfig, css }
 }
-
-export function setupServer(server: FastifyInstance, isProduction: boolean): void {
-  if (pusherConfig) {
-    server.route({
-      method: 'POST',
-      url: '/pusher/auth',
-      handler: pusherAuthHandler
-    })
-  }
-
-  server.route({
-    method: 'GET',
-    url: '/',
-    handler(this: FastifyInstance, _: FastifyRequest, reply: FastifyReply): void {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      reply.sendFile('index.html')
-    }
-  })
-
-  server.route({
-    method: 'GET',
-    url: '/sw.js',
-    handler(this: FastifyInstance, _: FastifyRequest, reply: FastifyReply): void {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      reply.sendFile('sw.js')
-    }
-  })
-
-  server.route({
-    method: 'GET',
-    url: '/:talk',
-    handler: talkHandler
-  })
-
-  if (!isProduction) {
-    server.route({
-      method: 'GET',
-      url: '/:talk/assets',
-      handler: assetsHandler
-    })
-  }
-
-  server.route({
-    method: 'GET',
-    url: '/:talk/:slide(^\\d+)',
-    handler: talkHandler
-  })
-}
-
-export async function safelist(context: BuildContext): Promise<string[]> {
-  const id = basename(context.currentPage ?? '', '.html')
-  if (!id || id === '404' || id === 'index' || id.endsWith('_assets')) {
-    return []
-  }
-
-  const talk = await getTalk(id)
-  const theme = await getTheme(talk.config.theme)
-
-  const { default: unoConfig } = await import(
-    resolve(rootDir, baseTemporaryDirectory, 'themes', theme.id, 'unocss.config.js')
-  )
-
-  return unoConfig.safelist
-}
-
-export const serverDir = 'html'

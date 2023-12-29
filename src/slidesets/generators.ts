@@ -3,16 +3,14 @@ import {
   baseTemporaryDirectory,
   danteDir,
   elapsed,
-  expandClasses,
-  loadClassesExpansion,
-  prepareStyles,
+  expandCSSClasses,
+  loadCSSClassesExpansion,
   renderCode,
   rootDir,
   type BuildContext,
-  type CSSClassGeneratorContext,
+  type CSSClassesResolver,
   type ClassesExpansions
 } from 'dante'
-import { compressCSSClasses } from 'dante/html-utils'
 import { glob, type IgnoreLike } from 'glob'
 import markdownIt from 'markdown-it'
 import { existsSync } from 'node:fs'
@@ -22,7 +20,6 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { safelist } from '../build.js'
 import { pusherConfig } from '../configuration.js'
 import { body as assetsBody, page as assetsPage } from '../templates/assets.js'
 import { page as index, body as indexBody } from '../templates/index.js'
@@ -66,28 +63,6 @@ function assetsSorter(left: string, right: string): number {
   return left.localeCompare(right)
 }
 
-function prepareClientClasses(context: BuildContext, talk: string, safelist: Set<string>, klasses: string): string {
-  const compressedClasses: Map<string, string> = context.extensions.css.compressedClasses[talk]
-  const compressedLayers: Map<string, string> = context.extensions.css.compressedLayers[talk]
-  const generator: CSSClassGeneratorContext = context.extensions.css.generator[talk]
-
-  if (context.css.keepExpanded) {
-    return context.extensions.expandClasses(klasses)
-  }
-
-  const [counter, ...compressed] = compressCSSClasses(
-    context.extensions.expandClasses(klasses).split(' ') as string[],
-    compressedClasses,
-    compressedLayers,
-    safelist,
-    generator.counter,
-    generator.prefix ?? ''
-  )
-
-  generator.counter = counter
-  return compressed.join(' ')
-}
-
 export function renderNotes(slide: Slide): string {
   return slide.notes ? markdownRenderer.render(slide.notes) : ''
 }
@@ -121,29 +96,51 @@ async function ensureRenderedCode(context: BuildContext, target: BaseSlide): Pro
 
   const classes: Record<string, string> = {}
 
-  if (typeof context.extensions.expandClasses === 'function') {
-    classes.root = context.extensions.expandClasses('freya@code__wrapper')
-    classes.line = context.extensions.expandClasses('freya@code__line')
-    classes.lineHighlighted = context.extensions.expandClasses('freya@code__line--highlighted')
-    classes.lineNumber = context.extensions.expandClasses('freya@code__line-number')
-  }
+  const resolveClasses = context.extensions.freya.resolveClasses
+  classes.root = resolveClasses('freya@code__wrapper')
+  classes.line = resolveClasses('freya@code__line')
+  classes.lineHighlighted = resolveClasses('freya@code__line--highlighted')
+  classes.lineNumber = resolveClasses('freya@code__line-number')
 
   const { content, language, numbers, highlight } = target.code
   target.code.rendered = await renderCode(content, language ?? '', numbers ?? false, highlight ?? '', classes)
   codeCache.set(cacheKey, target.code.rendered)
 }
 
+function createCSSClassesResolver(id: string, context: BuildContext, classes: ClassesExpansions): CSSClassesResolver {
+  // Create a subcontext to keep CSS scoped
+  context.extensions.freya.css[id] = {
+    keepExpanded: context.css.keepExpanded,
+    currentClasses: new Set(),
+    compressedClasses: new Map(),
+    compressionState: 0
+  }
+
+  // Override the default scope
+  context.css = context.extensions.freya.css[id]
+
+  return expandCSSClasses.bind(null, context, classes)
+}
+
 export async function generateAssetsListing(context: BuildContext): Promise<Record<string, string>> {
+  const classes = await loadCSSClassesExpansion(
+    await readFile(new URL('../assets/styles/classes.css', import.meta.url), 'utf-8')
+  )
+
+  const resolveClasses = createCSSClassesResolver('__assets', context, classes)
+  context.extensions.freya.resolveClasses = resolveClasses
+  const bodyClassName = resolveClasses('freya@assets__body')
+
   const pages: Record<string, string> = {}
-  const page = assetsPage()
 
   // For each talk, generate all the slideset
-  const total = context.extensions.talks.size
-  const totalPadded = total.toString() as string
+  const talks = context.extensions.freya.talks as Set<string>
+  const total = talks.size
+  const totalPadded = total.toString()
   let i = 0
   const padding = totalPadded.length
 
-  for (const id of context.extensions.talks as string[]) {
+  for (const id of talks) {
     i++
     const startTime = process.hrtime.bigint()
     const talk = await getTalk(id)
@@ -168,10 +165,10 @@ export async function generateAssetsListing(context: BuildContext): Promise<Reco
       themeAssets.push([asset, `/assets/themes/${talk.config.theme}/${asset}`])
     }
 
-    pages[id] = renderToStaticMarkup(page).replace(
-      '@BODY@',
-      renderToStaticMarkup(assetsBody({ talk, talkAssets, themeAssets }))
-    )
+    const body = assetsBody({ context, talk, talkAssets, themeAssets })
+    const page = assetsPage(context, bodyClassName)
+    pages[id] = renderToStaticMarkup(page).replace('@BODY@', renderToStaticMarkup(body))
+
     const progress = `[${i.toString().padStart(padding, '0')}/${totalPadded}]`
     context.logger.info(`${progress} Generated assets listing for slideset ${id} in ${elapsed(startTime)} ms.`)
   }
@@ -179,14 +176,10 @@ export async function generateAssetsListing(context: BuildContext): Promise<Reco
   return pages
 }
 
-function expandPageClasses(expansions: ClassesExpansions, klasses?: string): string {
-  return expandClasses(expansions, klasses)
-}
-
 export async function generateSlideset(context: BuildContext, theme: Theme, talk: Talk): Promise<string> {
   // Gather all files needed for the cache key
   const clientJsFile = fileURLToPath(new URL('../assets/js/slideset.js', import.meta.url))
-  const hotReloadFile = !context.isProduction ? resolve(danteDir, 'dist/assets/hot-reload-trigger.js') : ''
+  const hotReloadFile = !context.isProduction ? resolve(danteDir, 'dist/assets/hot-reload.js') : ''
   const serviceWorkerFile = context.isProduction
     ? fileURLToPath(new URL('../assets/js/service-worker.js', import.meta.url))
     : ''
@@ -196,20 +189,15 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
   // Load theme classes and layers, if any
   const themeClassesFile = resolve(rootDir, 'src/themes', theme.id, 'classes.css')
   const themeClasses = existsSync(themeClassesFile) ? await readFile(themeClassesFile, 'utf-8') : ''
-  const { compressedLayers } = await import(resolve(baseTemporaryDirectory, 'themes', theme.id, 'unocss.config.js'))
 
-  context.currentPage = talk.id
-  context.extensions.css.classesExpansions[talk.id] = await loadClassesExpansion(
+  const classes = await loadCSSClassesExpansion(
     (await readFile(new URL('../assets/styles/classes.css', import.meta.url), 'utf-8')) + themeClasses
   )
-  context.extensions.css.compressedLayers[talk.id] = compressedLayers
-  context.extensions.expandClasses = expandPageClasses.bind(
-    null,
-    context.extensions.css.classesExpansions[talk.id] as ClassesExpansions
-  )
+
+  const resolveClasses = createCSSClassesResolver(talk.id, context, classes)
+  context.extensions.freya.resolveClasses = resolveClasses
 
   // Prepare the client
-  const finalSafelist = new Set(await safelist(context))
   const title = talk.document.title
   const clientContext: ClientContext = {
     id: talk.id,
@@ -221,9 +209,9 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
     current: 0,
     isProduction: context.isProduction,
     classes: {
-      hidden: prepareClientClasses(context, talk.id, finalSafelist, 'js@hidden'),
-      wrapped: prepareClientClasses(context, talk.id, finalSafelist, `js@slide js@${talk.id}`),
-      listActive: prepareClientClasses(context, talk.id, finalSafelist, 'js@slides__wrapper--active')
+      hidden: resolveClasses('js@hidden'),
+      wrapped: resolveClasses('js@slide'),
+      listActive: resolveClasses('js@slides__wrapper--active')
     },
     pusher: pusherConfig
       ? {
@@ -275,9 +263,6 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
   // Render the page body
   const contents = renderToStaticMarkup(body({ context, slides }))
 
-  // Extract the CSS
-  const css = await prepareStyles(context, contents)
-
   // Generate the JS
   const siteVersion = `globalThis.__freyaSiteVersion = "${context.version}"`
   const hotReload = hotReloadFile ? await readFile(hotReloadFile, 'utf8') : ''
@@ -290,9 +275,9 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
       '@HEAD@',
       renderToStaticMarkup(
         header({
+          context,
           talk,
           theme,
-          css,
           js: await finalizeJs(
             [
               siteVersion,
@@ -315,11 +300,12 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
   const resolvedTalks: Record<string, Talk> = {}
 
   // For each talk, generate all the slideset
-  const total = context.extensions.talks.size
-  const totalPadded = total.toString() as string
+  const talks = context.extensions.freya.talks as Set<string>
+  const total = talks.size
+  const totalPadded = total.toString()
   let i = 0
   const padding = totalPadded.length
-  for (const id of context.extensions.talks as string[]) {
+  for (const id of talks) {
     i++
     const startTime = process.hrtime.bigint()
     const talk = await getTalk(id)
@@ -333,11 +319,17 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
   }
 
   // Generate the index file
-  const indexJSX = await index(context)
-  slidesets.index = renderToStaticMarkup(indexJSX).replace(
-    '@BODY@',
-    renderToStaticMarkup(indexBody({ talks: resolvedTalks }))
+  const classes = await loadCSSClassesExpansion(
+    await readFile(new URL('../assets/styles/classes.css', import.meta.url), 'utf-8')
   )
+
+  const resolveClasses = createCSSClassesResolver('__index', context, classes)
+  context.extensions.freya.resolveClasses = resolveClasses
+
+  const bodyClassName = resolveClasses('freya@index__body')
+  const body = indexBody({ context, talks: resolvedTalks })
+  const indexJSX = await index(context, bodyClassName)
+  slidesets.index = renderToStaticMarkup(indexJSX).replace('@BODY@', renderToStaticMarkup(body))
 
   return slidesets
 }

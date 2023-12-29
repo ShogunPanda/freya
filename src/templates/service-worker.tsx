@@ -100,7 +100,7 @@ ${main};
 globalThis.debug = ${process.env.FREYA_ENABLE_SERVICE_WORKER === 'true' || !context.isProduction};
 globalThis.version = "${context.version}";
 globalThis.precache = ${JSON.stringify(precache)};
-globalThis.talks = ${JSON.stringify(Array.from(context.extensions.talks as string[]))};
+globalThis.talks = ${JSON.stringify(Array.from(context.extensions.freya.talks as Set<string>))};
 
 main()
 `
