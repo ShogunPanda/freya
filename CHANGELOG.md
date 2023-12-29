@@ -1,3 +1,8 @@
+### 2023-12-29 / 0.41.0
+
+- fix: Updated TypeScript configuration.
+- chore: Updated TypeScript configuration.
+
 ### 2023-12-29 / 0.40.2
 
 - fix: Fixed binary paths.
