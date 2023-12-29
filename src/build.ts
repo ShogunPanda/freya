@@ -22,7 +22,7 @@ function generateNetlifyConfiguration(context: BuildContext): string {
   const startTime = process.hrtime.bigint()
   let generated = '[build]\npublish = "site"\nedge_functions = "functions"\n\n'
 
-  for (const talk of context.extensions.talks) {
+  for (const talk of context.extensions.freya.talks) {
     generated += `[[redirects]]\nfrom = "/${talk}/*"\nto = "/${talk}.html"\nstatus = 200\n\n`
   }
 
@@ -112,7 +112,6 @@ async function css(context: BuildContext): Promise<string> {
 
 export async function build(context: BuildContext): Promise<BuildResult> {
   context.logger.info(`Building site (version ${context.version}) ...`)
-  context.css.keepExpanded = false
 
   // Clean up the directory
   const baseDir = resolve(rootDir, 'dist/html')
