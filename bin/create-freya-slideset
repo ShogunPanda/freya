@@ -1,4 +1,5 @@
 #!/bin/bash
 
 ROOT=$(dirname $(realpath $0))
+PATH=$ROOT:$ROOT/../node_modules/dante/bin:$ROOT/../../dante/bin:$PATH
 DANTE_BASE_TEMPORARY_DIRECTORY=".freya" DANTE_CREATE_PATH=$ROOT/../dist/create.js create-dante-site $@
