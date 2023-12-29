@@ -179,9 +179,14 @@ function generateDimensions(short: string, long: string, customUnit: string, rat
 
 function generateCustomUnits(): Rule[] {
   const customUnits: [string, number, string][] = [
-    ['sp', 200, 'px'],
+    ['ch', 1, 'ch'],
+    ['em', 1, 'em'],
+    ['rem', 1, 'rem'],
     ['p', 1, '%'],
-    ['em', 1, 'em']
+    ['px', 1, 'px'],
+    ['vw', 1, 'vw'],
+    ['vh', 1, 'vh'],
+    ['sp', 200, 'px']
   ]
   const rules: Rule[] = []
 
@@ -221,12 +226,18 @@ export const config = defineUnoConfig({
   transformers: [transformerDirectives()],
   theme: {
     colors: {
-      'fs-1': '#2165e3',
-      'fs-2': '#fb7a9c',
-      'fs-3': '#ecb22e'
+      'fs-bg': 'var(--fs-color-bg)',
+      'fs-bg-darker': 'var(--fs-color-bg-darker)',
+      'fs-fg': 'var(--fs-color-fg)',
+      'fs-grey': 'var(--fs-color-grey)',
+      'fs-yellow': 'var(--fs-color-yellow)',
+      'fs-blue': 'var(--fs-color-blue)'
     },
     boxShadow: {
       assets: '5px 5px 10px -5px'
+    },
+    shadowColor: {
+      main: 'var(--fs-color-shadow)'
     }
   },
   rules: [

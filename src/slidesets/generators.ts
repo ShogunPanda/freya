@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url'
 import { type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { pusherConfig } from '../configuration.js'
+import { page as page404, body as page404Body } from '../templates/404.js'
 import { body as assetsBody, page as assetsPage } from '../templates/assets.js'
 import { page as index, body as indexBody } from '../templates/index.js'
 import { body, header, page } from '../templates/page.js'
@@ -293,6 +294,21 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
     .replace('@BODY@', contents)
 
   return html
+}
+
+export async function generatePage404(context: BuildContext): Promise<string> {
+  const classes = await loadCSSClassesExpansion(
+    await readFile(new URL('../assets/styles/classes.css', import.meta.url), 'utf-8')
+  )
+
+  // Generate page 404
+  const resolveClasses = createCSSClassesResolver('__404', context, classes)
+  context.extensions.freya.resolveClasses = resolveClasses
+
+  const bodyClassName = resolveClasses('freya@page404__body')
+  const body = page404Body({ context })
+  const page404JSX = page404(context, bodyClassName)
+  return renderToStaticMarkup(page404JSX).replace('@BODY@', renderToStaticMarkup(body))
 }
 
 export async function generateAllSlidesets(context: BuildContext): Promise<Record<string, string>> {

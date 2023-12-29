@@ -15,39 +15,53 @@ export function body({ context, talk, talkAssets, themeAssets }: BodyProps): JSX
     <main className={resolveClasses('freya@assets')}>
       <h1 className={resolveClasses('freya@assets__title')}>{talk.document.title}</h1>
 
-      <h2 className={resolveClasses('freya@assets__header')}>Talk Assets</h2>
+      {talkAssets.length > 0 && (
+        <>
+          <h2 className={resolveClasses('freya@assets__header')}>Talk Assets</h2>
 
-      <section className={resolveClasses('freya@assets__section')}>
-        {talkAssets.map(([path, url]) => {
-          return (
-            <figure key={path} className={resolveClasses('freya@assets__figure')} data-freya-asset-id={`@talk/${path}`}>
-              <div className={resolveClasses('freya@assets__figure__image-wrapper')}>
-                <img src={url} className={resolveClasses('freya@assets__figure__image')} />
-              </div>
-              <figcaption className={resolveClasses('freya@assets__figure__caption')}>{path}</figcaption>
-            </figure>
-          )
-        })}
-      </section>
+          <section className={resolveClasses('freya@assets__section')}>
+            {talkAssets.map(([path, url]) => {
+              return (
+                <figure
+                  key={path}
+                  className={resolveClasses('freya@assets__figure')}
+                  data-freya-asset-id={`@talk/${path}`}
+                >
+                  <div className={resolveClasses('freya@assets__figure__image-wrapper')}>
+                    <img src={url} className={resolveClasses('freya@assets__figure__image')} />
+                  </div>
+                  <figcaption className={resolveClasses('freya@assets__figure__caption')}>{path}</figcaption>
+                </figure>
+              )
+            })}
+          </section>
+        </>
+      )}
 
-      <h2 className={resolveClasses('freya@assets__header')}>Theme Assets</h2>
+      {themeAssets.length > 0 && (
+        <>
+          <h2 className={resolveClasses('freya@assets__header', talkAssets.length > 0 && 'freya@assets__header--next')}>
+            Theme Assets
+          </h2>
 
-      <section className={resolveClasses('freya@assets__section')}>
-        {themeAssets.map(([path, url]) => {
-          return (
-            <figure
-              key={path}
-              className={resolveClasses('freya@assets__figure')}
-              data-freya-asset-id={`@theme/${path}`}
-            >
-              <div className={resolveClasses('freya@assets__figure__image-wrapper')}>
-                <img src={url} className={resolveClasses('freya@assets__figure__image')} />
-              </div>
-              <figcaption className={resolveClasses('freya@assets__figure__caption')}>{path}</figcaption>
-            </figure>
-          )
-        })}
-      </section>
+          <section className={resolveClasses('freya@assets__section')}>
+            {themeAssets.map(([path, url]) => {
+              return (
+                <figure
+                  key={path}
+                  className={resolveClasses('freya@assets__figure')}
+                  data-freya-asset-id={`@theme/${path}`}
+                >
+                  <div className={resolveClasses('freya@assets__figure__image-wrapper')}>
+                    <img src={url} className={resolveClasses('freya@assets__figure__image')} />
+                  </div>
+                  <figcaption className={resolveClasses('freya@assets__figure__caption')}>{path}</figcaption>
+                </figure>
+              )
+            })}
+          </section>
+        </>
+      )}
     </main>
   )
 }

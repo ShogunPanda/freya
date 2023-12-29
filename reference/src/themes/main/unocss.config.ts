@@ -1,11 +1,32 @@
-import { CSSValue, Rule } from '@unocss/core'
+import { type CSSValue, type Rule } from '@unocss/core'
+import { handler } from '@unocss/preset-mini/utils'
 import presetWind from '@unocss/preset-wind'
 import transformerDirectives from '@unocss/transformer-directives'
-import { compressLayers, defineUnoConfig, numericRule, systemFonts, systemMonospaceFonts, layersVariant } from 'freya-slides'
+import { defineUnoConfig, layersVariant } from '../../../../dist/index.js'
 
-function generateSpacing(customUnit: string, ratio: number, unit: string): Array<Rule> {
-  const spacings: Array<Rule> = []
-  const sides: Record<string, Array<string>> = {
+export type UnoRuleDefinition = [
+  string | RegExp,
+  Record<string, string> | ((v: string[]) => Record<string, string> | CSSValue)
+]
+
+export const systemFonts =
+  "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'"
+
+export const systemMonospaceFonts = "ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace"
+
+export function numericRule(property: string, value: string, unit: string = '', ratio: number = 1): CSSValue {
+  const parsed = Number.parseFloat(value.replace('_', '.'))
+
+  return { [property]: `${parsed * ratio}${unit}` }
+}
+
+export function transformCSSValue(value: string): string | undefined {
+  return value.startsWith('$') ? handler.cssvar(value) : handler.bracket(value)
+}
+
+function generateSpacing(customUnit: string, ratio: number, unit: string): Rule[] {
+  const spacings: Rule[] = []
+  const sides: Record<string, string[]> = {
     t: ['top'],
     b: ['bottom'],
     l: ['left'],
@@ -13,7 +34,7 @@ function generateSpacing(customUnit: string, ratio: number, unit: string): Array
     x: ['left', 'right'],
     y: ['top', 'bottom']
   }
-  const modifiers: Array<[string, number]> = [
+  const modifiers: [string, number][] = [
     ['', 1],
     ['-', -1]
   ]
@@ -47,7 +68,7 @@ function generateSpacing(customUnit: string, ratio: number, unit: string): Array
   return spacings
 }
 
-function generateGaps(customUnit: string, ratio: number, unit: string): Array<Rule> {
+function generateGaps(customUnit: string, ratio: number, unit: string): Rule[] {
   return [
     [
       new RegExp(`^gap-(\\d+(?:_\\d+)?)${customUnit}$`),
@@ -73,8 +94,8 @@ function generateGaps(customUnit: string, ratio: number, unit: string): Array<Ru
   ]
 }
 
-function generateBorders(customUnit: string, ratio: number, unit: string): Array<Rule> {
-  const borders: Array<Rule> = [
+function generateBorders(customUnit: string, ratio: number, unit: string): Rule[] {
+  const borders: Rule[] = [
     [new RegExp(`^border-(\\d+(?:_\\d+)?)${customUnit}$`), ([, d]) => numericRule('border-width', d, unit, ratio)]
   ]
 
@@ -125,8 +146,8 @@ function generateRadiuses(customUnit: string, ratio: number, unit: string): Rule
   return radiuses
 }
 
-function generatePositions(customUnit: string, ratio: number, unit: string): Array<Rule> {
-  const positions: Array<Rule> = []
+function generatePositions(customUnit: string, ratio: number, unit: string): Rule[] {
+  const positions: Rule[] = []
   for (const position of ['top', 'bottom', 'left', 'right']) {
     positions.push(
       [
@@ -143,8 +164,8 @@ function generatePositions(customUnit: string, ratio: number, unit: string): Arr
   return positions
 }
 
-function generateDimensions(short: string, long: string, customUnit: string, ratio: number, unit: string): Array<Rule> {
-  const dimensions: Array<Rule> = []
+function generateDimensions(short: string, long: string, customUnit: string, ratio: number, unit: string): Rule[] {
+  const dimensions: Rule[] = []
 
   for (const prefix of ['', 'min-', 'max-']) {
     dimensions.push([
@@ -156,7 +177,7 @@ function generateDimensions(short: string, long: string, customUnit: string, rat
   return dimensions
 }
 
-function generateCustomUnits(): Array<Rule> {
+function generateCustomUnits(): Rule[] {
   const customUnits: [string, number, string][] = [
     ['ch', 1, 'ch'],
     ['em', 1, 'em'],
@@ -167,7 +188,7 @@ function generateCustomUnits(): Array<Rule> {
     ['vh', 1, 'vh'],
     ['sp', 200, 'px']
   ]
-  const rules: Array<Rule> = []
+  const rules: Rule[] = []
 
   for (const [customUnit, ratio, unit] of customUnits) {
     rules.push(
@@ -200,11 +221,23 @@ const layers: Record<string, number> = {
   js: 99
 }
 
-export default defineUnoConfig({
+export const config = defineUnoConfig({
   presets: [presetWind()],
   transformers: [transformerDirectives()],
   theme: {
     colors: {
+      'fs-bg': 'var(--fs-color-bg)',
+      'fs-bg-darker': 'var(--fs-color-bg-darker)',
+      'fs-fg': 'var(--fs-color-fg)',
+      'fs-grey': 'var(--fs-color-grey)',
+      'fs-yellow': 'var(--fs-color-yellow)',
+      'fs-blue': 'var(--fs-color-blue)'
+    },
+    boxShadow: {
+      assets: '5px 5px 10px -5px'
+    },
+    shadowColor: {
+      main: 'var(--fs-color-shadow)'
     }
   },
   rules: [
@@ -216,16 +249,39 @@ export default defineUnoConfig({
         return { transform: transformCSSValue(value) }
       }
     ],
+    [
+      /^content-(\[.+\])/,
+      ([, value]: string[]) => {
+        return { content: transformCSSValue(value) }
+      }
+    ],
+    [
+      /^counter-reset-(.+)/,
+      ([, value]: string[]) => {
+        return { 'counter-reset': transformCSSValue(value) }
+      }
+    ],
+    [
+      /^counter-increment-(.+)/,
+      ([, value]: string[]) => {
+        return { 'counter-increment': transformCSSValue(value) }
+      }
+    ],
+
     ...generateCustomUnits(),
     ...generateBorders('', 1, 'px'),
-    ...generateBorders('', 1, 'px'),
-    [/^stroke-width-(\d+(?:_\d+)?)$/, ([, value]: Array<string>) => numericRule('stroke-width', value)],
-    [/^line-height-(\d+(?:_\d+)?)$/, ([, value]: Array<string>) => numericRule('line-height', value, 'em')],
-    [/^font-size-(\d+(?:_\d+)?)em$/, ([, value]: Array<string>) => numericRule('font-size', value, 'em')],
-    [/^font-size-(\d+(?:_\d+)?)pt$/, ([, value]: Array<string>) => numericRule('font-size', value, 'px', 2.7)],
+    ...generateRadiuses('', 1, 'px'),
+    [/^stroke-width-(\d+(?:_\d+)?)$/, ([, value]: string[]) => numericRule('stroke-width', value)],
+    [/^line-height-(\d+(?:_\d+)?)$/, ([, value]: string[]) => numericRule('line-height', value, 'em')],
+    [/^font-size-(\d+(?:_\d+)?)em$/, ([, value]: string[]) => numericRule('font-size', value, 'em')],
+    [/^font-size-(\d+(?:_\d+)?)pt$/, ([, value]: string[]) => numericRule('font-size', value, 'px', 2.7)],
     ['font-system-fonts', { 'font-family': systemFonts }],
-    ['font-monospace-system-fonts', { 'font-family': systemMonospaceFonts }]
+    ['font-monospace-system-fonts', { 'font-family': systemMonospaceFonts }],
+    ['font-varela', { 'font-family': `"Varela Round", ${systemFonts}` }]
   ],
   layers,
   variants: [layersVariant],
+  safelist: []
 })
+
+export default config

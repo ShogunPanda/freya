@@ -243,12 +243,12 @@
       @apply p-2rem;
       @apply w-full;
       @apply min-h-full;
-      @apply bg-[rgb(242,242,247)];
+      @apply bg-fs-bg;
     }
 
     &__header {
       @apply line-height-1_4em;
-      @apply text-fs-2;
+      @apply text-fs-grey;
 
       &--next {
         @apply mt-3ch;
@@ -257,16 +257,47 @@
 
     &__talk {
       @apply block;
-      @apply mt-3rem;
-      @apply text-fs-1;
-      @apply visited:text-fs-1;
-      @apply hover:text-fs-3;
-      @apply active:text-fs-3;
+      @apply text-fs-blue;
+      @apply visited:text-fs-blue;
+      @apply hover:text-fs-yellow;
+      @apply active:text-fs-yellow;
+      @apply mt-1rem;
       @apply font-size-2_5em;
 
-      &__author {
-        @apply text-fs-2;
+      &--next {
+        @apply mt-3rem;
       }
+
+      &__author {
+        @apply block;
+        @apply text-fs-grey;
+      }
+    }
+  }
+
+  &page404 {
+    @apply width-80p;
+    @apply max-w-1000px;
+    @apply mx-auto;
+
+    &__body {
+      @apply font-varela;
+      @apply p-2rem;
+      @apply w-full;
+      @apply min-h-full;
+      @apply bg-fs-bg;
+      @apply flex;
+      @apply flex-col;
+      @apply items-center;
+      @apply justify-center;
+    }
+
+    &__subtitle {
+      @apply text-fs-grey;
+    }
+
+    &__cta {
+      @apply mt-1ch;
     }
   }
 
@@ -277,25 +308,28 @@
     @apply m-20pt;
 
     &__body {
-      @apply font-varela;
       @apply flex;
       @apply justify-center;
       @apply m-0;
       @apply w-full;
       @apply min-h-full;
-      @apply bg-[rgb(242,242,247)];
+      @apply bg-fs-bg;
     }
 
     &__title {
       @apply font-bold;
       @apply line-height-1_4em;
-      @apply text-fs-1;
     }
 
     &__header {
       @apply line-height-1_4em;
-      @apply text-fs-2;
-      @apply mt-3ch;
+      @apply text-fs-grey;
+      @apply mt-1ch;
+      @apply mb-1ch;
+
+      &--next {
+        @apply mt-3ch;
+      }
     }
 
     &__section {
@@ -311,19 +345,21 @@
       @apply justify-between;
       @apply border-solid;
       @apply border-width-2px;
-      @apply border-#e0e0e0;
+      @apply border-[--fs-color-shadow];
       @apply rounded-5px;
       @apply p-2ch;
+      @apply m-0;
       @apply shadow-assets;
-      @apply shadow-#C0C0C0;
-      @apply hover:bg-fs-3;
-      @apply hover:border-#404040;
+      @apply shadow-main;
+      @apply bg-fs-bg-darker;
+      @apply hover:bg-fs-yellow;
+      @apply hover:border-[--fs-color-shadow];
+      @apply gap-y-2ch;
 
       &__image {
-        @apply min-w-200px;
-        @apply min-h-100px;
-        @apply max-w-100%;
+        @apply w-full;
         @apply max-h-200px;
+        @apply object-contain;
 
         &-wrapper {
           @apply flex;
@@ -331,7 +367,6 @@
           @apply flex-1;
           @apply items-center;
           @apply justify-center;
-          @apply p-2ch;
         }
       }
 

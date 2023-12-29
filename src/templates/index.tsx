@@ -22,12 +22,15 @@ export function body({ context, talks }: BodyProps): JSX.Element {
       {currentTalks.length > 0 && (
         <>
           <h1 className={resolveClasses('freya@index__header')}>Current Slidesets</h1>
-          {currentTalks.map(([id, talk]) => (
+          {currentTalks.map(([id, talk], index) => (
             <Fragment key={`talk:${id}`}>
-              <a href={`/${id}`} className={resolveClasses('freya@index__talk')}>
+              <a
+                href={`/${id}`}
+                className={resolveClasses('freya@index__talk', index > 0 && 'freya@index__talk--next')}
+              >
                 {talk.document.title}
               </a>
-              <h4 className={resolveClasses('freya@index__talk__author')}>{talk.document.author.name}</h4>
+              <span className={resolveClasses('freya@index__talk__author')}>{talk.document.author.name}</span>
             </Fragment>
           ))}
         </>
@@ -36,12 +39,15 @@ export function body({ context, talks }: BodyProps): JSX.Element {
       {archivedTalks.length > 0 && (
         <>
           <h1 className={resolveClasses('freya@index__header', 'freya@index__header--next')}>Archived Slidesets</h1>
-          {archivedTalks.map(([id, talk]) => (
+          {archivedTalks.map(([id, talk], index) => (
             <Fragment key={`talk:${id}`}>
-              <a href={`/${id}`} className={resolveClasses('freya@index__talk')}>
+              <a
+                href={`/${id}`}
+                className={resolveClasses('freya@index__talk', index > 0 && 'freya@index__talk--next')}
+              >
                 {talk.document.title}
               </a>
-              <h4 className={resolveClasses('freya@index__talk__author')}>{talk.document.author.name}</h4>
+              <span className={resolveClasses('freya@index__talk__author')}>{talk.document.author.name}</span>
             </Fragment>
           ))}
         </>

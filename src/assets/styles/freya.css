@@ -22,3 +22,30 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
     U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
+
+html {
+  --fs-color-bg: rgb(242, 242, 247);
+  --fs-color-bg-darker: rgb(224, 224, 224);
+  --fs-color-fg: rgb(44, 44, 46);
+  --fs-color-grey: rgb(108, 108, 112);
+  --fs-color-yellow: rgb(236, 178, 46);
+  --fs-color-blue: rgb(33, 101, 227);
+  --fs-color-shadow: rgb(105, 105, 110);
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    --fs-color-bg: rgb(44, 44, 46);
+    --fs-color-bg-darker: rgb(20, 20, 20);
+    --fs-color-fg: rgb(242, 242, 247);
+    --fs-color-grey: rgb(108, 108, 112);
+    --fs-color-yellow: rgb(236, 178, 46);
+    --fs-color-blue: rgb(33, 101, 227);
+    --fs-color-shadow: rgb(105, 105, 110);
+  }
+}
+
+body {
+  @apply font-varela;
+  @apply text-fs-fg;
+}

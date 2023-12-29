@@ -7,7 +7,7 @@ import { basename, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { filterWhitelistedTalks, pusherConfig } from './configuration.js'
 import { config as freyaCssConfig } from './rendering/unocss.config.js'
-import { generateAllSlidesets, generateAssetsListing } from './slidesets/generators.js'
+import { generateAllSlidesets, generateAssetsListing, generatePage404 } from './slidesets/generators.js'
 import { getAllTalks, getTalk, getTheme } from './slidesets/loaders.js'
 import { type Theme } from './slidesets/models.js'
 import { serviceWorker } from './templates/service-worker.js'
@@ -99,10 +99,12 @@ async function css(context: BuildContext): Promise<string> {
   }
 
   // Before returning, also swap the context CSS with the subcontext CSS
-  if (!id || id === '404' || id === 'index') {
+  if (!id || id === 'index') {
     context.css = context.extensions.freya.css.__index
   } else if (id.endsWith('_assets')) {
     context.css = context.extensions.freya.css.__assets
+  } else if (id === '404') {
+    context.css = context.extensions.freya.css.__404
   } else {
     context.css = context.extensions.freya.css[id]
   }
@@ -120,9 +122,6 @@ export async function build(context: BuildContext): Promise<BuildResult> {
   await mkdir(resolve(baseDir, 'assets/talks'), { recursive: true })
   await mkdir(resolve(baseDir, 'assets/themes'), { recursive: true })
 
-  // Copy file 404.html
-  await cp(fileURLToPath(new URL('assets/404.html', import.meta.url)), resolve(baseDir, '404.html'))
-
   // Prepare the context
   if (typeof context.extensions.freya === 'undefined') {
     context.extensions.freya = {}
@@ -134,6 +133,7 @@ export async function build(context: BuildContext): Promise<BuildResult> {
 
   // Generate the slidesets
   context.extensions.freya.slidesets = await generateAllSlidesets(context)
+  context.extensions.freya.slidesets['404'] = await generatePage404(context)
 
   // Write slidesets and track preCache information
   const toPrecache = new Set<string>(context.extensions.freya.images as Set<string>)

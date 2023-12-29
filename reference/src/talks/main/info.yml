@@ -1,0 +1,6 @@
+---
+config: common.config
+document:
+  title: 'Test'
+  author: common.author
+  company: common.company

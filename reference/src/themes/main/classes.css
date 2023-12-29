@@ -1,0 +1,19 @@
+theme@ {
+  &title {
+    @apply font-size-3_5em;
+  }
+
+  &subtitle {
+    @apply font-size-2_5em;
+  }
+
+  &content {
+    @apply font-size-1em;
+  }
+
+  &content {
+    @apply border-solid;
+    @apply border-2px;
+    @apply border-black;
+  }
+}

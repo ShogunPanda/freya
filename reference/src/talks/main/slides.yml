@@ -1,0 +1,33 @@
+---
+layout: image
+title: 'Image'
+image: '@talk/freya.webp'
+foreground: white
+background: black
+
+---
+layout: default
+title: 'Title'
+subtitle: 'Subtitle'
+content:
+  - Content
+classes:
+  slide: bg-yellow
+  title: text-red
+  subtitle: text-green
+  content: text-blue
+
+---
+layout: raw
+title: 'Raw'
+raw: <h1 class="uppercase">Transformed</h1>
+image: '@theme/freya.webp'
+classes:
+  raw: bg-pink
+
+---
+layout: image
+title: Theme image
+image: '@theme/freya.webp'
+classes:
+  raw: bg-purple

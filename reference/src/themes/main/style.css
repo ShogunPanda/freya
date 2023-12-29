@@ -1,0 +1,78 @@
+@import 'virtual:theme-fonts';
+@import '@freya/normalize.css';
+@import '@freya/reset.css';
+@import '@freya/default.css';
+
+html {
+  --fs-color-bg: rgb(242, 242, 247);
+  --fs-color-bg-darker: rgb(224, 224, 224);
+  --fs-color-fg: rgb(44, 44, 46);
+  --fs-color-grey: rgb(108, 108, 112);
+  --fs-color-yellow: rgb(236, 178, 46);
+  --fs-color-blue: rgb(33, 101, 227);
+  --fs-color-shadow: rgb(105, 105, 110);
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    --fs-color-bg: rgb(44, 44, 46);
+    --fs-color-bg-darker: rgb(20, 20, 20);
+    --fs-color-fg: rgb(242, 242, 247);
+    --fs-color-grey: rgb(108, 108, 112);
+    --fs-color-yellow: rgb(236, 178, 46);
+    --fs-color-blue: rgb(33, 101, 227);
+    --fs-color-shadow: rgb(105, 105, 110);
+  }
+}
+
+body {
+  @apply font-varela;
+  @apply text-fs-fg;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  @apply leading-snug;
+}
+
+code {
+  @apply font-100;
+}
+
+em {
+  @apply font-bold;
+  @apply not-italic;
+  @apply text-fs-grey;
+}
+
+h1 {
+  @apply mb-0_4sp;
+  @apply font-size-25pt;
+}
+
+h4 {
+  @apply font-size-18pt;
+  @apply leading-normal;
+  @apply mb-0_4sp;
+}
+
+a,
+a:hover,
+a:active,
+a:visited,
+a:focus {
+  @apply text-fs-blue;
+  @apply visited:text-fs-blue;
+  @apply hover:text-fs-yellow;
+  @apply active:text-fs-yellow;
+  @apply line-height-1;
+}
+
+a:not([class]) {
+  @apply font-bold;
+}

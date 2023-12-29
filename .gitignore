@@ -1,3 +1,6 @@
 .netlify
 dist/
 target/
+reference/node_modules
+reference/.freya
+reference/dist
