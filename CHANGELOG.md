@@ -1,3 +1,7 @@
+### 2023-12-29 / 0.40.2
+
+- fix: Fixed binary paths.
+
 ### 2023-12-29 / 0.40.1
 
 - fix: Fixed binary paths.
