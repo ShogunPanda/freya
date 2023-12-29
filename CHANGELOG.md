@@ -1,3 +1,7 @@
+### 2023-12-29 / 0.41.1
+
+- fix: Removed useless class.
+
 ### 2023-12-29 / 0.41.0
 
 - fix: Updated TypeScript configuration.
