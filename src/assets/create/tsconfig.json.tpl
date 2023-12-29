@@ -3,20 +3,19 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "node",
-    "jsx": "react-jsx",
+    "jsx": "preserve",
+    "noEmit": true,
     "outDir": "dist",
     "allowJs": false,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "strict": true,
     "skipLibCheck": true,
-    "noEmit": true,
+    "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "strictNullChecks": true,
-    "useUnknownInCatchVariables": false,
-    "baseUrl": ".",
-    "lib": ["dom", "dom.iterable", "esnext"]
+    "useUnknownInCatchVariables": false
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

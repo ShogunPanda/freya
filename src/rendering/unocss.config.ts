@@ -217,9 +217,7 @@ const layers: Record<string, number> = {
 }
 
 export const config = defineUnoConfig({
-  // @ts-expect-error Wrong types
   presets: [presetWind()],
-  // @ts-expect-error Wrong types
   transformers: [transformerDirectives()],
   theme: {
     colors: {
