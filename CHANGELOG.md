@@ -1,3 +1,7 @@
+### 2023-12-29 / 0.40.1
+
+- fix: Fixed binary paths.
+
 ### 2023-12-29 / 0.40.0
 
 - feat: Updated dependencies and CSS handling.
