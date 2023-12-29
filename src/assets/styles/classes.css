@@ -343,10 +343,6 @@
   }
 }
 
-.js@hidden {
-  @apply js@display-none;
-}
-
 .js@slides__wrapper--active {
   @apply js@border-pink-400;
 }
