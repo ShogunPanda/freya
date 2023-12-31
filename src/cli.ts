@@ -1,18 +1,18 @@
-import { type Command } from 'commander'
 import {
+  baseTemporaryDirectory,
   builder,
   compileSourceCode,
   createBuildContext,
   initializeSyntaxHighlighting,
-  localServer,
   rootDir
-} from 'dante'
-import { cp, rm } from 'node:fs/promises'
-import { type AddressInfo } from 'node:net'
+} from '@perseveranza-pets/dante'
+import { type Command } from 'commander'
+import { cp, mkdtemp, rm } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import type pino from 'pino'
 import { pusherConfig, setWhitelistedTalks } from './configuration.js'
-import { createAllPDFs, exportAllAsPNGs } from './export.js'
+import { createAllPDFs, ensureMagick, exportAllAsPNGs } from './export.js'
 
 function applyOnlyOption(command: Command): void {
   command.hook('preAction', () => {
@@ -20,34 +20,71 @@ function applyOnlyOption(command: Command): void {
   })
 }
 
-async function performExport(command: Command, logger: pino.Logger, netlify: boolean): Promise<void> {
+async function performBuild(command: Command, logger: pino.Logger): Promise<void> {
   try {
+    await ensureMagick()
+
     // Build in production mode
     const { directory: staticDir, only }: Record<string, string> = command.optsWithGlobals()
     setWhitelistedTalks(only)
     const absoluteStaticDir = resolve(rootDir, staticDir)
-    const buildContext = createBuildContext(logger, true, absoluteStaticDir)
-    buildContext.extensions.freya = { netlify }
+    const context = createBuildContext(logger, true, absoluteStaticDir)
+    context.extensions.freya = { netlify: true }
 
     await compileSourceCode(logger)
     await initializeSyntaxHighlighting(logger)
-    await builder(buildContext)
+    await builder(context)
+  } catch (error) {
+    logger.error(error)
+    process.exit(1)
+  }
+}
 
-    // Start the server
-    const server = await localServer({
-      ip: '0.0.0.0',
-      port: 0,
-      logger: false,
-      isProduction: true,
-      staticDir: resolve(rootDir, staticDir)
-    })
+async function performExport(command: Command, logger: pino.Logger, skipCompilation: boolean = false): Promise<void> {
+  try {
+    await ensureMagick()
 
-    // Export as PNGs
-    await exportAllAsPNGs(logger, staticDir, (server.server.address() as AddressInfo).port)
-    await server.close()
+    // Build in production mode
+    const { directory: staticDir, only }: Record<string, string> = command.optsWithGlobals()
+    setWhitelistedTalks(only)
+    const absoluteStaticDir = resolve(rootDir, staticDir)
+    const context = createBuildContext(logger, true, absoluteStaticDir)
+    context.extensions.freya = { export: true }
+
+    // Temporarily disable logging
+    const oldLogger = context.logger
+
+    if (skipCompilation) {
+      const newLogger = context.logger.child({}, { level: 'warn' })
+      context.logger = newLogger
+    }
+
+    // Prepare building
+    if (!skipCompilation) {
+      await compileSourceCode(context.logger)
+      await initializeSyntaxHighlighting(context.logger)
+    }
+
+    // Setup the environment
+    process.env.DANTE_BUILD_FILE_PATH = fileURLToPath(new URL('./export.js', import.meta.url))
+    context.root = await mkdtemp(resolve(baseTemporaryDirectory, 'export-'))
+
+    // Build the files first
+    await builder(context)
+
+    // Restore regular logging
+    if (skipCompilation) {
+      context.logger = oldLogger
+    }
+
+    // Now create a PNG for each file
+    await exportAllAsPNGs(context, staticDir)
 
     // Create PDFs
-    await createAllPDFs(logger, staticDir)
+    await createAllPDFs(context, staticDir)
+
+    // Remove the temporary directory
+    await rm(context.root, { force: true, recursive: true })
   } catch (error) {
     logger.error(error)
     process.exit(1)
@@ -78,7 +115,7 @@ export function setupCLI(program: Command, logger: pino.Logger): void {
     .option('-d, --directory <dir>', 'The directory where to build and serve files from', 'dist')
     .alias('e')
     .action(async function exportAction(this: Command): Promise<void> {
-      await performExport(this, logger, false)
+      await performExport(this, logger)
     })
 
   program
@@ -87,6 +124,7 @@ export function setupCLI(program: Command, logger: pino.Logger): void {
     .option('-d, --directory <dir>', 'The directory where to build and serve files from', 'dist')
     .alias('y')
     .action(async function deployAction(this: Command): Promise<void> {
+      await performBuild(this, logger)
       await performExport(this, logger, true)
 
       const { directory: staticDir }: Record<string, string> = this.optsWithGlobals()

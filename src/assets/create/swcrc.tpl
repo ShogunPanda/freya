@@ -11,7 +11,12 @@
     },
     "transform": {
       "react": {
-        "runtime": "automatic"
+        "runtime": "automatic",
+        "importSource": "preact",
+        "pragmaFrag": "Fragment",
+        "throwIfNamespace": true,
+        "development": false,
+        "useBuiltins": false
       }
     }
   }

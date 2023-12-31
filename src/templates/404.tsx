@@ -1,10 +1,11 @@
-import { serializeCSSClasses, type BuildContext } from 'dante'
+import { serializeCSSClasses, type BuildContext } from '@perseveranza-pets/dante'
+import { type VNode } from 'preact'
 
 interface BodyProps {
   context: BuildContext
 }
 
-export function body({ context }: BodyProps): JSX.Element {
+export function body({ context }: BodyProps): VNode {
   const resolveClasses = context.extensions.freya.resolveClasses
 
   return (
@@ -18,7 +19,7 @@ export function body({ context }: BodyProps): JSX.Element {
   )
 }
 
-export function page(context: BuildContext, bodyClassName: string): JSX.Element {
+export function page(context: BuildContext, bodyClassName: string): VNode {
   return (
     <html lang="en">
       <head>

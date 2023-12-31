@@ -1,26 +1,22 @@
+import { type VNode } from 'preact'
+import { useFreya } from '../../../../../dist/components/context.js'
 import { type SlideProps } from '../../../../../src/index.js'
 import { SlideWrapper, Text } from '../components/common.js'
 import { type Slide } from '../models.js'
 
-export default function DefaultLayout(props: SlideProps<Slide>): JSX.Element {
-  const { context, theme, talk, index, slide } = props
-  const resolveClasses = context.extensions.freya.resolveClasses
+export default function RawLayout(props: SlideProps<Slide>): VNode {
+  const { resolveClasses } = useFreya()
+
+  const { index, slide, className } = props
 
   const {
     title,
     raw,
-    classes: { slide: className, title: titleClassName, raw: rawClassName }
+    classes: { slide: slideClassName, title: titleClassName, raw: rawClassName }
   } = slide
 
   return (
-    <SlideWrapper
-      context={context}
-      theme={theme}
-      talk={talk}
-      slide={slide}
-      index={index}
-      className={resolveClasses(className)}
-    >
+    <SlideWrapper slide={slide} index={index} className={resolveClasses(className, slideClassName)}>
       {title && (
         <h1 className={resolveClasses('theme@title', titleClassName)}>
           <Text text={title} />

@@ -1,4 +1,5 @@
-import { serializeCSSClasses, type BuildContext } from 'dante'
+import { serializeCSSClasses, type BuildContext } from '@perseveranza-pets/dante'
+import { type VNode } from 'preact'
 import { type Talk } from '../slidesets/models.js'
 
 interface BodyProps {
@@ -8,7 +9,7 @@ interface BodyProps {
   themeAssets: [string, string][]
 }
 
-export function body({ context, talk, talkAssets, themeAssets }: BodyProps): JSX.Element {
+export function body({ context, talk, talkAssets, themeAssets }: BodyProps): VNode {
   const resolveClasses = context.extensions.freya.resolveClasses
 
   return (
@@ -66,7 +67,7 @@ export function body({ context, talk, talkAssets, themeAssets }: BodyProps): JSX
   )
 }
 
-export function page(context: BuildContext, bodyClassName: string): JSX.Element {
+export function page(context: BuildContext, bodyClassName: string): VNode {
   const copyAssetScript = `
     document.addEventListener('DOMContentLoaded', () => {
       for (const link of document.querySelectorAll('[data-freya-asset-id]')) {

@@ -1,17 +1,17 @@
-import { danteDir, serializeCSSClasses, type BuildContext } from 'dante'
+import { danteDir, serializeCSSClasses, type BuildContext } from '@perseveranza-pets/dante'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { Fragment } from 'react'
+import { Fragment, type VNode } from 'preact'
 import { finalizeJs } from '../slidesets/generators.js'
 import { type Talk } from '../slidesets/models.js'
+import { serviceWorker as serviceWorkerTemplate } from '../templates/service-worker.js'
 
 interface BodyProps {
   context: BuildContext
   talks: Record<string, Talk>
 }
 
-export function body({ context, talks }: BodyProps): JSX.Element {
+export function body({ context, talks }: BodyProps): VNode {
   const resolveClasses = context.extensions.freya.resolveClasses
   const allTalks = Object.entries(talks)
   const currentTalks = allTalks.filter(([, talk]: [string, Talk]) => !talk.document.archived)
@@ -56,13 +56,11 @@ export function body({ context, talks }: BodyProps): JSX.Element {
   )
 }
 
-export async function page(context: BuildContext, bodyClassName: string): Promise<JSX.Element> {
+export async function page(context: BuildContext, bodyClassName: string): Promise<VNode> {
   const siteVersion = `globalThis.__freyaSiteVersion = "${context.version}"`
   const hotReload = !context.isProduction ? await readFile(resolve(danteDir, 'dist/assets/hot-reload.js'), 'utf8') : ''
 
-  const serviceWorker = context.isProduction
-    ? await readFile(fileURLToPath(new URL('../assets/js/service-worker.js', import.meta.url)), 'utf8')
-    : ''
+  const serviceWorker = context.isProduction && !context.extensions.freya.export ? serviceWorkerTemplate(context) : ''
 
   const js = await finalizeJs([siteVersion, hotReload, serviceWorker].join('\n;\n'))
 

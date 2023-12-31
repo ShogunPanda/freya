@@ -1,14 +1,12 @@
-import { type BuildContext } from 'dante'
+import { type VNode } from 'preact'
 import QRCodeGenerator from 'qrcode-generator'
-import { useContext } from 'react'
 import { getAlignments, getCover, isAlignment, isCovered, isFinder } from '../rendering/qr.js'
-import { CSSClassesResolverContext } from './classes-resolver.js'
+import { useFreya } from './context.js'
 import { Image } from './image.js'
 
 type QRCodeGeneratorInterface = typeof QRCodeGenerator
 
 interface QRCodeProps {
-  context: BuildContext
   data: string
   label?: string
   image?: string
@@ -129,8 +127,8 @@ export function generateQR(
   return qr
 }
 
-export function QRCode({ context, data, image, imageRatio, label, classes }: QRCodeProps): JSX.Element {
-  const resolveClasses = useContext(CSSClassesResolverContext)
+export function QRCode({ data, image, imageRatio, label, classes }: QRCodeProps): VNode {
+  const { resolveClasses } = useFreya()
 
   const { code: codeClassName, qr: qrClassName, label: labelClassName, image: imageClassName } = classes ?? {}
 
@@ -195,7 +193,7 @@ export function QRCode({ context, data, image, imageRatio, label, classes }: QRC
 
         {image && (
           <div className={resolveClasses('freya@qr__image-wrapper')}>
-            <Image context={context} src={image} className={resolveClasses('freya@qr__image', imageClassName)} />
+            <Image src={image} className={resolveClasses('freya@qr__image', imageClassName)} />
           </div>
         )}
       </div>

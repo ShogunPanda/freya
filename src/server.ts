@@ -1,11 +1,10 @@
-import { type ServerResult } from 'dante'
+import fastifyFormBody from '@fastify/formbody'
+import { type ServerResult } from '@perseveranza-pets/dante'
 import { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify'
 import { createHmac } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { pusherConfig } from './configuration.js'
-
 interface TalkHandlerParams {
   Params: {
     talk: string
@@ -26,7 +25,7 @@ export function pusherAuthHandler(request: FastifyRequest, reply: FastifyReply):
 
   const { socket_id: socket, channel_name: channel } = request.body as Record<string, string>
 
-  const user = JSON.stringify({ id: 'freya-slides-sync-guest' })
+  const user = JSON.stringify({ id: 'freya-sync-guest' })
   const stringToSign = `${socket}:${channel}`
   const signature = createHmac('sha256', secret).update(stringToSign).digest().toString('hex')
 
@@ -46,14 +45,6 @@ export async function talkHandler(
 
   if (talk === '404.html' || talk === '__status.html' || !pageExists(this, talk)) {
     return reply.code(404).sendFile('404.html')
-  }
-
-  if (request.query.export === 'true') {
-    const page = await readFile(resolve(this.rootDir, `${talk}.html`), 'utf-8')
-
-    // page = singleSlide(page, parseInt(request.params.slide, 10))
-
-    return reply.type('text/html').send(page)
   }
 
   return reply.sendFile(`${talk}.html`)
@@ -77,6 +68,9 @@ export function assetsHandler(
 
 export function setupServer(server: FastifyInstance, isProduction: boolean): ServerResult {
   if (pusherConfig) {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    server.register(fastifyFormBody)
+
     server.route({
       method: 'POST',
       url: '/pusher/auth',

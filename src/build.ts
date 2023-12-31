@@ -1,12 +1,12 @@
+import { baseTemporaryDirectory, elapsed, rootDir, type BuildContext, type BuildResult } from '@perseveranza-pets/dante'
 import { type UserConfig } from '@unocss/core'
-import { baseTemporaryDirectory, elapsed, rootDir, type BuildContext, type BuildResult } from 'dante'
 import { glob } from 'glob'
 import { existsSync } from 'node:fs'
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { filterWhitelistedTalks, pusherConfig } from './configuration.js'
-import { config as freyaCssConfig } from './rendering/unocss.config.js'
+import { unocssConfig } from './rendering/unocss.config.js'
 import { generateAllSlidesets, generateAssetsListing, generatePage404 } from './slidesets/generators.js'
 import { getAllTalks, getTalk, getTheme } from './slidesets/loaders.js'
 import { type Theme } from './slidesets/models.js'
@@ -45,10 +45,15 @@ async function generatePusherAuthFunction(context: BuildContext): Promise<string
   return functionFile
 }
 
-async function cssConfig(context: BuildContext): Promise<UserConfig<object>> {
-  const id = basename(context.currentPage ?? '', '.html')
-  if (!id || id === '404' || id === 'index' || id.endsWith('_assets')) {
-    return freyaCssConfig
+export async function cssConfig(context: BuildContext): Promise<UserConfig<object>> {
+  let id = basename(context.currentPage ?? '', '.html')
+
+  if (id && context.extensions.freya.export) {
+    id = id.endsWith('--notes') ? 'speaker-notes' : id.split('--')!.shift()!
+  }
+
+  if (!id || id === '404' || id === 'index' || id.endsWith('_assets') || id === 'speaker-notes') {
+    return unocssConfig
   }
 
   const talk = await getTalk(id)
@@ -61,12 +66,17 @@ async function cssConfig(context: BuildContext): Promise<UserConfig<object>> {
   return unoConfig
 }
 
-async function css(context: BuildContext): Promise<string> {
-  const id = basename(context.currentPage ?? '', '.html')
+export async function css(context: BuildContext): Promise<string> {
+  let id = basename(context.currentPage ?? '', '.html')
+
+  if (id && context.extensions.freya.export) {
+    id = id.endsWith('--notes') ? 'speaker-notes' : id.split('--')!.shift()!
+  }
+
   let themeFile: string
   let theme: Theme | undefined
 
-  if (!id || id === '404' || id === 'index' || id.endsWith('_assets')) {
+  if (!id || id === '404' || id === 'index' || id.endsWith('_assets') || id === 'speaker-notes') {
     themeFile = await readFile(fileURLToPath(new URL('./assets/styles/freya.css', import.meta.url)), 'utf-8')
   } else {
     const talk = await getTalk(id)
@@ -105,6 +115,8 @@ async function css(context: BuildContext): Promise<string> {
     context.css = context.extensions.freya.css.__assets
   } else if (id === '404') {
     context.css = context.extensions.freya.css.__404
+  } else if (id === 'speaker-notes') {
+    context.css = context.extensions.freya.css['__speaker-notes']
   } else {
     context.css = context.extensions.freya.css[id]
   }
@@ -185,7 +197,7 @@ export async function build(context: BuildContext): Promise<BuildResult> {
   fileOperations = []
 
   if (context.isProduction) {
-    await writeFile(resolve(baseDir, 'sw.js'), serviceWorker(context, Array.from(toPrecache)), 'utf8')
+    await writeFile(resolve(baseDir, 'sw.js'), serviceWorker(context), 'utf8')
   }
 
   // Remove all file and directory starting with a double underscore

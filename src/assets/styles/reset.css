@@ -87,3 +87,7 @@ dt:nth-child(n + 1) {
 dl {
   margin: 0;
 }
+
+html {
+  --freya-slide-display-progress: block;
+}

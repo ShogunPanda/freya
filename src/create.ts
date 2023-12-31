@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
+import { rootDir } from '@perseveranza-pets/dante'
 import { type Command } from 'commander'
-import { rootDir } from 'dante'
 import { readFileSync } from 'node:fs'
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'

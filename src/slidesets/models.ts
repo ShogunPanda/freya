@@ -1,10 +1,12 @@
-import { type BuildContext } from 'dante'
+import { type VNode } from 'preact'
 import { type Pusher } from '../configuration.js'
 
 export interface FontsList {
   ranges: Record<string, string>
   families: Record<string, Record<string, Record<number, string>>>
 }
+
+export type ParsedSVG = [string, string | undefined]
 
 export interface Config {
   theme: string
@@ -67,27 +69,36 @@ export interface Theme extends RawTheme {
 }
 
 export interface ClientContext {
+  version: string
   id: string
-  title: string
+  talk: Talk
+  theme: Theme
+  assets: {
+    content: Record<string, string>
+    images: Record<string, string>
+    svgs: Record<string, ParsedSVG>
+    svgsDefinitions: string[]
+  }
+  css: {
+    keepExpanded: boolean
+    classes: Record<string, string[]>
+    compressedClasses: Record<string, string>
+  }
   dimensions: {
     width: number
     height: number
   }
-  slidesCount: number
-  slidesPadding: number
-  aspectRatio: number
-  current: number
   isProduction: boolean
-  classes: Record<string, string>
+  isExporting: boolean
   pusher?: Omit<Pusher, 'secret'> & { hostname?: string }
+  data?: Record<string, any>
+  serverData?: Record<string, any>
 }
 
 export interface SlideProps<T = Slide> {
-  context: BuildContext
-  theme: Theme
-  talk: Talk
   slide: T
   index: number
+  className?: string
 }
 
-export type SlideRenderer<T> = (props: SlideProps<T>) => JSX.Element
+export type SlideRenderer<T> = (props: SlideProps<T>) => VNode

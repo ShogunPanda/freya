@@ -1,17 +1,35 @@
-import { elapsed, rootDir } from 'dante'
+import {
+  baseTemporaryDirectory,
+  elapsed,
+  rootDir,
+  type BuildContext,
+  type BuildResult,
+  type CSSClassesResolver
+} from '@perseveranza-pets/dante'
+import { glob } from 'glob'
 import { exec as execCB } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { promisify } from 'node:util'
-import type pino from 'pino'
 import { chromium } from 'playwright'
-import { renderToStaticMarkup } from 'react-dom/server'
-import waitOn from 'wait-on'
+import { render } from 'preact-render-to-string'
+import { css, cssConfig } from './build.js'
+import { SvgDefinitions } from './client.js'
 import { filterWhitelistedTalks } from './configuration.js'
-import { getAllTalks, getTalk } from './slidesets/loaders.js'
-import { type Talk } from './slidesets/models.js'
-import { speakerNotes } from './templates/speaker-notes.js'
+import { resolveSVG } from './rendering/svg.js'
+import {
+  createCSSClassesResolver,
+  ensureRenderedCode,
+  parseContent,
+  prepareClientContext
+} from './slidesets/generators.js'
+import { getAllTalks, getTalk, getTheme, resolveImageUrl } from './slidesets/loaders.js'
+import { type BaseSlide, type Slide, type SlideRenderer, type Talk } from './slidesets/models.js'
+import { header, page } from './templates/page.js'
+import { SlideComponent } from './templates/slide.js'
+import { body as speakerNotesBody, page as speakerNotesPage } from './templates/speaker-notes.js'
 
 interface Progress {
   current: number
@@ -21,28 +39,34 @@ interface Progress {
 
 const exec = promisify(execCB)
 
-async function exportNotes(
-  logger: pino.Logger,
-  talk: Talk,
-  directory: string,
-  filename: string,
-  progress: string
-): Promise<void> {
-  if (!talk.slides.some(s => (s.notes ?? '').length > 0)) {
-    return
+function slideTemporaryFileName(talk: Talk, index: number): string {
+  return `${talk.id}--${(index + 1).toString().padStart(talk.slidesPadding, '0')}.html`
+}
+
+function slideTemporaryNotesName(talk: Talk): string {
+  return `${talk.id}--notes.html`
+}
+
+function resolveImage(cache: Record<string, string>, theme: string, talk: string, url?: string): string {
+  return '.' + resolveImageUrl(cache, theme, talk, url)
+}
+
+export async function ensureMagick(): Promise<void> {
+  try {
+    await exec('magick --help')
+    await exec('convert --help')
+  } catch (e) {
+    throw new Error(
+      'The magick or convert utilities could not be executed. Please make sure you have imagemagick installed.'
+    )
   }
-
-  const startTime = process.hrtime.bigint()
-
-  await writeFile(resolve(directory, filename), renderToStaticMarkup(speakerNotes(talk)), 'utf8')
-  logger.info(`${progress} Generated speaker notes for slideset ${talk.id} in ${elapsed(startTime)} ms.`)
 }
 
 export async function exportAsPNGs(
-  logger: pino.Logger,
+  context: BuildContext,
   id: string,
+  sourceDir: string,
   fullOutput: string,
-  baseUrl: URL,
   progress: Progress
 ): Promise<void> {
   const browser = await chromium.launch({
@@ -50,8 +74,8 @@ export async function exportAsPNGs(
     args: ['--use-gl=egl']
   })
   const startTime = process.hrtime.bigint()
-  const context = await browser.newContext({ ignoreHTTPSErrors: true })
-  const page = await context.newPage()
+  const browserContext = await browser.newContext({ ignoreHTTPSErrors: true })
+  const page = await browserContext.newPage()
   const talk = await getTalk(id)
 
   // Resize the browser
@@ -63,8 +87,12 @@ export async function exportAsPNGs(
   for (let i = 0; i < talk.slidesCount; i++) {
     const paddedSlide = i.toString().padStart(talk.slidesPadding, '0')
 
-    await page.goto(new URL(`/${id}/${paddedSlide}?export=true`, baseUrl).toString())
-    await Promise.all([page.waitForLoadState('load')])
+    await page.goto(pathToFileURL(resolve(sourceDir, slideTemporaryFileName(talk, i))).toString())
+
+    // Only for the first slide, wait for all images to be preloaded
+    if (i === 0) {
+      await page.waitForLoadState('networkidle')
+    }
 
     // Now make a screenshot of the entire page
     await page.screenshot({
@@ -85,18 +113,27 @@ export async function exportAsPNGs(
   progress.current++
   const progressString = `[${progress.current.toString().padStart(progress.padding, '0')}/${progress.total}]`
 
-  logger.info(`${progressString} Generated files for slideset ${id} in ${elapsed(startTime)} ms.`)
+  const notesPath = resolve(sourceDir, slideTemporaryNotesName(talk))
 
-  await exportNotes(logger, talk, fullOutput, join(id, 'speaker-notes.html'), progressString)
+  if (existsSync(notesPath)) {
+    await cp(notesPath, resolve(rootDir, fullOutput, id, 'speaker-notes.html'))
+  }
+
+  context.logger.info(`${progressString} Generated files for slideset ${id} in ${elapsed(startTime)} ms.`)
 }
 
-export async function createPDF(logger: pino.Logger, id: string, staticDir: string, progress: Progress): Promise<void> {
+export async function createPDF(
+  context: BuildContext,
+  id: string,
+  staticDir: string,
+  progress: Progress
+): Promise<void> {
   const startTime = process.hrtime.bigint()
 
   try {
     await exec(`magick *.png ../../pdf/${id}.pdf`, { cwd: resolve(rootDir, staticDir, 'png', id) })
   } catch (error) {
-    logger.fatal({ e: error }, 'Creating PDF failed.')
+    context.logger.fatal({ e: error }, 'Creating PDF failed.')
     process.exit(1)
   }
 
@@ -107,34 +144,19 @@ export async function createPDF(logger: pino.Logger, id: string, staticDir: stri
 
   progress.current++
   const progressString = `[${progress.current.toString().padStart(progress.padding, '0')}/${progress.total}]`
-  logger.info(`${progressString} Created PDF for slideset ${id} in ${elapsed(startTime)} ms.`)
+  context.logger.info(`${progressString} Created PDF for slideset ${id} in ${elapsed(startTime)} ms.`)
 }
 
-export async function exportAllAsPNGs(logger: pino.Logger, staticDir: string, port: number): Promise<void> {
-  try {
-    await exec('magick --help')
-    await exec('convert --help')
-  } catch (e) {
-    throw new Error(
-      'The magick or convert utilities could not be executed. Please make sure you have imagemagick installed.'
-    )
-  }
-
+export async function exportAllAsPNGs(context: BuildContext, staticDir: string): Promise<void> {
   const operationStart = process.hrtime.bigint()
 
-  const fullOutput = resolve(rootDir, staticDir, 'png')
-  const protocol = existsSync(resolve(rootDir, 'ssl')) ? 'https' : 'http'
-  const baseUrl = new URL(`${protocol}://127.0.0.1:${port}`)
-
-  logger.info(`Exporting PNG files into directory ${staticDir}/png ...`)
-
   // Prepare the output directory
+  const fullOutput = resolve(rootDir, staticDir, 'png')
   await rm(fullOutput, { recursive: true, force: true })
   await mkdir(fullOutput, { recursive: true })
+  context.logger.info(`Exporting PNG files into directory ${fullOutput} ...`)
 
-  // Await for the website to be reachable
-  await waitOn({ resources: [`tcp:127.0.0.1:${port}`], timeout: 30_000 })
-
+  // Export all talk
   const talks = filterWhitelistedTalks(await getAllTalks())
 
   const talksArray = [...talks]
@@ -145,15 +167,15 @@ export async function exportAllAsPNGs(logger: pino.Logger, staticDir: string, po
     padding: talksArrayLength.toString().length
   }
 
-  await Promise.all(talksArray.map(t => exportAsPNGs(logger, t, fullOutput, baseUrl, progress)))
+  await Promise.all(talksArray.map(t => exportAsPNGs(context, t, context.root, fullOutput, progress)))
 
-  logger.info(`Exporting completed in ${elapsed(operationStart)} ms.`)
+  context.logger.info(`Exporting completed in ${elapsed(operationStart)} ms.`)
 }
 
-export async function createAllPDFs(logger: pino.Logger, staticDir: string): Promise<void> {
+export async function createAllPDFs(context: BuildContext, staticDir: string): Promise<void> {
   const operationStart = process.hrtime.bigint()
 
-  logger.info(`Creating PDF files into directory ${staticDir}/pdfs ...`)
+  context.logger.info(`Creating PDF files into directory ${staticDir}/pdfs ...`)
 
   // Prepare the output directory
   await rm(resolve(rootDir, staticDir, 'pdf'), { recursive: true, force: true })
@@ -169,7 +191,190 @@ export async function createAllPDFs(logger: pino.Logger, staticDir: string): Pro
     padding: talksArrayLength.toString().length
   }
 
-  await Promise.all(talksArray.map(t => createPDF(logger, t, staticDir, progress)))
+  await Promise.all(talksArray.map(t => createPDF(context, t, staticDir, progress)))
 
-  logger.info(`Created all PDF files in ${elapsed(operationStart)} ms.`)
+  context.logger.info(`Created all PDF files in ${elapsed(operationStart)} ms.`)
+}
+
+export async function generateAllSlidesets(context: BuildContext): Promise<Record<string, string>> {
+  // For each talk, generate one file per slideset
+  const talks = context.extensions.freya.talks as Set<string>
+  const total = talks.size
+  const totalPadded = total.toString()
+  let i = 0
+  const padding = totalPadded.length
+  const generated: Record<string, string> = {}
+
+  // For each talk
+  for (const id of talks) {
+    i++
+    const startTime = process.hrtime.bigint()
+    const talk = await getTalk(id)
+    const theme = await getTheme(talk.config.theme)
+
+    const clientContext = await prepareClientContext(context, theme, talk)
+    const resolveClasses: CSSClassesResolver = context.extensions.freya.resolveClasses
+    const layouts: Record<string, string> = {}
+
+    // Render the slides
+    for (let i = 0; i < talk.slides.length; i++) {
+      const slide = talk.slides[i]
+
+      if (typeof slide.content === 'string') {
+        slide.content = [slide.content]
+      }
+
+      if (!slide.options) {
+        slide.options = {}
+      }
+
+      if (!slide.classes) {
+        slide.classes = {}
+      }
+
+      await ensureRenderedCode(context, slide)
+
+      for (const item of (slide.items as BaseSlide[]) ?? []) {
+        await ensureRenderedCode(context, item)
+      }
+
+      // Render the slide on the server to add the required classes
+      const layoutPath = resolve(
+        rootDir,
+        baseTemporaryDirectory,
+        'themes',
+        talk.config.theme,
+        'layouts',
+        (slide.layout ?? 'default') + '.js'
+      )
+
+      const { default: layout }: { default: SlideRenderer<Slide> } = await import(layoutPath)
+      layouts[slide.layout ?? 'default'] = layoutPath
+
+      const body =
+        render(
+          SlideComponent({
+            context: clientContext,
+            layout,
+            slide,
+            index: i + 1,
+            resolveClasses,
+            resolveImage: resolveImage.bind(null, clientContext.assets.images),
+            resolveSVG: resolveSVG.bind(null, clientContext.assets.svgsDefinitions, clientContext.assets.svgs),
+            parseContent: parseContent.bind(null, clientContext.assets.content)
+          })
+        ) +
+        render(
+          SvgDefinitions({
+            definitions: clientContext.assets.svgsDefinitions,
+            className: resolveClasses('freya@svg-definitions')
+          })
+        )
+
+      const html = render(
+        page(
+          talk.document.title,
+          header({
+            context,
+            talk,
+            theme,
+            js: ''
+          }),
+          undefined,
+          undefined,
+          body
+        )
+      )
+
+      generated[slideTemporaryFileName(talk, i)] = html
+    }
+
+    // Generate speaker notes if appropriate
+    if (talk.slides.some(s => (s.notes ?? '').length > 0)) {
+      const resolveClasses = createCSSClassesResolver(
+        '__speaker-notes',
+        context,
+        context.extensions.freya.loadedClasses as Record<string, string[]>
+      )
+      context.extensions.freya.resolveClasses = resolveClasses
+
+      const bodyClassName = resolveClasses('freya@speaker-notes__body')
+      const body = speakerNotesBody({ talk, resolveClasses })
+      const page = speakerNotesPage(context, bodyClassName)
+
+      generated[slideTemporaryNotesName(talk)] = render(page).replace('@BODY@', render(body))
+    }
+
+    const progress = `[${i.toString().padStart(padding, '0')}/${totalPadded}]`
+    context.logger.info(`${progress} Generated slideset ${id} in ${elapsed(startTime)} ms.`)
+  }
+
+  return generated
+}
+
+// This is used as dante build in export mode
+export async function build(context: BuildContext): Promise<BuildResult> {
+  context.logger.info(`Building site (version ${context.version}) ...`)
+
+  // Clean up the directory
+  const baseDir = context.root
+  await rm(baseDir, { force: true, recursive: true })
+  await mkdir(baseDir)
+  await mkdir(resolve(baseDir, 'assets/talks'), { recursive: true })
+  await mkdir(resolve(baseDir, 'assets/themes'), { recursive: true })
+
+  // Prepare the context
+  context.extensions.freya.css = {}
+  context.extensions.freya.images = new Set()
+  context.extensions.freya.talks = filterWhitelistedTalks(await getAllTalks())
+
+  let fileOperations: Promise<void>[] = []
+
+  // Generate the slidesets
+  const slides = await generateAllSlidesets(context)
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  fileOperations = Object.entries(slides).map(([name, content]) => {
+    return writeFile(resolve(baseDir, name), content, 'utf-8')
+  })
+
+  await Promise.all(fileOperations)
+  fileOperations = []
+
+  // Copy themes and talks assets
+  const themes = new Set()
+
+  for (const talk of context.extensions.freya.talks as string[]) {
+    const {
+      config: { theme }
+    } = await getTalk(talk)
+    const talkAssets = resolve(rootDir, 'src/talks', talk, 'assets')
+    const themeAssets = resolve(rootDir, 'src/themes', theme, 'assets')
+    if (existsSync(talkAssets)) {
+      fileOperations.push(
+        cp(talkAssets, resolve(baseDir, 'assets/talks', talk), {
+          recursive: true
+        })
+      )
+    }
+    if (!themes.has(theme) && existsSync(themeAssets)) {
+      fileOperations.push(
+        cp(themeAssets, resolve(baseDir, 'assets/themes', theme), {
+          recursive: true
+        })
+      )
+    }
+    themes.add(theme)
+  }
+
+  await Promise.all(fileOperations)
+  fileOperations = []
+
+  // Remove all file and directory starting with a double underscore
+  for (const p of await glob(resolve(baseDir, 'assets/**/__*'))) {
+    fileOperations.push(rm(p, { recursive: true }))
+  }
+
+  await Promise.all(fileOperations)
+
+  return { cssConfig, css }
 }

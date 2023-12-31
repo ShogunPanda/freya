@@ -1,16 +1,16 @@
-# freya-slides
+# @perseveranza-pets/freya
 
-[![Version](https://img.shields.io/npm/v/freya-slides.svg)](https://npm.im/freya-slides)
-[![Dependencies](https://img.shields.io/librariesio/release/npm/freya-slides)](https://libraries.io/npm/freya-slides)
+[![Version](https://img.shields.io/npm/v/@perseveranza-pets/freya.svg)](https://npm.im/@perseveranza-pets/freya)
+[![Dependencies](https://img.shields.io/librariesio/release/npm/@perseveranza-pets/freya)](https://libraries.io/npm/@perseveranza-pets/freya)
 
 Opinionated JSX based slides generator.
 
-http://sw.cowtech.it/freya-slides
+http://sw.cowtech.it/freya
 
 ## Installation
 
 ```
-npx --package=freya-slides -- create-freya-slideset my-slideset
+npx --package=@perseveranza-pets/freya -- create-freya-slideset my-slideset
 cd my-slideset
 npm install
 freya dev
@@ -186,32 +186,19 @@ A theme must contain at least the following files:
   A sample layout file looks like this:
 
   ```tsx
-  import { useContext } from 'react'
-  import { CSSClassesResolverContext, Slide, SlideProps, parseContent } from 'freya-slides'
+  import { type Slide, type SlideProps, useFreya, Progress } from '@perseveranza-pets/freya'
+  import { type VNode } from 'preact'
 
-  export default function DefaultLayout({ context, slide, index }: SlideProps<Slide>): JSX.Element {
-    const resolveClasses = context.extensions.freya.resolveClasses
-    const { title, content, notes } = slide
+  export function DefaultLayout({ slide, index, className }: SlideProps<Slide>): VNode {
+    const { resolveClasses } = useFreya()
+    const { title, content } = slide
 
     return (
-      <CSSClassesResolverContext.Provider value={resolveClasses}>
-        <div
-          key={`slide:${index}`}
-          data-freya-id="slide"
-          data-freya-index={index}
-          className={resolveClasses('freya@slide')}
-        >
-          <h1 dangerouslySetInnerHTML={{ __html: parseContent(title) }} />
-
-          {content
-            ?.filter(Boolean)
-            .map((c: string, contentIndex: number) => (
-              <h4 key={`content:${index}:${contentIndex}`} dangerouslySetInnerHTML={{ __html: parseContent(c) }} />
-            ))}
-
-          <template data-freya-id="slide-notes" dangerouslySetInnerHTML={{ __html: notes ?? '' }} />
-        </div>
-      </CSSClassesResolverContext.Provider>
+      <article className={resolveClasses('freya@slide', className)}>
+        <h1>{title}</h1>
+        <p>{content}</p>
+        <Progress current={index} />
+      </article>
     )
   }
   ```
@@ -222,7 +209,7 @@ This package only supports to be directly imported in a ESM context.
 
 For informations on how to use it in a CommonJS context, please check [this page](https://gist.github.com/ShogunPanda/fe98fd23d77cdfb918010dbc42f4504d).
 
-## Contributing to freya-slides
+## Contributing to freya
 
 - Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet.
 - Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it.

@@ -1,7 +1,7 @@
 ---
 layout: image
 title: 'Image'
-image: '@talk/freya.webp'
+image: '@talk/freya-1.webp'
 foreground: white
 background: black
 
@@ -16,18 +16,22 @@ classes:
   title: text-red
   subtitle: text-green
   content: text-blue
+notes: |
+  # h1
+  # h2
+
+  Normal
 
 ---
 layout: raw
 title: 'Raw'
-raw: <h1 class="uppercase">Transformed</h1>
-image: '@theme/freya.webp'
+raw: <h1 class="uppercase mb-0">Transformed</h1>
 classes:
   raw: bg-pink
 
 ---
 layout: image
 title: Theme image
-image: '@theme/freya.webp'
+image: '@theme/freya-2.webp'
 classes:
   raw: bg-purple

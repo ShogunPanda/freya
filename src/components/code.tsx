@@ -1,9 +1,9 @@
-import { useContext } from 'react'
+import { type VNode } from 'preact'
 import { type Slide } from '../slidesets/models.js'
-import { CSSClassesResolverContext } from './classes-resolver.js'
+import { useFreya } from './context.js'
 
-export function Code({ rendered, className }: Slide['code'] & { className?: string }): JSX.Element | null {
-  const resolveClasses = useContext(CSSClassesResolverContext)
+export function Code({ rendered, className }: Slide['code'] & { className?: string }): VNode | null {
+  const { resolveClasses } = useFreya()
 
   if (!rendered) {
     return null

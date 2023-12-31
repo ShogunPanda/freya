@@ -24,7 +24,7 @@ export function transformCSSValue(value: string): string | undefined {
   return value.startsWith('$') ? handler.cssvar(value) : handler.bracket(value)
 }
 
-function generateSpacing(customUnit: string, ratio: number, unit: string): Rule[] {
+export function generateSpacing(customUnit: string, ratio: number, unit: string): Rule[] {
   const spacings: Rule[] = []
   const sides: Record<string, string[]> = {
     t: ['top'],
@@ -68,7 +68,7 @@ function generateSpacing(customUnit: string, ratio: number, unit: string): Rule[
   return spacings
 }
 
-function generateGaps(customUnit: string, ratio: number, unit: string): Rule[] {
+export function generateGaps(customUnit: string, ratio: number, unit: string): Rule[] {
   return [
     [
       new RegExp(`^gap-(\\d+(?:_\\d+)?)${customUnit}$`),
@@ -94,7 +94,7 @@ function generateGaps(customUnit: string, ratio: number, unit: string): Rule[] {
   ]
 }
 
-function generateBorders(customUnit: string, ratio: number, unit: string): Rule[] {
+export function generateBorders(customUnit: string, ratio: number, unit: string): Rule[] {
   const borders: Rule[] = [
     [new RegExp(`^border-(\\d+(?:_\\d+)?)${customUnit}$`), ([, d]) => numericRule('border-width', d, unit, ratio)]
   ]
@@ -114,7 +114,7 @@ function generateBorders(customUnit: string, ratio: number, unit: string): Rule[
   return borders
 }
 
-function generateRadiuses(customUnit: string, ratio: number, unit: string): Rule[] {
+export function generateRadiuses(customUnit: string, ratio: number, unit: string): Rule[] {
   const radiuses: Rule[] = [
     [new RegExp(`^rounded-(\\d+(?:_\\d+)?)${customUnit}$`), ([, d]) => numericRule('border-radius', d, unit, ratio)]
   ]
@@ -146,7 +146,7 @@ function generateRadiuses(customUnit: string, ratio: number, unit: string): Rule
   return radiuses
 }
 
-function generatePositions(customUnit: string, ratio: number, unit: string): Rule[] {
+export function generatePositions(customUnit: string, ratio: number, unit: string): Rule[] {
   const positions: Rule[] = []
   for (const position of ['top', 'bottom', 'left', 'right']) {
     positions.push(
@@ -164,7 +164,13 @@ function generatePositions(customUnit: string, ratio: number, unit: string): Rul
   return positions
 }
 
-function generateDimensions(short: string, long: string, customUnit: string, ratio: number, unit: string): Rule[] {
+export function generateDimensions(
+  short: string,
+  long: string,
+  customUnit: string,
+  ratio: number,
+  unit: string
+): Rule[] {
   const dimensions: Rule[] = []
 
   for (const prefix of ['', 'min-', 'max-']) {
@@ -177,7 +183,7 @@ function generateDimensions(short: string, long: string, customUnit: string, rat
   return dimensions
 }
 
-function generateCustomUnits(): Rule[] {
+export function generateCustomUnits(): Rule[] {
   const customUnits: [string, number, string][] = [
     ['ch', 1, 'ch'],
     ['em', 1, 'em'],
@@ -205,7 +211,7 @@ function generateCustomUnits(): Rule[] {
   return rules
 }
 
-const layers: Record<string, number> = {
+export const layers: Record<string, number> = {
   components: 10,
   utilities: 11,
   default: 12,
@@ -221,7 +227,7 @@ const layers: Record<string, number> = {
   js: 99
 }
 
-export const config = defineUnoConfig({
+export const unocssConfig = defineUnoConfig({
   presets: [presetWind()],
   transformers: [transformerDirectives()],
   theme: {
@@ -234,10 +240,10 @@ export const config = defineUnoConfig({
       'fs-blue': 'var(--fs-color-blue)'
     },
     boxShadow: {
-      assets: '5px 5px 10px -5px'
+      'freya-assets': '5px 5px 10px -5px'
     },
     shadowColor: {
-      main: 'var(--fs-color-shadow)'
+      'freya-assets-shadow-color': 'var(--fs-color-shadow)'
     }
   },
   rules: [
@@ -267,7 +273,12 @@ export const config = defineUnoConfig({
         return { 'counter-increment': transformCSSValue(value) }
       }
     ],
-
+    [
+      /^var-(.+?)-(.+)/,
+      ([, name, value]: string[]) => {
+        return { [`--${name}`]: transformCSSValue(value) }
+      }
+    ],
     ...generateCustomUnits(),
     ...generateBorders('', 1, 'px'),
     ...generateRadiuses('', 1, 'px'),
@@ -275,13 +286,20 @@ export const config = defineUnoConfig({
     [/^line-height-(\d+(?:_\d+)?)$/, ([, value]: string[]) => numericRule('line-height', value, 'em')],
     [/^font-size-(\d+(?:_\d+)?)em$/, ([, value]: string[]) => numericRule('font-size', value, 'em')],
     [/^font-size-(\d+(?:_\d+)?)pt$/, ([, value]: string[]) => numericRule('font-size', value, 'px', 2.7)],
+    [
+      /^var-\[([^]+)\]-(.+)/,
+      ([, name, value]: string[]) => {
+        return { [`--${name}`]: transformCSSValue(value) }
+      }
+    ],
     ['font-system-fonts', { 'font-family': systemFonts }],
     ['font-monospace-system-fonts', { 'font-family': systemMonospaceFonts }],
-    ['font-varela', { 'font-family': `"Varela Round", ${systemFonts}` }]
+    ['font-varela', { 'font-family': `"Varela Round", ${systemFonts}` }],
+    ['font-noto-sans', { 'font-family': `'Noto Sans', ${systemMonospaceFonts}` }]
   ],
   layers,
   variants: [layersVariant],
   safelist: []
 })
 
-export default config
+export default unocssConfig

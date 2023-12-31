@@ -29,7 +29,7 @@ export default async function handler(request: Request): Promise<Response> {
     return createResponse(401, { statusCode: 401, error: 'Unauthorized', message: 'Missing authentication data.' })
   }
 
-  const user = JSON.stringify({ id: 'freya-slides-sync-guest' })
+  const user = JSON.stringify({ id: 'freya-sync-guest' })
   const stringToSign = `${socket}:${channel}`
   const signature = hmac('sha256', secret, stringToSign, 'utf8', 'hex')
 

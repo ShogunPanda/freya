@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference lib="webworker" />
 
-import { type BuildContext } from 'dante'
+import { type BuildContext } from '@perseveranza-pets/dante'
 
 declare let self: ServiceWorkerGlobalScope
 
@@ -25,7 +25,7 @@ function main(): void {
   const rootUrlHash = Array.from(new Uint8Array(new TextEncoder().encode(self.origin)))
     .map(i => i.toString(16).padStart(2, '0'))
     .join('')
-  const cacheId = `freya-slides-${rootUrlHash}`
+  const cacheId = `freya-${rootUrlHash}`
 
   const workbox = globalThis.workbox
   const manifest = globalThis.precache.map(s => ({ url: `${rootUrl}${s}`, revision: globalThis.version }))
@@ -93,13 +93,13 @@ function main(): void {
   })
 }
 
-export function serviceWorker(context: BuildContext, precache: string[]): string {
+export function serviceWorker(context: BuildContext): string {
   return `
 ${main};
 
 globalThis.debug = ${process.env.FREYA_ENABLE_SERVICE_WORKER === 'true' || !context.isProduction};
 globalThis.version = "${context.version}";
-globalThis.precache = ${JSON.stringify(precache)};
+globalThis.precache = ${JSON.stringify(Array.from(context.extensions.freya.images as Set<string>))};
 globalThis.talks = ${JSON.stringify(Array.from(context.extensions.freya.talks as Set<string>))};
 
 main()

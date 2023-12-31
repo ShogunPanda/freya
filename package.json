@@ -1,14 +1,14 @@
 {
-  "name": "freya-slides",
+  "name": "@perseveranza-pets/freya",
   "version": "0.41.1",
   "description": "Opinionated JSX based slides generator.",
-  "homepage": "https://sw.cowtech.it/freya-slides",
-  "repository": "github:ShogunPanda/freya-slides",
+  "homepage": "https://sw.cowtech.it/freya",
+  "repository": "github:ShogunPanda/freya",
   "keywords": [
     "slides"
   ],
   "bugs": {
-    "url": "https://github.com/ShogunPanda/freya-slides/issues"
+    "url": "https://github.com/ShogunPanda/freya/issues"
   },
   "author": "Shogun <shogun@cowtech.it>",
   "license": "ISC",
@@ -27,7 +27,7 @@
   "type": "module",
   "exports": {
     ".": "./dist/index.js",
-    "./cli": "./dist/cli.js"
+    "./client": "./dist/client.js"
   },
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -44,18 +44,23 @@
   },
   "dependencies": {
     "@fastify/formbody": "^7.4.0",
+    "@perseveranza-pets/dante": "^0.40.2",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-replace": "^5.0.5",
     "@unocss/preset-wind": "^0.58.2",
     "commander": "^11.1.0",
-    "dante": "^0.38.0",
     "glob": "^10.3.10",
     "js-yaml": "^4.1.0",
     "markdown-it": "^14.0.0",
     "playwright": "^1.40.1",
     "playwright-chromium": "^1.40.1",
+    "preact": "^10.19.3",
+    "preact-render-to-string": "^6.3.1",
+    "preact-router": "^4.1.2",
     "pusher-js": "8.4.0-rc2",
     "qrcode-generator": "^1.4.4",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "rollup": "^4.9.2",
     "wait-on": "^7.2.0",
     "xml-js": "^1.6.11"
   },
@@ -63,8 +68,6 @@
     "@cowtech/eslint-config": "^9.0.0",
     "@types/js-yaml": "^4.0.9",
     "@types/markdown-it": "^13.0.7",
-    "@types/react": "^18.2.46",
-    "@types/react-dom": "^18.2.18",
     "@types/wait-on": "^5.3.4",
     "concurrently": "^8.2.2",
     "eslint": "^8.56.0",

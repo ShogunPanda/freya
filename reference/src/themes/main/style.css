@@ -61,11 +61,7 @@ h4 {
   @apply mb-0_4sp;
 }
 
-a,
-a:hover,
-a:active,
-a:visited,
-a:focus {
+a {
   @apply text-fs-blue;
   @apply visited:text-fs-blue;
   @apply hover:text-fs-yellow;

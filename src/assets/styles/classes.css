@@ -1,16 +1,22 @@
 .freya@ {
   &loading {
-    @apply bg-black;
-    @apply w-100vw;
-    @apply h-100vh;
-    @apply absolute;
-    @apply top-0;
-    @apply left-0;
-    @apply flex;
-    @apply items-center;
-    @apply justify-center;
-    @apply z-10010;
-    @apply text-white;
+    @apply text-#E0E0E0;
+
+    &__text {
+      @apply m-0;
+    }
+  }
+
+  &image {
+    @apply block;
+  }
+
+  &svg {
+    @apply block;
+  }
+
+  &svg-definitions {
+    @apply hidden;
   }
 
   &slide {
@@ -28,183 +34,15 @@
     @apply bg-white;
   }
 
-  &slides,
-  &presenter {
+  &progress {
+    @apply display-[--freya-slide-display-progress];
     @apply absolute;
-    @apply top-0;
+    @apply bottom-0;
     @apply left-0;
-    @apply w-full;
-    @apply min-h-full;
-
-    &__overlay {
-      @apply absolute;
-      @apply top-0;
-      @apply left-0;
-      @apply w-full;
-      @apply h-full;
-      @apply bg-black;
-      @apply opacity-90;
-      @apply z-0;
-    }
-
-    &__contents {
-      @apply relative;
-      @apply flex;
-      @apply z-1;
-      @apply p-0_25sp;
-    }
-
-    &__close {
-      @apply flex;
-      @apply items-center;
-      @apply justify-center;
-      @apply text-white;
-      @apply hover:text-pink-400;
-      @apply active:text-pink-400;
-      @apply focus:text-pink-400;
-      @apply visited:text-white;
-
-      &__image {
-        @apply w-0_25sp;
-        @apply stroke-width-4;
-      }
-    }
-  }
-
-  &slides {
-    @apply z-10003;
-
-    &__contents {
-      @apply h-100vh;
-      @apply overflow-auto;
-    }
-
-    &__close {
-      @apply fixed;
-      @apply top-0_25sp;
-      @apply right-0_25sp;
-      @apply z-2;
-    }
-
-    &__list {
-      @apply grid;
-      @apply gap-y-0_3sp;
-      @apply gap-x-0_2sp;
-      @apply w-full;
-      @apply pr-0_5sp;
-      @apply grid-cols-[repeat(auto-fit,_minmax(250px,_1fr))];
-      @apply z-1;
-    }
-
-    &__wrapper {
-      @apply relative;
-      @apply w-266px;
-      @apply h-[calc(var(--freya-slide-wrapper-height)_+_16px)];
-      @apply overflow-hidden;
-      @apply cursor-pointer;
-      @apply border-solid;
-      @apply border-8px;
-      @apply border-transparent;
-      @apply hover:border-pink-400;
-      @apply active:border-pink-400;
-
-      &__number {
-        @apply flex;
-        @apply absolute;
-        @apply items-center;
-        @apply justify-center;
-        @apply font-size-12pt;
-        @apply font-semibold;
-        @apply top-0;
-        @apply right-0;
-        @apply w-64px;
-        @apply h-36px;
-        @apply bg-black;
-        @apply text-white;
-        @apply z-1000;
-        @apply opacity-75;
-      }
-    }
-  }
-
-  &presenter {
-    @apply z-10002;
-
-    &__layout {
-      @apply w-full;
-      @apply grid;
-      @apply justify-center;
-      @apply gap-x-0_25sp;
-      @apply gap-y-0_25sp;
-      @apply grid-areas-[a_a]-[b_c]-[d_e]; /* If you re-enable 3 columns presenter: grid-area-[a_a_a]-[b_c_d]-[e_f_g] */
-      @apply grid-rows-[min-content_1fr]; /* If you re-enable 3 columns presenter: grid-rows-[1fr_min-content_1fr] */
-      @apply grid-cols-[min-content_min-content];
-    }
-
-    &__header {
-      @apply flex;
-      @apply items-center;
-      @apply justify-center;
-      @apply grid-area-[a];
-      @apply line-height-1;
-
-      &__controls {
-        @apply flex;
-        @apply flex-1;
-        @apply items-center;
-        @apply justify-center;
-        @apply gap-x-1ch;
-        @apply py-0_1sp;
-        @apply text-white;
-        @apply font-size-20pt;
-        @apply font-semibold;
-        @apply ml-0_25sp;
-      }
-
-      &__action {
-        @apply line-height-1;
-      }
-
-      &__text {
-        @apply font-monospace-system-fonts;
-      }
-    }
-
-    &__slide {
-      &--preview,
-      &--current {
-        @apply relative;
-        @apply overflow-hidden;
-      }
-
-      &--current {
-        @apply w-50vw;
-        @apply grid-area-[b]; /* If you re-enable 3 columns presenter: grid-area-[c] */
-        @apply h-[var(--freya-presenter-slide-current-height)];
-      }
-
-      &--preview /*, &--next*/ {
-        @apply w-25vw;
-        @apply h-[var(--freya-presenter-slide-preview-height)];
-      }
-
-      /*
-      &--previous {
-        @apply grid-area-[b];
-        @apply justify-self-end;
-      }
-      */
-
-      &--next {
-        @apply grid-area-[c]; /* If you re-enable 3 columns presenter: grid-area-[d] */
-      }
-    }
-
-    &__notes {
-      @apply grid-area-[d]; /* If you re-enable 3 columns presenter: grid-area-[f] */
-      @apply text-white;
-      @apply font-size-10pt;
-    }
+    @apply w-[calc(var(--freya-slide-progress)_*_1%)];
+    @apply h-0_03sp;
+    @apply bg-#5AC3EA;
+    @apply z-10;
   }
 
   &qr {
@@ -230,6 +68,218 @@
 
     &__image {
       @apply bg-white;
+    }
+  }
+
+  &overlay {
+    @apply absolute;
+    @apply top-0;
+    @apply left-0;
+    @apply w-full;
+    @apply h-full;
+    @apply bg-black;
+    @apply opacity-90;
+    @apply z-2;
+  }
+
+  &navigator {
+    @apply var-[freya-slide-display-progress]-[none];
+    @apply absolute;
+    @apply top-0;
+    @apply left-0;
+    @apply w-full;
+    @apply min-h-full;
+    @apply max-h-full;
+
+    @apply p-0_25sp;
+    @apply pr-0_5sp;
+    @apply z-3;
+    @apply grid;
+    @apply gap-y-0_3sp;
+    @apply gap-x-0_2sp;
+    @apply grid-cols-[repeat(auto-fit,_minmax(250px,_1fr))];
+    @apply grid-rows-[min-content];
+    @apply overflow-auto;
+
+    &__close {
+      @apply fixed;
+      @apply top-0_125sp;
+      @apply right-0_125sp;
+      @apply flex;
+      @apply items-center;
+      @apply justify-center;
+      @apply text-white;
+
+      @apply hover:text-#5AC3EA;
+      @apply active:text-#5AC3EA;
+      @apply focus:text-#5AC3EA;
+      @apply visited:text-white;
+
+      &__image {
+        @apply w-0_25sp;
+        @apply stroke-width-3;
+      }
+    }
+
+    &__slide {
+      @apply block;
+      @apply relative;
+      @apply overflow-hidden;
+      @apply border-solid;
+      @apply border-8px;
+      @apply border-transparent;
+      @apply h-[--freya-navigator-slide-height];
+      @apply cursor-pointer;
+      @apply freya@hover:border-#5AC3EA;
+
+      &--active {
+        @apply freya@border-#5AC3EA;
+      }
+
+      &__contents {
+        @apply pointer-events-none;
+        @apply select-none;
+        @apply transform-origin-[0_0];
+      }
+
+      &__number {
+        @apply flex;
+        @apply absolute;
+        @apply items-center;
+        @apply justify-center;
+        @apply font-noto-sans;
+        @apply font-size-10pt;
+        @apply font-semibold;
+        @apply top-0;
+        @apply right-0;
+        @apply w-[calc(3ch+2rem)];
+        @apply h-[calc(1ch+2rem)];
+        @apply bg-black;
+        @apply text-white;
+        @apply z-2;
+        @apply opacity-75;
+        @apply pointer-events-none;
+        @apply select-none;
+      }
+    }
+  }
+
+  &presenter {
+    @apply var-[freya-slide-display-progress]-[none];
+    @apply absolute;
+    @apply top-0;
+    @apply left-0;
+    @apply w-full;
+    @apply min-h-full;
+    @apply p-0_25sp;
+    @apply pr-0_5sp;
+    @apply z-3;
+    @apply grid;
+    @apply gap-0_3sp;
+
+    &--with-previous {
+      @apply grid-areas-[header_header_header]-[previous_current_next]-[u1_notes_u2];
+      @apply grid-cols-[1fr_2fr_1fr];
+      @apply grid-rows-[min-content_min-content_1fr];
+    }
+
+    &--no-previous {
+      @apply grid-areas-[header_header]-[current_next]-[notes_unused];
+      @apply grid-cols-[2fr_1fr];
+      @apply grid-rows-[min-content_min-content_1fr];
+    }
+
+    &__header {
+      @apply grid-area-[header];
+      @apply flex;
+      @apply items-center;
+      @apply justify-center;
+      @apply gap-x-1ch;
+      @apply text-white;
+      @apply font-size-20pt;
+
+      &__label {
+        @apply font-noto-sans;
+        @apply font-semibold;
+
+        &--paused {
+          @apply opacity-40;
+        }
+      }
+    }
+
+    &__close {
+      @apply fixed;
+      @apply top-0_125sp;
+      @apply right-0_125sp;
+      @apply flex;
+      @apply items-center;
+      @apply justify-center;
+      @apply text-white;
+
+      @apply hover:text-#5AC3EA;
+      @apply active:text-#5AC3EA;
+      @apply focus:text-#5AC3EA;
+      @apply visited:text-white;
+
+      &__image {
+        @apply w-0_25sp;
+        @apply stroke-width-3;
+      }
+    }
+
+    &__slide {
+      @apply block;
+      @apply relative;
+      @apply overflow-hidden;
+      @apply border-solid;
+      @apply border-8px;
+      @apply border-transparent;
+      @apply h-[--freya-presenter-slide-height];
+
+      &--previous {
+        @apply grid-area-[previous];
+      }
+
+      &--current {
+        @apply grid-area-[current];
+        @apply freya@border-#5AC3EA;
+      }
+
+      &--next {
+        @apply grid-area-[next];
+      }
+
+      &__contents {
+        @apply pointer-events-none;
+        @apply select-none;
+        @apply transform-origin-[0_0];
+      }
+
+      &__number {
+        @apply flex;
+        @apply absolute;
+        @apply items-center;
+        @apply justify-center;
+        @apply font-noto-sans;
+        @apply font-size-10pt;
+        @apply font-semibold;
+        @apply top-0;
+        @apply right-0;
+        @apply w-[calc(3ch+2rem)];
+        @apply h-[calc(1ch+2rem)];
+        @apply bg-black;
+        @apply text-white;
+        @apply z-2;
+        @apply opacity-75;
+        @apply pointer-events-none;
+        @apply select-none;
+      }
+    }
+
+    &__notes {
+      @apply grid-area-[notes];
+      @apply text-white;
     }
   }
 
@@ -345,12 +395,12 @@
       @apply justify-between;
       @apply border-solid;
       @apply border-width-2px;
-      @apply border-[--fs-color-shadow];
+      @apply border-[--fs-color-color-shadow];
       @apply rounded-5px;
       @apply p-2ch;
       @apply m-0;
-      @apply shadow-assets;
-      @apply shadow-main;
+      @apply shadow-freya-assets;
+      @apply shadow-freya-assets-shadow-color;
       @apply bg-fs-bg-darker;
       @apply hover:bg-fs-yellow;
       @apply hover:border-[--fs-color-shadow];
@@ -376,15 +426,25 @@
       }
     }
   }
-}
 
-.js@slides__wrapper--active {
-  @apply js@border-pink-400;
-}
+  &speaker-notes {
+    @apply width-80p;
+    @apply max-w-1600px;
+    @apply mx-auto;
 
-.js@slide {
-  @apply pointer-events-none;
-  @apply select-none;
-  @apply transform-[var(--freya-slides-slide-transform)];
-  @apply transform-origin-[0_0];
+    &__body {
+      @apply font-varela;
+      @apply p-2rem;
+      @apply bg-fs-bg;
+    }
+
+    &__subtitle {
+      @apply text-fs-grey;
+    }
+
+    &__slide {
+      @apply mt-2rem;
+      @apply text-fs-grey;
+    }
+  }
 }

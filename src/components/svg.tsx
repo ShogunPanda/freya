@@ -1,51 +1,108 @@
-import { readFileSync } from 'node:fs'
-import { type SVGProps } from 'react'
-import { normalizeSVGProps, parseSVG } from '../rendering/svg.js'
-import { resolveImagePath } from '../slidesets/loaders.js'
+import { type JSX, type VNode } from 'preact'
+import { useFreya } from './context.js'
 
-interface SvgProps extends SVGProps<SVGSVGElement> {
-  contents: string
-  className?: string
-  theme: string
-}
-
-interface SvgIconProps extends SVGProps<SVGSVGElement> {
-  viewBoxWidth?: string
-  viewBoxHeight?: string
-  theme: string
-  name: string
+interface SvgProps extends JSX.SVGAttributes<SVGSVGElement> {
+  src: string
   className?: string
 }
 
-export function Svg({ theme, contents, ...props }: SvgProps): JSX.Element {
-  const [svgProps, svgContents] = parseSVG(readFileSync(resolveImagePath(theme, '', contents), 'utf8'))
-
-  return <svg {...normalizeSVGProps(svgProps)} {...props} dangerouslySetInnerHTML={{ __html: svgContents }} />
+interface SvgDefinitionsProps {
+  definitions: string[]
+  className?: string
 }
 
-export function SvgIcon(props: SvgIconProps): JSX.Element {
-  const { viewBoxWidth: rawViewBoxWidth, viewBoxHeight: rawViewBoxHeight, theme, name } = props
+export function generateSVGId(start: number): string {
+  let name = ''
+  let i = start
 
-  const rawContents = readFileSync(resolveImagePath(theme, '', `@theme/icons/${name}.svg`), 'utf8')
+  do {
+    let index = i % 26
+    i = i / 26
 
-  const viewBoxWidth = rawViewBoxWidth ?? 24
-  const viewBoxHeight = rawViewBoxHeight ?? 24
+    if (start > 0 && index - 1 === -1) {
+      index = 26
+      i--
+    }
 
-  const [svgProps, svgContents] = parseSVG(rawContents)
+    // a = 97 => a + index - 1
+    name = String.fromCharCode(index + 97) + name
+  } while (i >= 1)
 
+  return `svg:${name}`
+}
+
+export function normalizeSVGProps(props: Record<string, string | undefined>): JSX.SVGAttributes<SVGSVGElement> {
+  const {
+    viewBox,
+    version,
+    style: rawStyle,
+    class: className,
+    'stroke-width': strokeWidth,
+    stroke,
+    fill,
+    'stroke-linecap': strokeLinecap,
+    'stroke-linecap': strokeLinejoin
+  } = props
+
+  // Camelcase some props and all the styles
+  return {
+    viewBox,
+    version,
+    stroke,
+    strokeWidth,
+    strokeLinecap: strokeLinecap as JSX.SVGAttributes<SVGSVGElement>['strokeLinecap'],
+    strokeLinejoin: strokeLinejoin as JSX.SVGAttributes<SVGSVGElement>['strokeLinejoin'],
+    fill,
+    style: Object.fromEntries(
+      (rawStyle ?? '')
+        .split(';')
+        .map(s => {
+          const [k, v] = s.split(':')
+
+          // Camelcase the key
+          return [k.replaceAll(/-(.)/g, ([, c]) => c.toUpperCase()), v]
+        })
+        .filter(e => e[0])
+    ),
+    className
+  }
+}
+
+// Since this is used also in export, it cannot use useFreya and resolveClasses must be called in the caller
+export function SvgDefinitions({ definitions, className }: SvgDefinitionsProps): VNode {
   return (
     <svg
-      {...normalizeSVGProps(svgProps)}
-      viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
-      {...props}
-      dangerouslySetInnerHTML={{ __html: svgContents }}
-    />
+      version="1.1"
+      xmlns="http://www.w3.org/2000/svg"
+      xmlnsXlink="http://www.w3.org/1999/xlink"
+      className={className}
+    >
+      <defs dangerouslySetInnerHTML={{ __html: definitions.join('\n') }} />
+    </svg>
   )
 }
 
-export function SvgCloseIcon(props: Partial<SvgProps>): JSX.Element {
+export function Svg({ path, className, ...props }: SvgProps): VNode {
+  const {
+    talk: { id: talkId },
+    theme: { id: themeId },
+    resolveClasses,
+    resolveSVG
+  } = useFreya()
+
+  const [id, viewBox] = resolveSVG(themeId, talkId, path)
+
+  return (
+    <svg {...props} className={resolveClasses('freya@svg', className)} viewBox={viewBox}>
+      <use xlinkHref={`#${id}`} />
+    </svg>
+  )
+}
+
+export function SvgCloseIcon(props: JSX.SVGAttributes<SVGSVGElement>): VNode {
   return (
     <svg
+      {...props}
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       strokeWidth="2"
@@ -53,7 +110,6 @@ export function SvgCloseIcon(props: Partial<SvgProps>): JSX.Element {
       fill="none"
       strokeLinecap="round"
       strokeLinejoin="round"
-      {...props}
     >
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <line x1="18" y1="6" x2="6" y2="18" />

@@ -1,18 +1,18 @@
-import { rootDir } from 'dante'
+import { rootDir } from '@perseveranza-pets/dante'
 import { glob } from 'glob'
 import { load, loadAll } from 'js-yaml'
 import { existsSync } from 'node:fs'
 import { readFile, readdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { pusherConfig } from '../configuration.js'
-import { type Config, type RawTheme, type Slide, type Talk, type Theme } from './models.js'
+import { type Config, type ParsedSVG, type RawTheme, type Slide, type Talk, type Theme } from './models.js'
 
 let commonCache: Record<string, object> | undefined
 let allTalksCache: Set<string> | undefined
 const themesCache = new Map<string, Theme>()
 const talksCache = new Map<string, Talk>()
 
-export async function resolvePusher(): Promise<[string, string]> {
+export async function resolvePusher(): Promise<ParsedSVG> {
   let pusherFile = ''
   let pusher = ''
 
@@ -33,16 +33,36 @@ export async function resolvePusher(): Promise<[string, string]> {
   return [pusherFile, pusher]
 }
 
-export function resolveImagePath(theme: string, talk: string, url?: string): string {
-  return resolve(
+export function resolveImagePath(cache: Record<string, string>, theme: string, talk: string, path?: string): string {
+  path = path?.toString()
+  const key = `${theme}:${talk}:${path}`
+
+  if (!path) {
+    return ''
+  } else if (cache[key]) {
+    return cache[key]
+  }
+
+  cache[key] = resolve(
     rootDir,
     'src',
-    (url ?? '').replace('@talk', `talks/${talk}/assets`).replace('@theme', `themes/${theme}/assets`)
+    (path ?? '').replace('@talk', `talks/${talk}/assets`).replace('@theme', `themes/${theme}/assets`)
   )
+  return cache[key]
 }
 
-export function resolveImageUrl(theme: string, talk: string, url?: string): string {
-  return (url ?? '').replace('@talk', `/assets/talks/${talk}`).replace('@theme', `/assets/themes/${theme}`)
+export function resolveImageUrl(cache: Record<string, string>, theme: string, talk: string, url?: string): string {
+  url = url?.toString()
+  const key = `${theme}:${talk}:${url}`
+
+  if (!url) {
+    return ''
+  } else if (cache[key]) {
+    return cache[key]
+  }
+
+  cache[key] = url.replace('@talk', `/assets/talks/${talk}`).replace('@theme', `/assets/themes/${theme}`)
+  return cache[key]
 }
 
 export async function getCommon(): Promise<Record<string, object>> {
@@ -69,7 +89,7 @@ export async function getTheme(themeName: string): Promise<Theme> {
   }
 
   let fontsStyles = ''
-  const fontsUrls: string[] = []
+  const fontsUrls = new Set<string>()
 
   const themeFile = await readFile(resolve(rootDir, 'src/themes', themeName, 'theme.yml'), 'utf8')
   const rawTheme = load(themeFile) as RawTheme
@@ -93,7 +113,7 @@ export async function getTheme(themeName: string): Promise<Theme> {
 }
         `.trim() + '\n'
 
-            fontsUrls.push(url)
+            fontsUrls.add(url)
           }
         }
       }
@@ -104,9 +124,9 @@ export async function getTheme(themeName: string): Promise<Theme> {
     id: themeName,
     urls: {},
     ...rawTheme,
-    images: (rawTheme.images ?? []).map(i => resolveImageUrl(themeName, '', i)),
+    images: Array.from(new Set((rawTheme.images ?? []).map(i => resolveImageUrl({}, themeName, '', i)))),
     fontsStyles,
-    fontsUrls
+    fontsUrls: Array.from(fontsUrls)
   }
 
   themesCache.set(themeName, theme)
@@ -146,7 +166,7 @@ export async function getTalk(id: string): Promise<Talk> {
   }
 
   // Gather all images
-  const images: string[] = []
+  const images = new Set<string>()
 
   for (const slide of talk.slides) {
     // Track the included images
@@ -154,7 +174,7 @@ export async function getTalk(id: string): Promise<Talk> {
       const image = slide[property] as string
 
       if (image) {
-        images.push(resolveImageUrl(talk.config.theme, id, image)!)
+        images.add(resolveImageUrl({}, talk.config.theme, id, image)!)
       }
     }
   }
@@ -165,7 +185,7 @@ export async function getTalk(id: string): Promise<Talk> {
   talk.slidesCount = talk.slides.length
   talk.slidesPadding = Math.ceil(Math.log10(talk.slides.length))
   talk.aspectRatio = talk.config.dimensions.width / talk.config.dimensions.height
-  talk.images = images
+  talk.images = Array.from(images)
 
   talksCache.set(id, talk)
   return talk

@@ -3,6 +3,7 @@ export interface Slide {
   title?: string
   subtitle?: string
   content: string[]
+  raw: string
   image: string
   foreground?: string
   background?: string
@@ -14,6 +15,7 @@ export interface Slide {
     title?: string
     subtitle?: string
     content?: string
+    image?: string
     raw?: string
   }
   notes?: string

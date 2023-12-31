@@ -1,7 +1,7 @@
 import { CSSValue, Rule } from '@unocss/core'
 import presetWind from '@unocss/preset-wind'
 import transformerDirectives from '@unocss/transformer-directives'
-import { compressLayers, defineUnoConfig, numericRule, systemFonts, systemMonospaceFonts, layersVariant } from 'freya-slides'
+import { compressLayers, defineUnoConfig, numericRule, systemFonts, systemMonospaceFonts, layersVariant } from '@perseveranza-pets/freya'
 
 function generateSpacing(customUnit: string, ratio: number, unit: string): Array<Rule> {
   const spacings: Array<Rule> = []
@@ -224,7 +224,8 @@ export default defineUnoConfig({
     [/^font-size-(\d+(?:_\d+)?)em$/, ([, value]: Array<string>) => numericRule('font-size', value, 'em')],
     [/^font-size-(\d+(?:_\d+)?)pt$/, ([, value]: Array<string>) => numericRule('font-size', value, 'px', 2.7)],
     ['font-system-fonts', { 'font-family': systemFonts }],
-    ['font-monospace-system-fonts', { 'font-family': systemMonospaceFonts }]
+    ['font-monospace-system-fonts', { 'font-family': systemMonospaceFonts }],
+    ['font-noto-sans', { 'font-family': `'Noto Sans', ${systemMonospaceFonts}` }]
   ],
   layers,
   variants: [layersVariant],

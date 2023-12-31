@@ -1,15 +1,8 @@
-import { serializeCSSClasses, type BuildContext } from 'dante'
-import { type ReactNode } from 'react'
-import { Presenter } from '../components/presenter.js'
-import { SlidesList } from '../components/slides-list.js'
-import { CSSClassesResolverContext } from '../index.js'
+import { serializeCSSClasses, type BuildContext } from '@perseveranza-pets/dante'
+import { type VNode } from 'preact'
+import { render } from 'preact-render-to-string'
 import { resolveImageUrl } from '../slidesets/loaders.js'
 import { type Talk, type Theme } from '../slidesets/models.js'
-
-interface BodyProps {
-  context: BuildContext
-  slides: ReactNode[]
-}
 
 interface HeaderProps {
   context: BuildContext
@@ -18,29 +11,10 @@ interface HeaderProps {
   js: string
 }
 
-export function body({ context, slides }: BodyProps): JSX.Element {
-  const { resolveClasses } = context.extensions.freya
-
-  return (
-    <>
-      <nav data-freya-id="loading" className={resolveClasses('freya@loading')}>
-        <h1 className={resolveClasses('freya@loading__contents')}>Loading ...</h1>
-      </nav>
-
-      {slides}
-
-      <CSSClassesResolverContext.Provider value={resolveClasses}>
-        <SlidesList context={context} count={slides.length} />
-        <Presenter context={context} />
-      </CSSClassesResolverContext.Provider>
-    </>
-  )
-}
-
-export function header({ context, talk, theme, js }: HeaderProps): JSX.Element {
+export function header({ context, talk, theme, js }: HeaderProps): VNode {
   const { fontsUrls, images: themeImages, id } = theme
 
-  const faviconImageUrl = resolveImageUrl(id, talk.id, '@theme/favicon.webp')
+  const faviconImageUrl = resolveImageUrl({}, id, talk.id, '@theme/favicon.webp')
 
   return (
     <>
@@ -56,7 +30,7 @@ export function header({ context, talk, theme, js }: HeaderProps): JSX.Element {
         <link key={url} rel="preload" as="font" href={url} crossOrigin="anonymous" />
       ))}
       {[...themeImages, ...talk.images].map(url => (
-        <link key={url} rel="preload" as="image" href={url} />
+        <link key={url} rel="preload" as="image" href={(context.extensions.freya.export ? '.' : '') + url} />
       ))}
 
       <script defer={true} type="module" dangerouslySetInnerHTML={{ __html: js }} />
@@ -64,16 +38,26 @@ export function header({ context, talk, theme, js }: HeaderProps): JSX.Element {
   )
 }
 
-export function page(title: string): JSX.Element {
+export function page(
+  title: string,
+  head: VNode,
+  bodyClassName?: string,
+  messageClassName?: string,
+  body?: string
+): VNode {
+  if (!body) {
+    body = render(<h1 className={messageClassName}>Loading ...</h1>)
+  }
+
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{title}</title>
-        @HEAD@
+        {head}
       </head>
-      <body>@BODY@</body>
+      <body className={bodyClassName} dangerouslySetInnerHTML={{ __html: body }} />
     </html>
   )
 }

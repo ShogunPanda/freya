@@ -1,16 +1,12 @@
-import { type BuildContext } from 'dante'
-import { useContext } from 'react'
-import { CSSClassesResolverContext } from './classes-resolver.js'
+import { type VNode } from 'preact'
+import { useFreya } from './context.js'
 
 interface ImageProps {
-  context: BuildContext
   src: string
   className?: string
 }
 
-export function Image({ context, src, className }: ImageProps): JSX.Element {
-  const resolveClasses = useContext(CSSClassesResolverContext)
-
-  context.extensions.freya.images.add(src)
+export function Image({ src, className }: ImageProps): VNode {
+  const { resolveClasses } = useFreya()
   return <img className={resolveClasses('freya@image', className)} src={src} />
 }

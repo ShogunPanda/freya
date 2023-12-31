@@ -1,7 +1,5 @@
-import { minify } from '@swc/core'
 import {
   baseTemporaryDirectory,
-  danteDir,
   elapsed,
   expandCSSClasses,
   loadCSSClassesExpansion,
@@ -10,7 +8,11 @@ import {
   type BuildContext,
   type CSSClassesResolver,
   type ClassesExpansions
-} from 'dante'
+} from '@perseveranza-pets/dante'
+import rollupCommonJs from '@rollup/plugin-commonjs'
+import rollupNodeResolve from '@rollup/plugin-node-resolve'
+import rollupReplace from '@rollup/plugin-replace'
+import { minify, transform } from '@swc/core'
 import { glob, type IgnoreLike } from 'glob'
 import markdownIt from 'markdown-it'
 import { existsSync } from 'node:fs'
@@ -18,15 +20,28 @@ import { readFile } from 'node:fs/promises'
 import { hostname } from 'node:os'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { type ReactNode } from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
+import { render } from 'preact-render-to-string'
+import { rollup } from 'rollup'
+import { clientCssClasses } from '../components/client.js'
+import { navigatorCssClasses } from '../components/navigator.js'
+import { presenterCssClasses } from '../components/presenter.js'
 import { pusherConfig } from '../configuration.js'
+import { resolveSVG } from '../rendering/svg.js'
 import { page as page404, body as page404Body } from '../templates/404.js'
 import { body as assetsBody, page as assetsPage } from '../templates/assets.js'
 import { page as index, body as indexBody } from '../templates/index.js'
-import { body, header, page } from '../templates/page.js'
-import { getTalk, getTheme, resolvePusher } from './loaders.js'
-import { type BaseSlide, type ClientContext, type Slide, type SlideRenderer, type Talk, type Theme } from './models.js'
+import { header, page } from '../templates/page.js'
+import { SlideComponent } from '../templates/slide.js'
+import { getTalk, getTheme, resolveImageUrl, resolvePusher } from './loaders.js'
+import {
+  type BaseSlide,
+  type ClientContext,
+  type ParsedSVG,
+  type Slide,
+  type SlideRenderer,
+  type Talk,
+  type Theme
+} from './models.js'
 
 interface Path {
   name: string
@@ -68,21 +83,25 @@ export function renderNotes(slide: Slide): string {
   return slide.notes ? markdownRenderer.render(slide.notes) : ''
 }
 
-export function parseContent(raw?: string): string {
+export function parseContent(cache: Record<string, string>, raw?: string): string {
   raw = raw?.toString()
 
   if (!raw) {
     return ''
+  } else if (cache[raw]) {
+    return raw
   }
 
-  return markdownRenderer
+  cache[raw] = markdownRenderer
     .render(raw)
     .replace(/^<p>/m, '')
     .replace(/<\/p>$/m, '')
     .trim()
+
+  return cache[raw]
 }
 
-async function ensureRenderedCode(context: BuildContext, target: BaseSlide): Promise<void> {
+export async function ensureRenderedCode(context: BuildContext, target: BaseSlide): Promise<void> {
   if (!target.code || target.code?.rendered) {
     return
   }
@@ -101,6 +120,7 @@ async function ensureRenderedCode(context: BuildContext, target: BaseSlide): Pro
   classes.root = resolveClasses('freya@code__wrapper')
   classes.line = resolveClasses('freya@code__line')
   classes.lineHighlighted = resolveClasses('freya@code__line--highlighted')
+  classes.lineNotHighlighted = resolveClasses('freya@code__line--not-highlighted')
   classes.lineNumber = resolveClasses('freya@code__line-number')
 
   const { content, language, numbers, highlight } = target.code
@@ -108,7 +128,11 @@ async function ensureRenderedCode(context: BuildContext, target: BaseSlide): Pro
   codeCache.set(cacheKey, target.code.rendered)
 }
 
-function createCSSClassesResolver(id: string, context: BuildContext, classes: ClassesExpansions): CSSClassesResolver {
+export function createCSSClassesResolver(
+  id: string,
+  context: BuildContext,
+  classes: ClassesExpansions
+): CSSClassesResolver {
   // Create a subcontext to keep CSS scoped
   context.extensions.freya.css[id] = {
     keepExpanded: context.css.keepExpanded,
@@ -121,6 +145,150 @@ function createCSSClassesResolver(id: string, context: BuildContext, classes: Cl
   context.css = context.extensions.freya.css[id]
 
   return expandCSSClasses.bind(null, context, classes)
+}
+
+async function loadData(
+  context: BuildContext,
+  theme: Theme,
+  talk: Talk,
+  file: string,
+  clientData: Record<string, any>,
+  serverData: Record<string, any>,
+  key: string
+): Promise<void> {
+  if (!existsSync(file)) {
+    return
+  }
+
+  const { setupClient, setupServer } = await import(file)
+
+  if (typeof setupClient === 'function') {
+    clientData[key] = await setupClient(context, theme, talk)
+  }
+
+  if (typeof setupServer === 'function') {
+    serverData[key] = await setupServer(context, theme, talk)
+  }
+}
+
+export async function prepareClientContext(context: BuildContext, theme: Theme, talk: Talk): Promise<ClientContext> {
+  // Load theme and talk data, if any
+  const data: Record<string, any> = {}
+  const serverData: Record<string, any> = {}
+
+  const themeSetupFile = resolve(baseTemporaryDirectory, 'themes', theme.id, 'setup.js')
+  const talkSetupFile = resolve(baseTemporaryDirectory, 'talk', talk.id, 'setup.js')
+
+  await loadData(context, theme, talk, themeSetupFile, data, serverData, 'theme')
+  await loadData(context, theme, talk, talkSetupFile, data, serverData, 'talk')
+
+  // Load theme classes and layers, if any
+  const themeClassesFile = resolve(rootDir, 'src/themes', theme.id, 'classes.css')
+  const themeClasses = existsSync(themeClassesFile) ? await readFile(themeClassesFile, 'utf-8') : ''
+
+  const classes = await loadCSSClassesExpansion(
+    (await readFile(new URL('../assets/styles/classes.css', import.meta.url), 'utf-8')) + themeClasses
+  )
+
+  const resolveClasses = createCSSClassesResolver(talk.id, context, classes)
+  context.extensions.freya.resolveClasses = resolveClasses
+  context.extensions.freya.loadedClasses = classes
+
+  const content: Record<string, string> = {}
+  const images: Record<string, string> = {}
+  const svgsDefinitions: string[] = []
+  const svgs: Record<string, ParsedSVG> = {}
+
+  // Prepare the client
+  return {
+    version: context.version,
+    id: talk.id,
+    talk,
+    theme,
+    assets: { content, images, svgs, svgsDefinitions },
+    css: {
+      keepExpanded: context.css.keepExpanded,
+      classes,
+      compressedClasses: Object.fromEntries(context.css.compressedClasses.entries())
+    },
+    dimensions: talk.config.dimensions,
+    isProduction: context.isProduction,
+    isExporting: context.extensions.freya.export ?? false,
+    pusher: pusherConfig
+      ? {
+          key: pusherConfig.key,
+          cluster: pusherConfig.cluster,
+          hostname: context.isProduction ? hostname() : undefined
+        }
+      : undefined,
+    data,
+    serverData
+  }
+}
+
+export async function generateApplicationScript(
+  context: BuildContext,
+  clientContext: ClientContext,
+  layoutsMap: Record<string, string>
+): Promise<string> {
+  const application = fileURLToPath(new URL('../components/application.js', import.meta.url))
+
+  const layouts: string[] = []
+  const imports = Object.entries(layoutsMap).map(([id, path]) => {
+    layouts.push(`"${id}": ${id}Layout`)
+    return `import { default as ${id}Layout } from "${path}"`
+  })
+
+  // Bundle with rollup
+  const bundled = await rollup({
+    input: application,
+    plugins: [
+      rollupReplace({
+        preventAssignment: true,
+        values: {
+          __replace_placeholder_context__: JSON.stringify(clientContext, null, 2),
+          __replace_placeholder_layouts__: `{${layouts.join(', ')}}`,
+          __replace_placeholder_imports__: imports.join('\n')
+        }
+      }),
+      rollupNodeResolve({
+        browser: true,
+        modulePaths: [fileURLToPath(new URL('../../../node_modules', import.meta.url))],
+        preferBuiltins: true
+      }),
+      rollupCommonJs()
+    ],
+    output: {
+      format: 'esm'
+    },
+    treeshake: true
+  })
+
+  const generated = await bundled.generate({ format: 'esm' })
+  let code = generated.output[0].code
+
+  // Eventually minify with swc
+  if (context.isProduction) {
+    const minified = await transform(code, { jsc: { target: 'es2022' }, minify: true })
+    code = minified.code
+  }
+
+  return code
+}
+
+export async function generatePage404(context: BuildContext): Promise<string> {
+  const classes = await loadCSSClassesExpansion(
+    await readFile(new URL('../assets/styles/classes.css', import.meta.url), 'utf-8')
+  )
+
+  // Generate page 404
+  const resolveClasses = createCSSClassesResolver('__404', context, classes)
+  context.extensions.freya.resolveClasses = resolveClasses
+
+  const bodyClassName = resolveClasses('freya@page404__body')
+  const body = page404Body({ context })
+  const page404JSX = page404(context, bodyClassName)
+  return render(page404JSX).replace('@BODY@', render(body))
 }
 
 export async function generateAssetsListing(context: BuildContext): Promise<Record<string, string>> {
@@ -168,7 +336,7 @@ export async function generateAssetsListing(context: BuildContext): Promise<Reco
 
     const body = assetsBody({ context, talk, talkAssets, themeAssets })
     const page = assetsPage(context, bodyClassName)
-    pages[id] = renderToStaticMarkup(page).replace('@BODY@', renderToStaticMarkup(body))
+    pages[id] = render(page).replace('@BODY@', render(body))
 
     const progress = `[${i.toString().padStart(padding, '0')}/${totalPadded}]`
     context.logger.info(`${progress} Generated assets listing for slideset ${id} in ${elapsed(startTime)} ms.`)
@@ -178,54 +346,12 @@ export async function generateAssetsListing(context: BuildContext): Promise<Reco
 }
 
 export async function generateSlideset(context: BuildContext, theme: Theme, talk: Talk): Promise<string> {
-  // Gather all files needed for the cache key
-  const clientJsFile = fileURLToPath(new URL('../assets/js/slideset.js', import.meta.url))
-  const hotReloadFile = !context.isProduction ? resolve(danteDir, 'dist/assets/hot-reload.js') : ''
-  const serviceWorkerFile = context.isProduction
-    ? fileURLToPath(new URL('../assets/js/service-worker.js', import.meta.url))
-    : ''
-
   const [, pusher] = await resolvePusher()
+  const clientContext = await prepareClientContext(context, theme, talk)
+  const resolveClasses: CSSClassesResolver = context.extensions.freya.resolveClasses
+  const layouts: Record<string, string> = {}
 
-  // Load theme classes and layers, if any
-  const themeClassesFile = resolve(rootDir, 'src/themes', theme.id, 'classes.css')
-  const themeClasses = existsSync(themeClassesFile) ? await readFile(themeClassesFile, 'utf-8') : ''
-
-  const classes = await loadCSSClassesExpansion(
-    (await readFile(new URL('../assets/styles/classes.css', import.meta.url), 'utf-8')) + themeClasses
-  )
-
-  const resolveClasses = createCSSClassesResolver(talk.id, context, classes)
-  context.extensions.freya.resolveClasses = resolveClasses
-
-  // Prepare the client
-  const title = talk.document.title
-  const clientContext: ClientContext = {
-    id: talk.id,
-    title,
-    dimensions: talk.config.dimensions,
-    slidesCount: talk.slidesCount,
-    slidesPadding: talk.slidesPadding,
-    aspectRatio: talk.aspectRatio,
-    current: 0,
-    isProduction: context.isProduction,
-    classes: {
-      hidden: resolveClasses('js@hidden'),
-      wrapped: resolveClasses('js@slide'),
-      listActive: resolveClasses('js@slides__wrapper--active')
-    },
-    pusher: pusherConfig
-      ? {
-          key: pusherConfig.key,
-          cluster: pusherConfig.cluster,
-          hostname: context.isProduction ? hostname() : undefined
-        }
-      : undefined
-  }
-
-  // Generate each slide
-  const slides: ReactNode[] = []
-
+  // Render the slides
   for (let i = 0; i < talk.slides.length; i++) {
     const slide = talk.slides[i]
 
@@ -247,68 +373,66 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
       await ensureRenderedCode(context, item)
     }
 
-    const { default: layout }: { default: SlideRenderer<Slide> } = await import(
-      resolve(
-        rootDir,
-        baseTemporaryDirectory,
-        'themes',
-        talk.config.theme,
-        'layouts',
-        (slide.layout ?? 'default') + '.js'
-      )
+    // Render the slide on the server to add the required classes
+    const layoutPath = resolve(
+      rootDir,
+      baseTemporaryDirectory,
+      'themes',
+      talk.config.theme,
+      'layouts',
+      (slide.layout ?? 'default') + '.js'
     )
 
-    slides.push({ ...layout({ context, theme, talk, slide, index: i + 1 }), key: `slide:${i + 1}` })
+    const { default: layout }: { default: SlideRenderer<Slide> } = await import(layoutPath)
+    layouts[slide.layout ?? 'default'] = layoutPath
+
+    render(
+      SlideComponent({
+        context: clientContext,
+        layout,
+        slide,
+        index: i + 1,
+        resolveClasses,
+        resolveImage: resolveImageUrl.bind(null, clientContext.assets.images),
+        resolveSVG: resolveSVG.bind(null, clientContext.assets.svgsDefinitions, clientContext.assets.svgs),
+        parseContent: parseContent.bind(null, clientContext.assets.content)
+      })
+    )
+
+    if (slide.notes) {
+      parseContent(clientContext.assets.content, slide.notes)
+    }
   }
 
-  // Render the page body
-  const contents = renderToStaticMarkup(body({ context, slides }))
+  // Render some classes needed for the SPA
+  resolveClasses(...clientCssClasses, ...navigatorCssClasses, ...presenterCssClasses)
 
-  // Generate the JS
-  const siteVersion = `globalThis.__freyaSiteVersion = "${context.version}"`
-  const hotReload = hotReloadFile ? await readFile(hotReloadFile, 'utf8') : ''
-  const serviceWorker = serviceWorkerFile ? await readFile(serviceWorkerFile, 'utf8') : ''
-  const client = await readFile(clientJsFile, 'utf8')
+  // Update some values after rendering
+  clientContext.css.compressedClasses = Object.fromEntries(context.css.compressedClasses.entries())
+
+  for (const image of Object.values(clientContext.assets.images)) {
+    context.extensions.freya.images.add(image)
+  }
+
+  // Do not propagate the server data to the client
+  clientContext.serverData = undefined
 
   // Render the page
-  const html = renderToStaticMarkup(page(title))
-    .replace(
-      '@HEAD@',
-      renderToStaticMarkup(
-        header({
-          context,
-          talk,
-          theme,
-          js: await finalizeJs(
-            [
-              siteVersion,
-              hotReload,
-              serviceWorker,
-              pusher,
-              client.replace('const context = {}', `const context = ${JSON.stringify(clientContext)}`)
-            ].join('\n;\n')
-          )
-        })
-      )
+  const html = render(
+    page(
+      talk.document.title,
+      header({
+        context,
+        talk,
+        theme,
+        js: await finalizeJs([await generateApplicationScript(context, clientContext, layouts), pusher].join('\n;\n'))
+      }),
+      resolveClasses('freya@loading'),
+      resolveClasses('freya@loading__text')
     )
-    .replace('@BODY@', contents)
-
-  return html
-}
-
-export async function generatePage404(context: BuildContext): Promise<string> {
-  const classes = await loadCSSClassesExpansion(
-    await readFile(new URL('../assets/styles/classes.css', import.meta.url), 'utf-8')
   )
 
-  // Generate page 404
-  const resolveClasses = createCSSClassesResolver('__404', context, classes)
-  context.extensions.freya.resolveClasses = resolveClasses
-
-  const bodyClassName = resolveClasses('freya@page404__body')
-  const body = page404Body({ context })
-  const page404JSX = page404(context, bodyClassName)
-  return renderToStaticMarkup(page404JSX).replace('@BODY@', renderToStaticMarkup(body))
+  return html
 }
 
 export async function generateAllSlidesets(context: BuildContext): Promise<Record<string, string>> {
@@ -345,7 +469,7 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
   const bodyClassName = resolveClasses('freya@index__body')
   const body = indexBody({ context, talks: resolvedTalks })
   const indexJSX = await index(context, bodyClassName)
-  slidesets.index = renderToStaticMarkup(indexJSX).replace('@BODY@', renderToStaticMarkup(body))
+  slidesets.index = render(indexJSX).replace('@BODY@', render(body))
 
   return slidesets
 }

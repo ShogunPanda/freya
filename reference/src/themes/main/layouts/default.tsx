@@ -1,27 +1,23 @@
+import { type VNode } from 'preact'
+import { useFreya } from '../../../../../dist/components/context.js'
 import { type SlideProps } from '../../../../../src/index.js'
 import { SlideWrapper, Text } from '../components/common.js'
 import { type Slide } from '../models.js'
 
-export default function DefaultLayout(props: SlideProps<Slide>): JSX.Element {
-  const { context, theme, talk, index, slide } = props
-  const resolveClasses = context.extensions.freya.resolveClasses
+export default function DefaultLayout(props: SlideProps<Slide>): VNode {
+  const { resolveClasses } = useFreya()
+
+  const { index, slide, className } = props
 
   const {
     title,
     subtitle,
     content,
-    classes: { slide: className, title: titleClassName, subtitle: subtitleClassName, content: contentClassName }
+    classes: { slide: slideClassName, title: titleClassName, subtitle: subtitleClassName, content: contentClassName }
   } = slide
 
   return (
-    <SlideWrapper
-      context={context}
-      theme={theme}
-      talk={talk}
-      slide={slide}
-      index={index}
-      className={resolveClasses(className)}
-    >
+    <SlideWrapper slide={slide} index={index} className={resolveClasses(className, slideClassName)}>
       {title && (
         <h1 className={resolveClasses('theme@title', titleClassName)}>
           <Text text={title} />
@@ -34,7 +30,7 @@ export default function DefaultLayout(props: SlideProps<Slide>): JSX.Element {
         </h2>
       )}
 
-      {content?.filter(Boolean).map((c: string | object, contentIndex: number) => {
+      {content?.filter(Boolean).map((c: string, contentIndex: number) => {
         const key = `content:${index}:${contentIndex}`
 
         return (
