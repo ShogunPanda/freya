@@ -1,3 +1,9 @@
+### 2024-01-08 / 0.42.0
+
+- feat!: Renamed and moved to Preact and CSR.
+- feat: Updated style and added reference theme.
+- fix: Fixed Netlify generation.
+
 ### 2023-12-29 / 0.41.1
 
 - fix: Removed useless class.
