@@ -1,3 +1,7 @@
+### 2024-01-08 / 0.43.1
+
+- fix: Fixed event handling.
+
 ### 2024-01-08 / 0.43.0
 
 - feat: Added events back.
