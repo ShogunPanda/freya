@@ -1,6 +1,6 @@
 import { render, type VNode } from 'preact'
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
-import { route, Router, type RouterOnChangeArgs, type RoutableProps } from 'preact-router'
+import { route, Router, type RoutableProps, type RouterOnChangeArgs } from 'preact-router'
 import Pusher, { type Channel } from 'pusher-js'
 import { type ClientContext, type ParsedSVG } from '../slidesets/models.js'
 import {
@@ -129,6 +129,7 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
     (ev?: Event) => {
       ev?.preventDefault()
       setIsNavigating(current => !current)
+      window.dispatchEvent(new Event('freya:navigator:toggled'))
     },
     [setIsNavigating]
   )
@@ -137,6 +138,7 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
     (ev?: Event) => {
       ev?.preventDefault()
       setIsNavigating(false)
+      window.dispatchEvent(new Event('freya:navigator:toggled'))
     },
     [setIsNavigating]
   )
@@ -145,6 +147,7 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
     (ev?: Event) => {
       ev?.preventDefault()
       setIsPresenting(false)
+      window.dispatchEvent(new Event('freya:presenter:toggled'))
     },
     [setIsNavigating]
   )
@@ -153,6 +156,7 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
     (ev?: Event) => {
       ev?.preventDefault()
       setIsPresenting(current => !current)
+      window.dispatchEvent(new Event('freya:presenter:toggled'))
     },
     [setIsPresenting]
   )
@@ -163,6 +167,7 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
 
       setPresentationDuration(0)
       setPresentationPaused(false)
+      window.dispatchEvent(new Event('freya:presenter:timer:started'))
     },
     [setPresentationDuration, setPresentationPaused]
   )
@@ -171,6 +176,7 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
     (ev?: Event) => {
       ev?.preventDefault()
       setPresentationPaused(current => !current)
+      window.dispatchEvent(new Event('freya:presenter:timer:toggled'))
     },
     [setPresentationPaused]
   )
@@ -181,8 +187,10 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
 
       if (isNavigating) {
         setIsNavigating(false)
+        window.dispatchEvent(new Event('freya:navigator:toggled'))
       } else if (isPresenting) {
         setIsPresenting(false)
+        window.dispatchEvent(new Event('freya:presenter:toggled'))
       }
     },
     [isNavigating, isPresenting, setIsNavigating, setIsPresenting]
@@ -214,10 +222,12 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
 
   const handleSynchronizationUpdate = useCallback(
     (ev: MessageEvent) => {
-      const { id: remoteId, current } = ev.data
+      const { id: remoteId, current: rawCurrent } = ev.data
+      const current = parseInt(rawCurrent as string, 10)
 
       if (id === remoteId && current !== index && !isPresenting) {
-        route(slideUrl(id, parseInt(current as string, 10), slidesPadding))
+        route(slideUrl(id, current, slidesPadding))
+        window.dispatchEvent(new MessageEvent('freya:slide:changed', { data: { id, index: current } }))
       }
     },
     [id, index, isPresenting]
@@ -261,6 +271,7 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
     document.addEventListener('touchend', boundHandleTouchEnd, false)
 
     boundUpdateSlidesAppearance()
+    window.dispatchEvent(new Event('freya:ready'))
 
     return () => {
       window.removeEventListener('resize', boundUpdateSlidesAppearance, false)
@@ -277,6 +288,7 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
     }
 
     if (index < 1 || index > slidesCount) {
+      window.dispatchEvent(new MessageEvent('freya:slide:changed', { data: { id, index } }))
       route(`/${id}/${'1'.padStart(slidesPadding, '0')}`)
       return
     }
