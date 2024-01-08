@@ -1,3 +1,7 @@
+### 2024-01-08 / 0.43.0
+
+- feat: Added events back.
+
 ### 2024-01-08 / 0.42.0
 
 - feat!: Renamed and moved to Preact and CSR.
