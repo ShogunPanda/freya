@@ -43,7 +43,7 @@ export function slideUrl(id: string, index: number, slidesPadding: number): stri
 export function beforeSlideUpdate(id: string, index: number): boolean {
   const event = new MessageEvent('freya:slide:changed', { data: { id, index } })
   window.dispatchEvent(event)
-  return event.defaultPrevented
+  return !event.defaultPrevented
 }
 
 // Update slide scaling according to the screen resolution
