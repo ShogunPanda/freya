@@ -40,10 +40,10 @@ export function slideUrl(id: string, index: number, slidesPadding: number): stri
   return `/${id}/${index.toString().padStart(slidesPadding, '0')}`
 }
 
-export function beforeSlideUpdate(id: string, index: number): boolean {
-  const event = new MessageEvent('freya:slide:changed', { data: { id, index } })
+export function shouldAbortSlideChange(id: string, index: number): boolean {
+  const event = new MessageEvent('freya:slide:changed', { data: { id, index, cancel: false } })
   window.dispatchEvent(event)
-  return !event.defaultPrevented
+  return event.data.cancel
 }
 
 // Update slide scaling according to the screen resolution
@@ -88,7 +88,7 @@ export function updateSlide(context: DOMContext, modifier: number): void {
     return
   }
 
-  if (!beforeSlideUpdate(id, index)) {
+  if (shouldAbortSlideChange(id, index)) {
     return
   }
 

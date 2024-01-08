@@ -2,7 +2,7 @@ import { type VNode } from 'preact'
 import { useCallback, useLayoutEffect, useRef } from 'preact/hooks'
 import { route } from 'preact-router'
 import { type Slide } from '../slidesets/models.js'
-import { beforeSlideUpdate, slideUrl } from './client.js'
+import { shouldAbortSlideChange, slideUrl } from './client.js'
 import { useFreya, type CSSClassToken } from './context.js'
 import { Slide as SlideComponent } from './slide.js'
 import { SvgCloseIcon } from './svg.js'
@@ -75,7 +75,7 @@ export function Navigator({ current, slides, className, close }: NavigatorProps)
 
   const goto = useCallback(
     (index: number) => {
-      if (!beforeSlideUpdate(id, index + 1)) {
+      if (!shouldAbortSlideChange(id, index + 1)) {
         return
       }
 
