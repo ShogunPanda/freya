@@ -1,3 +1,7 @@
+### 2024-01-08 / 0.44.0
+
+- fix: Fixed slide change aborting.
+
 ### 2024-01-08 / 0.43.1
 
 - fix: Fixed event handling.
