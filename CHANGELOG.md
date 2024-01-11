@@ -1,3 +1,7 @@
+### 2024-01-11 / 0.50.0
+
+- feat: Allow components in QR.
+
 ### 2024-01-11 / 0.49.0
 
 - feat: Renamed property.
