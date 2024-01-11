@@ -1,3 +1,7 @@
+### 2024-01-11 / 0.47.0
+
+- chore: Updated dependencies.
+
 ### 2024-01-11 / 0.46.0
 
 - feat: Filter out private talks in production.
