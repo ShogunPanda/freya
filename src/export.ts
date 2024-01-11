@@ -157,7 +157,7 @@ export async function exportAllAsPNGs(context: BuildContext, staticDir: string):
   context.logger.info(`Exporting PNG files into directory ${fullOutput} ...`)
 
   // Export all talk
-  const talks = filterWhitelistedTalks(await getAllTalks())
+  const talks = filterWhitelistedTalks(context, await getAllTalks())
 
   const talksArray = [...talks]
   const talksArrayLength = talksArray.length
@@ -181,7 +181,7 @@ export async function createAllPDFs(context: BuildContext, staticDir: string): P
   await rm(resolve(rootDir, staticDir, 'pdf'), { recursive: true, force: true })
   await mkdir(resolve(rootDir, staticDir, 'pdf'), { recursive: true })
 
-  const talks = filterWhitelistedTalks(await getAllTalks())
+  const talks = filterWhitelistedTalks(context, await getAllTalks())
 
   const talksArray = [...talks]
   const talksArrayLength = talksArray.length
@@ -326,7 +326,9 @@ export async function build(context: BuildContext): Promise<BuildResult> {
   // Prepare the context
   context.extensions.freya.css = {}
   context.extensions.freya.images = new Set()
-  context.extensions.freya.talks = filterWhitelistedTalks(await getAllTalks())
+  context.extensions.freya.talks = filterWhitelistedTalks(context, await getAllTalks())
+
+  context.logger.info(`Exporting slideset(s): ${Array.from(context.extensions.freya.talks as Set<string>).join(', ')}`)
 
   let fileOperations: Promise<void>[] = []
 

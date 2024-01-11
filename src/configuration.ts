@@ -1,3 +1,4 @@
+import { type BuildContext } from '@perseveranza-pets/dante'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -37,11 +38,19 @@ export function setWhitelistedTalks(list: string): void {
     .filter(t => t)
 }
 
-export function filterWhitelistedTalks(talks: Set<string>): Set<string> {
-  if (whitelistedTalks.length === 0) {
-    return talks
+export function filterWhitelistedTalks(context: BuildContext, talks: Set<string>): Set<string> {
+  let whitelisted = [...talks]
+
+  if (whitelistedTalks.length > 0) {
+    whitelisted = whitelisted.filter(t => whitelistedTalks.includes(t))
   }
-  return new Set([...talks].filter(t => whitelistedTalks.includes(t)))
+
+  // When in production, filter out all talks that start with "__"
+  if (context.isProduction) {
+    whitelisted = whitelisted.filter(t => !t.startsWith('__'))
+  }
+
+  return new Set(whitelisted)
 }
 
 export const freyaDir = resolve(fileURLToPath(import.meta.url), '../..')

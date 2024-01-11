@@ -158,7 +158,9 @@ export async function build(context: BuildContext): Promise<BuildResult> {
   )
   context.extensions.freya.css = {}
   context.extensions.freya.images = new Set()
-  context.extensions.freya.talks = filterWhitelistedTalks(await getAllTalks())
+  context.extensions.freya.talks = filterWhitelistedTalks(context, await getAllTalks())
+
+  context.logger.info(`Building slideset(s): ${Array.from(context.extensions.freya.talks as Set<string>).join(', ')}`)
 
   // Generate the slidesets
   context.extensions.freya.slidesets = await generateAllSlidesets(context)
@@ -218,7 +220,7 @@ export async function build(context: BuildContext): Promise<BuildResult> {
   }
 
   // Remove all file and directory starting with a double underscore
-  for (const p of await glob(resolve(baseDir, 'assets/**/__*'))) {
+  for (const p of await glob(resolve(baseDir, 'assets/*/*/**/__*'))) {
     fileOperations.push(rm(p, { recursive: true }))
   }
 
