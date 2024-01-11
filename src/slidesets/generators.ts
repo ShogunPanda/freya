@@ -16,7 +16,6 @@ import { minify, transform } from '@swc/core'
 import { glob, type IgnoreLike } from 'glob'
 import markdownIt from 'markdown-it'
 import { existsSync } from 'node:fs'
-import { readFile } from 'node:fs/promises'
 import { hostname } from 'node:os'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -26,6 +25,7 @@ import { clientCssClasses } from '../components/client.js'
 import { navigatorCssClasses } from '../components/navigator.js'
 import { presenterCssClasses } from '../components/presenter.js'
 import { pusherConfig } from '../configuration.js'
+import { readFile } from '../fs.js'
 import { resolveSVG } from '../rendering/svg.js'
 import { page as page404, body as page404Body } from '../templates/404.js'
 import { body as assetsBody, page as assetsPage } from '../templates/assets.js'
@@ -184,10 +184,10 @@ export async function prepareClientContext(context: BuildContext, theme: Theme, 
 
   // Load theme classes and layers, if any
   const themeClassesFile = resolve(rootDir, 'src/themes', theme.id, 'classes.css')
-  const themeClasses = existsSync(themeClassesFile) ? await readFile(themeClassesFile, 'utf-8') : ''
+  const themeClasses = existsSync(themeClassesFile) ? await readFile(themeClassesFile) : ''
 
   const classes = await loadCSSClassesExpansion(
-    (await readFile(new URL('../assets/styles/classes.css', import.meta.url), 'utf-8')) + themeClasses
+    (await readFile(new URL('../assets/styles/classes.css', import.meta.url))) + themeClasses
   )
 
   const resolveClasses = createCSSClassesResolver(talk.id, context, classes)
@@ -278,7 +278,7 @@ export async function generateApplicationScript(
 
 export async function generatePage404(context: BuildContext): Promise<string> {
   const classes = await loadCSSClassesExpansion(
-    await readFile(new URL('../assets/styles/classes.css', import.meta.url), 'utf-8')
+    await readFile(new URL('../assets/styles/classes.css', import.meta.url))
   )
 
   // Generate page 404
@@ -293,7 +293,7 @@ export async function generatePage404(context: BuildContext): Promise<string> {
 
 export async function generateAssetsListing(context: BuildContext): Promise<Record<string, string>> {
   const classes = await loadCSSClassesExpansion(
-    await readFile(new URL('../assets/styles/classes.css', import.meta.url), 'utf-8')
+    await readFile(new URL('../assets/styles/classes.css', import.meta.url))
   )
 
   const resolveClasses = createCSSClassesResolver('__assets', context, classes)
@@ -460,7 +460,7 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
 
   // Generate the index file
   const classes = await loadCSSClassesExpansion(
-    await readFile(new URL('../assets/styles/classes.css', import.meta.url), 'utf-8')
+    await readFile(new URL('../assets/styles/classes.css', import.meta.url))
   )
 
   const resolveClasses = createCSSClassesResolver('__index', context, classes)

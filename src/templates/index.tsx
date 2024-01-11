@@ -1,7 +1,7 @@
 import { danteDir, serializeCSSClasses, type BuildContext } from '@perseveranza-pets/dante'
-import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { Fragment, type VNode } from 'preact'
+import { readFile } from '../fs.js'
 import { finalizeJs } from '../slidesets/generators.js'
 import { type Talk } from '../slidesets/models.js'
 import { serviceWorker as serviceWorkerTemplate } from '../templates/service-worker.js'
@@ -58,7 +58,7 @@ export function body({ context, talks }: BodyProps): VNode {
 
 export async function page(context: BuildContext, bodyClassName: string): Promise<VNode> {
   const siteVersion = `globalThis.__freyaSiteVersion = "${context.version}"`
-  const hotReload = !context.isProduction ? await readFile(resolve(danteDir, 'dist/assets/hot-reload.js'), 'utf8') : ''
+  const hotReload = !context.isProduction ? await readFile(resolve(danteDir, 'dist/assets/hot-reload.js')) : ''
 
   const serviceWorker = context.isProduction && !context.extensions.freya.export ? serviceWorkerTemplate(context) : ''
 
@@ -70,14 +70,11 @@ export async function page(context: BuildContext, bodyClassName: string): Promis
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Slidesets</title>
-        <link
-          rel="preload"
-          as="font"
-          crossOrigin="anonymous"
-          href="https://fonts.gstatic.com/s/varelaround/v20/w8gdH283Tvk__Lua32TysjIfp8uPLdshZg.woff2"
-        />
-        <script defer={true} type="text/javascript" dangerouslySetInnerHTML={{ __html: js }} />
+        {context.extensions.freya.fonts.urls.map((url: string, index: number) => (
+          <link key={index} rel="preload" as="font" href={url} crossOrigin="anonymous" />
+        ))}
         <style {...serializeCSSClasses(context)} />
+        <script defer={true} type="text/javascript" dangerouslySetInnerHTML={{ __html: js }} />
       </head>
       <body className={bodyClassName}>@BODY@</body>
     </html>

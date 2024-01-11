@@ -1,10 +1,6 @@
+import { type Fonts } from '@perseveranza-pets/dante'
 import { type VNode } from 'preact'
 import { type Pusher } from '../configuration.js'
-
-export interface FontsList {
-  ranges: Record<string, string>
-  families: Record<string, Record<string, Record<number, string>>>
-}
 
 export type ParsedSVG = [string, string | undefined]
 
@@ -58,14 +54,12 @@ export interface Talk extends RawTalk {
 export interface RawTheme {
   style: string
   images: string[]
-  fonts: FontsList
+  fonts: Fonts
 }
 
 export interface Theme extends RawTheme {
   id: string
   urls: Record<string, string>
-  fontsStyles: string
-  fontsUrls: string[]
 }
 
 export interface ClientContext {

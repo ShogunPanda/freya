@@ -1,7 +1,7 @@
-@import 'virtual:theme-fonts';
 @import '@freya/normalize.css';
 @import '@freya/reset.css';
 @import '@freya/default.css';
+@import '@theme/fonts';
 
 html {
   --fs-color-bg: rgb(242, 242, 247);

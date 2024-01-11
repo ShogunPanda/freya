@@ -26,13 +26,9 @@ export function page(context: BuildContext, bodyClassName: string): VNode {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Slidesets</title>
-        <link
-          rel="preload"
-          as="font"
-          crossOrigin="anonymous"
-          href="https://fonts.gstatic.com/s/varelaround/v20/w8gdH283Tvk__Lua32TysjIfp8uPLdshZg.woff2"
-        />
-
+        {context.extensions.freya.fonts.urls.map((url: string, index: number) => (
+          <link key={index} rel="preload" as="font" href={url} crossOrigin="anonymous" />
+        ))}
         <style {...serializeCSSClasses(context)} />
       </head>
       <body className={bodyClassName}>@BODY@</body>

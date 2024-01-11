@@ -2,9 +2,10 @@ import { rootDir } from '@perseveranza-pets/dante'
 import { glob } from 'glob'
 import { load, loadAll } from 'js-yaml'
 import { existsSync } from 'node:fs'
-import { readFile, readdir } from 'node:fs/promises'
+import { readdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { pusherConfig } from '../configuration.js'
+import { readFile } from '../fs.js'
 import { type Config, type ParsedSVG, type RawTheme, type Slide, type Talk, type Theme } from './models.js'
 
 let commonCache: Record<string, object> | undefined
@@ -27,7 +28,7 @@ export async function resolvePusher(): Promise<ParsedSVG> {
     }
 
     pusherFile = location[0]
-    pusher = await readFile(pusherFile, 'utf8')
+    pusher = await readFile(pusherFile)
   }
 
   return [pusherFile, pusher]
@@ -74,7 +75,7 @@ export async function getCommon(): Promise<Record<string, object>> {
   const commonPath = resolve(rootDir, 'src/talks', 'common.yml')
 
   if (existsSync(commonPath)) {
-    loaded = (await load(await readFile(commonPath, 'utf8'))) as Record<string, object>
+    loaded = (await load(await readFile(commonPath))) as Record<string, object>
   }
 
   commonCache = loaded
@@ -88,45 +89,14 @@ export async function getTheme(themeName: string): Promise<Theme> {
     return cached
   }
 
-  let fontsStyles = ''
-  const fontsUrls = new Set<string>()
-
-  const themeFile = await readFile(resolve(rootDir, 'src/themes', themeName, 'theme.yml'), 'utf8')
+  const themeFile = await readFile(resolve(rootDir, 'src/themes', themeName, 'theme.yml'))
   const rawTheme = load(themeFile) as RawTheme
-  const fonts = rawTheme.fonts
-
-  // Generate all the fonts related CSS
-  if (fonts.families && fonts.ranges) {
-    for (const [name, styles] of Object.entries(fonts.families)) {
-      for (const [style, weights] of Object.entries(styles)) {
-        for (const [weight, definition] of Object.entries(weights)) {
-          for (const [range, url] of Object.entries(definition)) {
-            fontsStyles +=
-              `
-@font-face {
-  font-family: "${name}";
-  font-style: ${style};
-  font-weight: ${weight};
-  font-display: swap;
-  src: url(${url}) format('woff2');
-  unicode-range: ${fonts.ranges[range]}
-}
-        `.trim() + '\n'
-
-            fontsUrls.add(url)
-          }
-        }
-      }
-    }
-  }
 
   const theme = {
     id: themeName,
     urls: {},
     ...rawTheme,
-    images: Array.from(new Set((rawTheme.images ?? []).map(i => resolveImageUrl({}, themeName, '', i)))),
-    fontsStyles,
-    fontsUrls: Array.from(fontsUrls)
+    images: Array.from(new Set((rawTheme.images ?? []).map(i => resolveImageUrl({}, themeName, '', i))))
   }
 
   themesCache.set(themeName, theme)
@@ -143,13 +113,13 @@ export async function getTalk(id: string): Promise<Talk> {
   let talk: Talk
 
   if (existsSync(resolve(rootDir, 'src/talks', id, 'slides.yml'))) {
-    const infoFile = await readFile(resolve(rootDir, 'src/talks', id, 'info.yml'), 'utf8')
+    const infoFile = await readFile(resolve(rootDir, 'src/talks', id, 'info.yml'))
     talk = load(infoFile) as Talk
 
-    const slidesFile = await readFile(resolve(rootDir, 'src/talks', id, 'slides.yml'), 'utf8')
+    const slidesFile = await readFile(resolve(rootDir, 'src/talks', id, 'slides.yml'))
     talk.slides = loadAll(slidesFile) as Slide[]
   } else {
-    const talkFile = await readFile(resolve(rootDir, 'src/talks', id, 'talk.yml'), 'utf8')
+    const talkFile = await readFile(resolve(rootDir, 'src/talks', id, 'talk.yml'))
     talk = load(talkFile) as Talk
   }
 

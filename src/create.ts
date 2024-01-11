@@ -3,10 +3,11 @@
 import { rootDir } from '@perseveranza-pets/dante'
 import { type Command } from 'commander'
 import { readFileSync } from 'node:fs'
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, writeFile } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { pino } from 'pino'
+import { readFile } from './fs.js'
 
 const packageInfo = JSON.parse(readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8'))
 
@@ -74,10 +75,7 @@ export async function initializeSlideset(name: string, directory: string): Promi
     const destination = compile(resolve(fullOutput, file), variables)
 
     logger.info(`Creating file ${relative(fullOutput, destination)} ...`)
-    const template = await readFile(
-      fileURLToPath(new URL(`./assets/create/${templateFile}.tpl`, import.meta.url)),
-      'utf8'
-    )
+    const template = await readFile(new URL(`./assets/create/${templateFile}.tpl`, import.meta.url))
     await writeFile(destination, compile(template.trim(), variables), 'utf8')
   }
 }

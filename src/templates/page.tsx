@@ -12,7 +12,7 @@ interface HeaderProps {
 }
 
 export function header({ context, talk, theme, js }: HeaderProps): VNode {
-  const { fontsUrls, images: themeImages, id } = theme
+  const { fonts, images: themeImages, id } = theme
 
   const faviconImageUrl = resolveImageUrl({}, id, talk.id, '@theme/favicon.webp')
 
@@ -20,19 +20,15 @@ export function header({ context, talk, theme, js }: HeaderProps): VNode {
     <>
       <meta name="author" content={talk.document.author.name} />
       <meta name="description" content={talk.document.title} />
-
       <link rel="icon" href={faviconImageUrl} type="image/webp" sizes="192x192" />
       <link rel="apple-touch-icon" type="image/webp" href={faviconImageUrl} />
-
-      <style {...serializeCSSClasses(context)} />
-
-      {fontsUrls.map(url => (
-        <link key={url} rel="preload" as="font" href={url} crossOrigin="anonymous" />
+      {fonts.urls.map((url: string, index: number) => (
+        <link key={index} rel="preload" as="font" href={url} crossOrigin="anonymous" />
       ))}
       {[...themeImages, ...talk.images].map(url => (
         <link key={url} rel="preload" as="image" href={(context.extensions.freya.export ? '.' : '') + url} />
       ))}
-
+      <style {...serializeCSSClasses(context)} />
       <script defer={true} type="module" dangerouslySetInnerHTML={{ __html: js }} />
     </>
   )

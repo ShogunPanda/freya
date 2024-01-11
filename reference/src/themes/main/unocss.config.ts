@@ -1,3 +1,3 @@
-import { config } from '../../../../dist/rendering/unocss.config.js'
+import { unocssConfig } from '../../../../dist/rendering/unocss.config.js'
 
-export default config
+export default unocssConfig

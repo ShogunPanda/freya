@@ -1,11 +1,21 @@
-import { baseTemporaryDirectory, elapsed, rootDir, type BuildContext, type BuildResult } from '@perseveranza-pets/dante'
+import {
+  baseTemporaryDirectory,
+  elapsed,
+  fontsToCss,
+  loadFontsFile,
+  rootDir,
+  type BuildContext,
+  type BuildResult,
+  type Fonts
+} from '@perseveranza-pets/dante'
 import { type UserConfig } from '@unocss/core'
 import { glob } from 'glob'
 import { existsSync } from 'node:fs'
-import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { filterWhitelistedTalks, pusherConfig } from './configuration.js'
+import { readFile } from './fs.js'
 import { unocssConfig } from './rendering/unocss.config.js'
 import { generateAllSlidesets, generateAssetsListing, generatePage404 } from './slidesets/generators.js'
 import { getAllTalks, getTalk, getTheme } from './slidesets/loaders.js'
@@ -37,7 +47,7 @@ function generateNetlifyConfiguration(context: BuildContext): string {
 
 async function generatePusherAuthFunction(context: BuildContext): Promise<string> {
   const startTime = process.hrtime.bigint()
-  let functionFile = await readFile(new URL('./templates/pusher-auth.js', import.meta.url), 'utf8')
+  let functionFile = await readFile(new URL('./templates/pusher-auth.js', import.meta.url))
   functionFile = functionFile.replace('@KEY@', pusherConfig!.key).replace('@SECRET@', pusherConfig!.secret)
 
   context.logger.info(`Generated function pusher-auth.js in ${elapsed(startTime)} ms`)
@@ -77,12 +87,12 @@ export async function css(context: BuildContext): Promise<string> {
   let theme: Theme | undefined
 
   if (!id || id === '404' || id === 'index' || id.endsWith('_assets') || id === 'speaker-notes') {
-    themeFile = await readFile(fileURLToPath(new URL('./assets/styles/freya.css', import.meta.url)), 'utf-8')
+    themeFile = await readFile(new URL('./assets/styles/freya.css', import.meta.url))
   } else {
     const talk = await getTalk(id)
     theme = await getTheme(talk.config.theme)
 
-    themeFile = await readFile(resolve(rootDir, 'src/themes', theme.id, 'style.css'), 'utf-8')
+    themeFile = await readFile(resolve(rootDir, 'src/themes', theme.id, 'style.css'))
   }
 
   const matcher = /^@import (['"])(.+)(\1);$/m
@@ -97,12 +107,16 @@ export async function css(context: BuildContext): Promise<string> {
     const id = mo[2]
     let replacement: string = ''
 
-    if (id === 'virtual:theme-fonts' && theme) {
-      replacement = theme.fontsStyles
+    if (id === '@theme/fonts') {
+      if (theme) {
+        replacement = fontsToCss(theme.fonts)
+      } else {
+        replacement = fontsToCss(context.extensions.freya.fonts as Fonts)
+      }
     } else if (id.startsWith('@freya')) {
       const url = new URL(`./assets/styles/${id.replace('@freya/', '')}`, import.meta.url)
 
-      replacement = await readFile(fileURLToPath(url), 'utf8')
+      replacement = await readFile(url)
     }
 
     themeFile = themeFile.replaceAll(mo[0], replacement)
@@ -139,6 +153,9 @@ export async function build(context: BuildContext): Promise<BuildResult> {
     context.extensions.freya = {}
   }
 
+  context.extensions.freya.fonts = await loadFontsFile(
+    fileURLToPath(new URL('./assets/styles/fonts.yml', import.meta.url))
+  )
   context.extensions.freya.css = {}
   context.extensions.freya.images = new Set()
   context.extensions.freya.talks = filterWhitelistedTalks(await getAllTalks())

@@ -127,7 +127,7 @@ freya deploy && cd dist/deploy && netlify deploy --site $SITE --prod
 Themes can be created by adding a new folder in the folder `src/theme`.
 A theme must contain at least the following files:
 
-- `theme.yml`: A YML file describing the theme, with the following structure:
+- `theme.yml`: A YAML file describing the theme, with the following structure:
 
   ```
   ---
@@ -136,6 +136,7 @@ A theme must contain at least the following files:
   fonts:
     ranges:
     families:
+    urls:
   ```
 
   The `style` value is optional and points to the theme's CSS file.
@@ -145,8 +146,11 @@ A theme must contain at least the following files:
   The `fonts` value contains a definition for fonts to be loaded remotely:
 
   - `fonts.ranges` contains a key-value definition of UTF-8 ranges
+  - `fonts.families` contains all the theme fonts families, specified with the hierachy `style/weight/range/urlIndex`.
+  - `fonts.urls` contains all URLs for all fonts.
+  - `fonts.source` contains all original CSS URLs for fonts definitions. This is not used by freya but can be used for debugging.
 
-  - `fonts.families` contains all the theme fonts families, specified with the hierachy style-weight-range-URL.
+  You can generate the YAML representation of one or more fonts by using the `freya font` command.
 
   A full `theme.yml` file might look like this:
 
@@ -169,13 +173,15 @@ A theme must contain at least the following files:
 
 - `style.css`: A CSS with theme definition. PostCSS rules like nesting and `@apply` rules are allowed.
 
-  To import fonts, prepend: `@import 'virtual:theme-fonts';`
-
   Freya exposes three stylesheets which can be imported:
 
   - `@import '@freya/normalize.css'`: Applies [modern-normalize](https://github.com/sindresorhus/modern-normalize).
   - `@import '@freya/reset.css'`: Applies additional CSS resets.
   - `@import '@freya/default.css'`: Applies defaults styles for the grid and presenter modes.
+
+  Additionally, you can import these special URLs:
+
+  - `@import 'theme/fonts'`: Serializes fonts definitions into CSS rules.
 
 - `unocss.config.ts`: A TypeScript file to configure [UnoCSS](https://github.com/unocss/unocss).
 
