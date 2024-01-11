@@ -1,4 +1,4 @@
-import { type VNode } from 'preact'
+import { type ComponentChildren, type VNode } from 'preact'
 import QRCodeGenerator from 'qrcode-generator'
 import { getAlignments, getCover, isAlignment, isCovered, isFinder } from '../rendering/qr.js'
 import { useFreya } from './context.js'
@@ -9,7 +9,7 @@ type QRCodeGeneratorInterface = typeof QRCodeGenerator
 interface QRCodeProps {
   data: string
   label?: string
-  image?: string
+  image?: string | ComponentChildren
   imageRatio?: number
   className?: string
   classes?: {
@@ -179,6 +179,10 @@ export function QRCode({ data, image, imageRatio, label, classes, className }: Q
     svgPath += drawAlignment(aligment[0], aligment[1])
   }
 
+  if (image && typeof image === 'string') {
+    image = <Image src={image} className={resolveClasses('freya@qr__image', imageClassName)} />
+  }
+
   return (
     <div className={resolveClasses('freya@qr', className)}>
       <div className={resolveClasses('freya@qr__wrapper')}>
@@ -191,11 +195,7 @@ export function QRCode({ data, image, imageRatio, label, classes, className }: Q
           viewBox={`0 0 ${dimension} ${dimension}`}
         ></svg>
 
-        {image && (
-          <div className={resolveClasses('freya@qr__image-wrapper')}>
-            <Image src={image} className={resolveClasses('freya@qr__image', imageClassName)} />
-          </div>
-        )}
+        {image && <div className={resolveClasses('freya@qr__image-wrapper')}>{image}</div>}
       </div>
       {label && (
         <a href={data} target="_blank" rel="noopener noreferrer" className={resolveClasses(labelClassName)}>
