@@ -1,3 +1,7 @@
+### 2024-01-11 / 0.45.0
+
+- feat: Added fonts handling.
+
 ### 2024-01-08 / 0.44.0
 
 - fix: Fixed slide change aborting.
