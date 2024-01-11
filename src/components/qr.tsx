@@ -13,7 +13,7 @@ interface QRCodeProps {
   imageRatio?: number
   className?: string
   classes?: {
-    qr?: string
+    code?: string
     image?: string
     label?: string
   }
@@ -130,7 +130,7 @@ export function generateQR(
 export function QRCode({ data, image, imageRatio, label, classes, className }: QRCodeProps): VNode {
   const { resolveClasses } = useFreya()
 
-  const { qr: qrClassName, label: labelClassName, image: imageClassName } = classes ?? {}
+  const { code: codeClassName, label: labelClassName, image: imageClassName } = classes ?? {}
 
   // Generate the QR Code
   const qr = generateQR(data)
@@ -184,7 +184,7 @@ export function QRCode({ data, image, imageRatio, label, classes, className }: Q
       <div className={resolveClasses('freya@qr__wrapper')}>
         <svg
           data-url={data}
-          className={resolveClasses('freya@qr__code', qrClassName)}
+          className={resolveClasses('freya@qr__code', codeClassName)}
           dangerouslySetInnerHTML={{ __html: svgPath }}
           width={dimension}
           height={dimension}
