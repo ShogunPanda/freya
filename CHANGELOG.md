@@ -1,3 +1,7 @@
+### 2024-01-11 / 0.48.0
+
+- feat: Use standard property for QR class name.
+
 ### 2024-01-11 / 0.47.0
 
 - chore: Updated dependencies.
