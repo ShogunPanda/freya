@@ -1,3 +1,7 @@
+### 2024-01-11 / 0.49.0
+
+- feat: Renamed property.
+
 ### 2024-01-11 / 0.48.0
 
 - feat: Use standard property for QR class name.
