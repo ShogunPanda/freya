@@ -131,6 +131,7 @@
       @apply border-transparent;
       @apply h-[--freya-navigator-slide-height];
       @apply freya@hover:border-#5AC3EA;
+      @apply cursor-pointer;
 
       &--active {
         @apply freya@border-#5AC3EA;
@@ -138,15 +139,8 @@
 
       &__contents {
         @apply transform-origin-[0_0];
-      }
-
-      &__overlay {
-        @apply cursor-pointer;
         @apply select-none;
-        @apply absolute;
-        @apply w-full;
-        @apply h-full;
-        @apply z-100;
+        @apply pointer-events-none;
       }
 
       &__number {

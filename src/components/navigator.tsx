@@ -75,7 +75,7 @@ export function Navigator({ current, slides, className, close }: NavigatorProps)
 
   const goto = useCallback(
     (index: number) => {
-      if (!shouldAbortSlideChange(id, index + 1)) {
+      if (shouldAbortSlideChange(id, index + 1)) {
         return
       }
 
@@ -101,7 +101,6 @@ export function Navigator({ current, slides, className, close }: NavigatorProps)
           onClick={goto.bind(null, index)}
         >
           <SlideComponent slide={slide} index={index} className={resolveClasses('freya@navigator__slide__contents')} />
-          <div className={resolveClasses('freya@navigator__slide__overlay')} />
           <span className={resolveClasses('freya@navigator__slide__number')}>{index + 1}</span>
         </div>
       ))}
