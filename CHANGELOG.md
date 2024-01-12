@@ -1,3 +1,7 @@
+### 2024-01-12 / 0.51.1
+
+- fix: Backfill classes.
+
 ### 2024-01-12 / 0.51.0
 
 - feat: Allow classes for code snippets.
