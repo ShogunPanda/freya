@@ -99,6 +99,7 @@
     @apply gap-x-0_2sp;
     @apply grid-cols-[repeat(auto-fit,_minmax(250px,_1fr))];
     @apply grid-rows-[min-content];
+    @apply grid-auto-rows-[min-content];
     @apply overflow-auto;
 
     &__close {
@@ -129,7 +130,6 @@
       @apply border-8px;
       @apply border-transparent;
       @apply h-[--freya-navigator-slide-height];
-      @apply cursor-pointer;
       @apply freya@hover:border-#5AC3EA;
 
       &--active {
@@ -137,9 +137,16 @@
       }
 
       &__contents {
-        @apply pointer-events-none;
-        @apply select-none;
         @apply transform-origin-[0_0];
+      }
+
+      &__overlay {
+        @apply cursor-pointer;
+        @apply select-none;
+        @apply absolute;
+        @apply w-full;
+        @apply h-full;
+        @apply z-100;
       }
 
       &__number {

@@ -1,6 +1,6 @@
 import { type VNode } from 'preact'
-import { useCallback, useLayoutEffect, useRef } from 'preact/hooks'
 import { route } from 'preact-router'
+import { useCallback, useLayoutEffect, useRef } from 'preact/hooks'
 import { type Slide } from '../slidesets/models.js'
 import { shouldAbortSlideChange, slideUrl } from './client.js'
 import { useFreya, type CSSClassToken } from './context.js'
@@ -101,6 +101,7 @@ export function Navigator({ current, slides, className, close }: NavigatorProps)
           onClick={goto.bind(null, index)}
         >
           <SlideComponent slide={slide} index={index} className={resolveClasses('freya@navigator__slide__contents')} />
+          <div className={resolveClasses('freya@navigator__slide__overlay')} />
           <span className={resolveClasses('freya@navigator__slide__number')}>{index + 1}</span>
         </div>
       ))}
