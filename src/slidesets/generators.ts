@@ -114,7 +114,7 @@ export async function ensureRenderedCode(context: BuildContext, target: BaseSlid
     return
   }
 
-  const userClasses = target.code.classes
+  const userClasses = target.code.classes ?? {}
   const classes: Record<string, string> = {}
 
   const resolveClasses = context.extensions.freya.resolveClasses
