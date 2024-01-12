@@ -1,3 +1,7 @@
+### 2024-01-12 / 0.50.1
+
+- fix: Use good cache key.
+
 ### 2024-01-11 / 0.50.0
 
 - feat: Allow components in QR.
