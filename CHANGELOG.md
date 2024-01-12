@@ -1,3 +1,7 @@
+### 2024-01-12 / 0.51.2
+
+- fix: Fixed navigator click.
+
 ### 2024-01-12 / 0.51.1
 
 - fix: Backfill classes.
