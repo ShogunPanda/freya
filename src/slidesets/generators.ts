@@ -114,14 +114,15 @@ export async function ensureRenderedCode(context: BuildContext, target: BaseSlid
     return
   }
 
+  const userClasses = target.code.classes
   const classes: Record<string, string> = {}
 
   const resolveClasses = context.extensions.freya.resolveClasses
-  classes.root = resolveClasses('freya@code__wrapper')
-  classes.line = resolveClasses('freya@code__line')
-  classes.lineHighlighted = resolveClasses('freya@code__line--highlighted')
-  classes.lineNotHighlighted = resolveClasses('freya@code__line--not-highlighted')
-  classes.lineNumber = resolveClasses('freya@code__line-number')
+  classes.root = resolveClasses('freya@code__wrapper', userClasses.root)
+  classes.line = resolveClasses('freya@code__line', userClasses.line)
+  classes.lineHighlighted = resolveClasses('freya@code__line--highlighted', userClasses.lineHighlighted)
+  classes.lineNotHighlighted = resolveClasses('freya@code__line--not-highlighted', userClasses.lineNotHighlighted)
+  classes.lineNumber = resolveClasses('freya@code__line-number', userClasses.lineNumber)
 
   const { content, language, numbers, highlight } = target.code
   target.code.rendered = await renderCode(content, language ?? '', numbers ?? false, highlight ?? '', classes)

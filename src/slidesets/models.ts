@@ -30,9 +30,10 @@ export interface BaseSlide {
     numbers?: boolean
     highlight?: string
     rendered?: string
+    classes: Record<string, string>
   }
   options: Record<string, any>
-  classes: Record<string, any>
+  classes: Record<string, string>
 }
 
 export type Slide = BaseSlide & Record<string, any>
