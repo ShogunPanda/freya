@@ -1,3 +1,7 @@
+### 2024-01-12 / 0.51.4
+
+- fix: Fixed navigator.
+
 ### 2024-01-12 / 0.51.3
 
 - fix: Linted code.
