@@ -1,6 +1,6 @@
 import { type VNode } from 'preact'
-import { route } from 'preact-router'
 import { useCallback, useLayoutEffect, useRef } from 'preact/hooks'
+import { route } from 'preact-router'
 import { type Slide } from '../slidesets/models.js'
 import { shouldAbortSlideChange, slideUrl } from './client.js'
 import { useFreya, type CSSClassToken } from './context.js'
