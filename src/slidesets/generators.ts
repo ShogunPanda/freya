@@ -106,7 +106,7 @@ export async function ensureRenderedCode(context: BuildContext, target: BaseSlid
     return
   }
 
-  const cacheKey = `code:${target.code.language}:${target.code.content}`
+  const cacheKey = JSON.stringify(target)
   const renderedCode = codeCache.get(cacheKey)
 
   if (renderedCode) {
