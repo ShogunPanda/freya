@@ -46,6 +46,8 @@
   }
 
   &qr {
+    @apply inline-block;
+
     &__wrapper {
       @apply relative;
     }
