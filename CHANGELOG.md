@@ -1,3 +1,7 @@
+### 2024-01-19 / 0.51.6
+
+- fix: Added missing rule.
+
 ### 2024-01-19 / 0.51.5
 
 - fix: Fixed layers.
