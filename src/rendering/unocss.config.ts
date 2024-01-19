@@ -215,16 +215,7 @@ export const layers: Record<string, number> = {
   components: 10,
   utilities: 11,
   default: 12,
-  freya: 21,
-  theme: 41,
-  talk: 61,
-  'freya-override': 81,
-  'theme-override': 82,
-  'talk-override': 83,
-  'freya-important': 91,
-  'theme-important': 92,
-  'talk-important': 93,
-  js: 99
+  freya: 20
 }
 
 export const unocssConfig = defineUnoConfig({
