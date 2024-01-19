@@ -1,6 +1,6 @@
 {
   "name": "@perseveranza-pets/freya",
-  "version": "0.51.4",
+  "version": "0.51.5",
   "description": "Opinionated JSX based slides generator.",
   "homepage": "https://sw.cowtech.it/freya",
   "repository": "github:ShogunPanda/freya",
