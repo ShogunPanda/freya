@@ -1,3 +1,7 @@
+### 2024-01-22 / 0.52.0
+
+- feat: Export custom units.
+
 ### 2024-01-19 / 0.51.6
 
 - fix: Added missing rule.
