@@ -14,6 +14,30 @@ export const systemFonts =
 
 export const systemMonospaceFonts = "ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace"
 
+export const customUnits: Record<string, [number, string]> = {
+  ch: [1, 'ch'],
+  em: [1, 'em'],
+  rem: [1, 'rem'],
+  p: [1, '%'],
+  px: [1, 'px'],
+  vw: [1, 'vw'],
+  vh: [1, 'vh'],
+  sp: [200, 'px']
+}
+
+export function parseNumericValue(raw: string, units: Record<string, [number, string]> = {}): string {
+  const mo = raw.match(/(\d+(?:_\d+)?)([a-z]+)/)
+
+  if (!mo) {
+    return raw
+  }
+
+  const parsed = Number.parseFloat(mo[1].replace('_', '.'))
+  const [ratio, unit] = units[mo[2]] ?? [1, 'px']
+
+  return `${parsed * ratio}${unit}`
+}
+
 export function numericRule(property: string, value: string, unit: string = '', ratio: number = 1): CSSValue {
   const parsed = Number.parseFloat(value.replace('_', '.'))
 
@@ -184,19 +208,9 @@ export function generateDimensions(
 }
 
 export function generateCustomUnits(): Rule[] {
-  const customUnits: [string, number, string][] = [
-    ['ch', 1, 'ch'],
-    ['em', 1, 'em'],
-    ['rem', 1, 'rem'],
-    ['p', 1, '%'],
-    ['px', 1, 'px'],
-    ['vw', 1, 'vw'],
-    ['vh', 1, 'vh'],
-    ['sp', 200, 'px']
-  ]
   const rules: Rule[] = []
 
-  for (const [customUnit, ratio, unit] of customUnits) {
+  for (const [customUnit, [ratio, unit]] of Object.entries(customUnits)) {
     rules.push(
       ...generateSpacing(customUnit, ratio, unit),
       ...generatePositions(customUnit, ratio, unit),
