@@ -114,7 +114,7 @@ export async function ensureRenderedCode(context: BuildContext, code: CodeDefini
     return
   }
 
-  const userClasses = code.classes ?? {}
+  const userClasses = code.className ?? {}
   const classes: Record<string, string> = {}
 
   const resolveClasses = context.extensions.freya.resolveClasses

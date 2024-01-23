@@ -26,7 +26,7 @@ export interface CodeDefinition {
   numbers?: boolean
   highlight?: string
   rendered?: string
-  classes: Record<string, string>
+  className: Record<string, string>
 }
 
 export interface BaseSlide {
