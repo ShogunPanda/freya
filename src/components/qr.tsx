@@ -11,8 +11,8 @@ interface QRCodeProps {
   label?: string
   image?: string | ComponentChildren
   imageRatio?: number
-  className?: string
-  classes?: {
+  className?: {
+    root?: string
     code?: string
     image?: string
     label?: string
@@ -127,10 +127,10 @@ export function generateQR(
   return qr
 }
 
-export function QRCode({ data, image, imageRatio, label, classes, className }: QRCodeProps): VNode {
+export function QRCode({ data, image, imageRatio, label, className }: QRCodeProps): VNode {
   const { resolveClasses } = useFreya()
 
-  const { code: codeClassName, label: labelClassName, image: imageClassName } = classes ?? {}
+  const { root: rootClassName, code: codeClassName, label: labelClassName, image: imageClassName } = className ?? {}
 
   // Generate the QR Code
   const qr = generateQR(data)
@@ -184,7 +184,7 @@ export function QRCode({ data, image, imageRatio, label, classes, className }: Q
   }
 
   return (
-    <div className={resolveClasses('freya@qr', className)}>
+    <div className={resolveClasses('freya@qr', rootClassName)}>
       <div className={resolveClasses('freya@qr__wrapper')}>
         <svg
           data-url={data}
