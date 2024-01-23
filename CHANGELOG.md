@@ -1,3 +1,7 @@
+### 2024-01-23 / 0.54.0
+
+- fix: Load data after setting up resolvers.
+
 ### 2024-01-23 / 0.53.0
 
 - feat: Do not assume slide structure.
