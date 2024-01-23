@@ -1,3 +1,7 @@
+### 2024-01-23 / 0.53.0
+
+- feat: Do not assume slide structure.
+
 ### 2024-01-22 / 0.52.0
 
 - feat: Export custom units.
