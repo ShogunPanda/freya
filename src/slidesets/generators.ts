@@ -173,16 +173,6 @@ async function loadData(
 }
 
 export async function prepareClientContext(context: BuildContext, theme: Theme, talk: Talk): Promise<ClientContext> {
-  // Load theme and talk data, if any
-  const data: Record<string, any> = {}
-  const serverData: Record<string, any> = {}
-
-  const themeSetupFile = resolve(baseTemporaryDirectory, 'themes', theme.id, 'setup.js')
-  const talkSetupFile = resolve(baseTemporaryDirectory, 'talk', talk.id, 'setup.js')
-
-  await loadData(context, theme, talk, themeSetupFile, data, serverData, 'theme')
-  await loadData(context, theme, talk, talkSetupFile, data, serverData, 'talk')
-
   // Load theme classes and layers, if any
   const themeClassesFile = resolve(rootDir, 'src/themes', theme.id, 'classes.css')
   const themeClasses = existsSync(themeClassesFile) ? await readFile(themeClassesFile) : ''
@@ -199,6 +189,16 @@ export async function prepareClientContext(context: BuildContext, theme: Theme, 
   const images: Record<string, string> = {}
   const svgsDefinitions: string[] = []
   const svgs: Record<string, ParsedSVG> = {}
+
+  // Load theme and talk data, if any
+  const data: Record<string, any> = {}
+  const serverData: Record<string, any> = {}
+
+  const themeSetupFile = resolve(baseTemporaryDirectory, 'themes', theme.id, 'setup.js')
+  const talkSetupFile = resolve(baseTemporaryDirectory, 'talk', talk.id, 'setup.js')
+
+  await loadData(context, theme, talk, themeSetupFile, data, serverData, 'theme')
+  await loadData(context, theme, talk, talkSetupFile, data, serverData, 'talk')
 
   // Prepare the client
   return {
