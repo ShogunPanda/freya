@@ -1,8 +1,8 @@
 import { type VNode } from 'preact'
-import { type Slide } from '../slidesets/models.js'
+import { type CodeDefinition } from '../slidesets/models.js'
 import { useFreya } from './context.js'
 
-export function Code({ rendered, className }: Slide['code'] & { className?: string }): VNode | null {
+export function Code({ rendered, className }: CodeDefinition & { className?: string }): VNode | null {
   const { resolveClasses } = useFreya()
 
   if (!rendered) {

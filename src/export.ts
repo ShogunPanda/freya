@@ -19,14 +19,9 @@ import { css, cssConfig } from './build.js'
 import { SvgDefinitions } from './client.js'
 import { filterWhitelistedTalks } from './configuration.js'
 import { resolveSVG } from './rendering/svg.js'
-import {
-  createCSSClassesResolver,
-  ensureRenderedCode,
-  parseContent,
-  prepareClientContext
-} from './slidesets/generators.js'
+import { createCSSClassesResolver, parseContent, prepareClientContext } from './slidesets/generators.js'
 import { getAllTalks, getTalk, getTheme, resolveImageUrl } from './slidesets/loaders.js'
-import { type BaseSlide, type Slide, type SlideRenderer, type Talk } from './slidesets/models.js'
+import { type Slide, type SlideRenderer, type Talk } from './slidesets/models.js'
 import { header, page } from './templates/page.js'
 import { SlideComponent } from './templates/slide.js'
 import { body as speakerNotesBody, page as speakerNotesPage } from './templates/speaker-notes.js'
@@ -219,24 +214,6 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
     // Render the slides
     for (let i = 0; i < talk.slides.length; i++) {
       const slide = talk.slides[i]
-
-      if (typeof slide.content === 'string') {
-        slide.content = [slide.content]
-      }
-
-      if (!slide.options) {
-        slide.options = {}
-      }
-
-      if (!slide.classes) {
-        slide.classes = {}
-      }
-
-      await ensureRenderedCode(context, slide)
-
-      for (const item of (slide.items as BaseSlide[]) ?? []) {
-        await ensureRenderedCode(context, item)
-      }
 
       // Render the slide on the server to add the required classes
       const layoutPath = resolve(

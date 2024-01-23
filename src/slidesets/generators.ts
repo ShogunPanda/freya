@@ -34,8 +34,8 @@ import { header, page } from '../templates/page.js'
 import { SlideComponent } from '../templates/slide.js'
 import { getTalk, getTheme, resolveImageUrl, resolvePusher } from './loaders.js'
 import {
-  type BaseSlide,
   type ClientContext,
+  type CodeDefinition,
   type ParsedSVG,
   type Slide,
   type SlideRenderer,
@@ -101,20 +101,20 @@ export function parseContent(cache: Record<string, string>, raw?: string): strin
   return cache[raw]
 }
 
-export async function ensureRenderedCode(context: BuildContext, target: BaseSlide): Promise<void> {
-  if (!target.code || target.code?.rendered) {
+export async function ensureRenderedCode(context: BuildContext, code: CodeDefinition): Promise<void> {
+  if (!code || code?.rendered) {
     return
   }
 
-  const cacheKey = JSON.stringify(target)
+  const cacheKey = JSON.stringify(code)
   const renderedCode = codeCache.get(cacheKey)
 
   if (renderedCode) {
-    target.code.rendered = renderedCode
+    code.rendered = renderedCode
     return
   }
 
-  const userClasses = target.code.classes ?? {}
+  const userClasses = code.classes ?? {}
   const classes: Record<string, string> = {}
 
   const resolveClasses = context.extensions.freya.resolveClasses
@@ -124,9 +124,9 @@ export async function ensureRenderedCode(context: BuildContext, target: BaseSlid
   classes.lineNotHighlighted = resolveClasses('freya@code__line--not-highlighted', userClasses.lineNotHighlighted)
   classes.lineNumber = resolveClasses('freya@code__line-number', userClasses.lineNumber)
 
-  const { content, language, numbers, highlight } = target.code
-  target.code.rendered = await renderCode(content, language ?? '', numbers ?? false, highlight ?? '', classes)
-  codeCache.set(cacheKey, target.code.rendered)
+  const { content, language, numbers, highlight } = code
+  code.rendered = await renderCode(content, language ?? '', numbers ?? false, highlight ?? '', classes)
+  codeCache.set(cacheKey, code.rendered)
 }
 
 export function createCSSClassesResolver(
@@ -366,12 +366,6 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
 
     if (!slide.classes) {
       slide.classes = {}
-    }
-
-    await ensureRenderedCode(context, slide)
-
-    for (const item of (slide.items as BaseSlide[]) ?? []) {
-      await ensureRenderedCode(context, item)
     }
 
     // Render the slide on the server to add the required classes

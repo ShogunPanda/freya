@@ -20,20 +20,19 @@ export interface BaseDocument {
 
 export type Document = BaseDocument & Record<string, any>
 
+export interface CodeDefinition {
+  content: string
+  language?: string
+  numbers?: boolean
+  highlight?: string
+  rendered?: string
+  classes: Record<string, string>
+}
+
 export interface BaseSlide {
   layout?: string
   title: string
   notes: string
-  code?: {
-    content: string
-    language?: string
-    numbers?: boolean
-    highlight?: string
-    rendered?: string
-    classes: Record<string, string>
-  }
-  options: Record<string, any>
-  classes: Record<string, string>
 }
 
 export type Slide = BaseSlide & Record<string, any>
