@@ -1,3 +1,7 @@
+### 2024-01-23 / 0.56.0
+
+- fix: Fixed property name.
+
 ### 2024-01-23 / 0.55.0
 
 - fix: Fixed property name.
