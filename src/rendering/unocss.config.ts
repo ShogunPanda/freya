@@ -1,6 +1,6 @@
 import { type CSSValue, type Rule } from '@unocss/core'
 import { handler } from '@unocss/preset-mini/utils'
-import presetWind from '@unocss/preset-wind'
+import { presetWind } from '@unocss/preset-wind'
 import transformerDirectives from '@unocss/transformer-directives'
 import { defineUnoConfig, layersVariant } from './unocss.js'
 
@@ -234,6 +234,7 @@ export const layers: Record<string, number> = {
 
 export const unocssConfig = defineUnoConfig({
   presets: [presetWind()],
+  // @ts-expect-error Invalid handling of moduleResolution
   transformers: [transformerDirectives()],
   theme: {
     colors: {

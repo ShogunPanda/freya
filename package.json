@@ -3,7 +3,10 @@
   "version": "0.58.0",
   "description": "Opinionated JSX based slides generator.",
   "homepage": "https://sw.cowtech.it/freya",
-  "repository": "github:ShogunPanda/freya",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShogunPanda/freya.git"
+  },
   "keywords": [
     "slides"
   ],
@@ -44,34 +47,35 @@
   },
   "dependencies": {
     "@fastify/formbody": "^7.4.0",
-    "@perseveranza-pets/dante": "^0.44.0",
+    "@perseveranza-pets/dante": "^0.44.3",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.5",
-    "@unocss/preset-wind": "^0.58.2",
+    "@swc/cli": "^0.2.3",
+    "@unocss/preset-wind": "^0.58.3",
     "commander": "^11.1.0",
     "glob": "^10.3.10",
     "js-yaml": "^4.1.0",
     "markdown-it": "^14.0.0",
-    "playwright": "^1.40.1",
-    "playwright-chromium": "^1.40.1",
+    "playwright": "^1.41.1",
+    "playwright-chromium": "^1.41.1",
     "preact": "^10.19.3",
     "preact-render-to-string": "^6.3.1",
     "preact-router": "^4.1.2",
     "pusher-js": "8.4.0-rc2",
     "qrcode-generator": "^1.4.4",
-    "rollup": "^4.9.2",
+    "rollup": "^4.9.6",
     "wait-on": "^7.2.0",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
-    "@cowtech/eslint-config": "^9.0.0",
+    "@cowtech/eslint-config": "^9.0.3",
     "@types/js-yaml": "^4.0.9",
     "@types/markdown-it": "^13.0.7",
     "@types/wait-on": "^5.3.4",
     "concurrently": "^8.2.2",
     "eslint": "^8.56.0",
-    "prettier": "^3.1.1",
+    "prettier": "^3.2.4",
     "typescript": "^5.3.3"
   }
 }

@@ -82,7 +82,7 @@ export function SvgDefinitions({ definitions, className }: SvgDefinitionsProps):
   )
 }
 
-export function Svg({ path, className, ...props }: SvgProps): VNode {
+export function Svg({ src: path, className, ...props }: SvgProps): VNode {
   const {
     talk: { id: talkId },
     theme: { id: themeId },

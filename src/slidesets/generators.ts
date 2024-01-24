@@ -250,6 +250,7 @@ export async function generateApplicationScript(
   const bundled = await rollup({
     input: application,
     plugins: [
+      // @ts-expect-error Invalid handling of moduleResolution
       rollupReplace({
         preventAssignment: true,
         values: {
@@ -258,11 +259,13 @@ export async function generateApplicationScript(
           __replace_placeholder_imports__: imports.join('\n')
         }
       }),
+      // @ts-expect-error Invalid handling of moduleResolution
       rollupNodeResolve({
         browser: true,
         modulePaths: [fileURLToPath(new URL('../../../node_modules', import.meta.url))],
         preferBuiltins: true
       }),
+      // @ts-expect-error Invalid handling of moduleResolution
       rollupCommonJs()
     ],
     output: {

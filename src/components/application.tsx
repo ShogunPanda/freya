@@ -111,6 +111,7 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
   const [presentationPaused, setPresentationPaused] = useState(true)
   const localChannel = useRef<BroadcastChannel>()
   const remoteChannel = useRef<Channel>()
+  // @ts-expect-error Invalid handling of moduleResolution
   const pusher = useRef<Pusher>()
 
   const hookMethods = {
@@ -330,8 +331,10 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
     }
 
     if (!pusher.current) {
+      // @ts-expect-error Invalid handling of moduleResolution
       Pusher.logToConsole = !context.isProduction
 
+      // @ts-expect-error Invalid handling of moduleResolution
       pusher.current = new Pusher(context.pusher.key, {
         cluster: context.pusher.cluster,
         channelAuthorization: { transport: 'ajax', endpoint: '/pusher/auth' }
@@ -344,11 +347,11 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
         `private-talks-${protocol.replace(':', '')}-${hostname}-${port}-${environment}`
       )
 
-      remoteChannel.current.bind('pusher:subscription_error', (event: Event) => {
+      remoteChannel.current!.bind('pusher:subscription_error', (event: Event) => {
         console.error('Subscription failed', event)
       })
 
-      remoteChannel.current.bind('pusher:error', (event: Event) => {
+      remoteChannel.current!.bind('pusher:error', (event: Event) => {
         console.error('Receiving synchronization failed', event)
       })
     }
