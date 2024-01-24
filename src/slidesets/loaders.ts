@@ -135,27 +135,12 @@ export async function getTalk(id: string): Promise<Talk> {
     }
   }
 
-  // Gather all images
-  const images = new Set<string>()
-
-  for (const slide of talk.slides) {
-    // Track the included images
-    for (const property of ['image']) {
-      const image = slide[property] as string
-
-      if (image) {
-        images.add(resolveImageUrl({}, talk.config.theme, id, image)!)
-      }
-    }
-  }
-
   // Set some properties
   talk.id = id
   talk.config.urls = { ...talk.config.urls }
   talk.slidesCount = talk.slides.length
   talk.slidesPadding = Math.ceil(Math.log10(talk.slides.length))
   talk.aspectRatio = talk.config.dimensions.width / talk.config.dimensions.height
-  talk.images = Array.from(images)
 
   talksCache.set(id, talk)
   return talk
