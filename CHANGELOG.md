@@ -1,3 +1,7 @@
+### 2024-01-24 / 0.58.0
+
+- feat: Handle box drawing characters.
+
 ### 2024-01-24 / 0.57.0
 
 - feat: Do not assume slide structure for images.
