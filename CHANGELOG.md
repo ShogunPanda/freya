@@ -1,3 +1,7 @@
+### 2024-01-24 / 0.57.0
+
+- feat: Do not assume slide structure for images.
+
 ### 2024-01-24 / 0.56.2
 
 - fix: Fixed class.
