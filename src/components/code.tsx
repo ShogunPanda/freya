@@ -11,7 +11,7 @@ export function Code({ rendered, className }: CodeDefinition): VNode | null {
 
   return (
     <div
-      className={resolveClasses('freya@code', className.root)}
+      className={resolveClasses('freya@code', className?.root)}
       dangerouslySetInnerHTML={{ __html: rendered.replaceAll('$', '&#36;') }}
     />
   )
