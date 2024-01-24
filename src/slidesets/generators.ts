@@ -124,7 +124,13 @@ export async function ensureRenderedCode(context: BuildContext, code: CodeDefini
   classes.lineNotHighlighted = resolveClasses('freya@code__line--not-highlighted', userClasses.lineNotHighlighted)
   classes.lineNumber = resolveClasses('freya@code__line-number', userClasses.lineNumber)
 
-  const { content, language, numbers, highlight } = code
+  const { language, numbers, highlight } = code
+  let content = code.content
+
+  if (language === 'none') {
+    content = content.replaceAll('\u{2502}', '|').replaceAll(/[\u{2500}-\u{257F}]/gu, '-')
+  }
+
   code.rendered = await renderCode(content, language ?? '', numbers ?? false, highlight ?? '', classes)
   codeCache.set(cacheKey, code.rendered)
 }

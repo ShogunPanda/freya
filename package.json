@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@fastify/formbody": "^7.4.0",
-    "@perseveranza-pets/dante": "^0.43.2",
+    "@perseveranza-pets/dante": "^0.44.0",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.5",
