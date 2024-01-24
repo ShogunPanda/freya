@@ -1,3 +1,7 @@
+### 2024-01-24 / 0.58.1
+
+- chore: Updated TypeScript configuration.
+
 ### 2024-01-24 / 0.58.0
 
 - feat: Handle box drawing characters.
