@@ -1,3 +1,9 @@
+### 2024-01-28 / 0.59.0
+
+- chore: Linted code.
+- feat: Improved hooks.
+- chore: Removed reference theme.
+
 ### 2024-01-24 / 0.58.1
 
 - chore: Updated TypeScript configuration.
