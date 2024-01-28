@@ -1,6 +1,6 @@
-import { createContext, type ComponentChildren, type VNode } from 'preact'
+import { createContext, type Context } from 'preact'
 import { useContext } from 'preact/hooks'
-import { type ClientContext, type ParsedSVG } from '../slidesets/models.js'
+import { type ClientContext as ClientContextModel, type ParsedSVG } from '../slidesets/models.js'
 
 export type CSSClassToken = string | false | undefined | null
 
@@ -9,21 +9,25 @@ export type ImagesResolver = (theme: string, talk: string, url?: string) => stri
 export type SVGResolver = (theme: string, talk: string, url?: string) => ParsedSVG
 export type MarkdownParser = (raw?: string) => string
 
-interface HookMethods {
+export interface ClientContextMethods {
   resolveClasses: CSSClassesResolver
   resolveImage: ImagesResolver
   resolveSVG: SVGResolver
   parseContent: MarkdownParser
 }
 
-export type FreyaHookProps = ClientContext & HookMethods
+export type ClientContextProps = ClientContextModel & ClientContextMethods
 
-export interface FreyaContextProps extends Partial<HookMethods> {
-  context: ClientContext
-  children?: ComponentChildren | ComponentChildren[]
+export interface SlideContextProps<SlideModel = Record<string, unknown>> {
+  slide: SlideModel
+  index: number
+  previousIndex: number
+  navigator?: boolean
+  presenter?: boolean
 }
 
-export const FreyaContext = createContext<FreyaHookProps>(undefined as unknown as FreyaHookProps)
+export const ClientContextInstance = createContext<ClientContextProps>(undefined as unknown as ClientContextProps)
+export const SlideContextInstance = createContext<SlideContextProps>(undefined as unknown as SlideContextProps)
 
 export function sanitizeClassName(...raw: CSSClassToken[]): string {
   return raw
@@ -50,25 +54,22 @@ export function defaultSVGResolver(_theme: string, _talk: string, _path?: string
   return ['', undefined]
 }
 
-export function FreyaContextRoot({
-  context,
-  resolveClasses,
-  resolveImage,
-  resolveSVG,
-  parseContent,
-  children
-}: FreyaContextProps): VNode {
-  const value = {
+export function createClientContextValue(context: ClientContextModel, hooks: ClientContextMethods): ClientContextProps {
+  const { resolveClasses, resolveImage, resolveSVG, parseContent } = hooks
+
+  return {
     ...context,
     resolveClasses: resolveClasses ?? defaultCSSClassesResolver,
     resolveImage: resolveImage ?? defaultImagesResolver,
     resolveSVG: resolveSVG ?? defaultSVGResolver,
     parseContent: parseContent ?? defaultMarkdownParser
   }
-
-  return <FreyaContext.Provider value={value}>{children}</FreyaContext.Provider>
 }
 
-export function useFreya(): FreyaHookProps {
-  return useContext(FreyaContext)
+export function useClient(): ClientContextProps {
+  return useContext(ClientContextInstance)
+}
+
+export function useSlide<SlideModel>(): SlideContextProps<SlideModel> {
+  return useContext(SlideContextInstance as Context<SlideContextProps<SlideModel>>)
 }

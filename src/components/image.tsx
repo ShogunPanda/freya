@@ -1,5 +1,5 @@
 import { type VNode } from 'preact'
-import { useFreya } from './context.js'
+import { useClient } from './contexts.js'
 
 interface ImageProps {
   src: string
@@ -7,6 +7,6 @@ interface ImageProps {
 }
 
 export function Image({ src, className }: ImageProps): VNode {
-  const { resolveClasses } = useFreya()
+  const { resolveClasses } = useClient()
   return <img className={resolveClasses('freya@image', className)} src={src} />
 }

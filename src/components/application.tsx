@@ -1,8 +1,8 @@
-import { render, type VNode } from 'preact'
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
+import { Fragment, render, type VNode } from 'preact'
 import { route, Router, type RoutableProps, type RouterOnChangeArgs } from 'preact-router'
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
 import Pusher, { type Channel } from 'pusher-js'
-import { type ClientContext, type ParsedSVG } from '../slidesets/models.js'
+import { type ClientContext as ClientContextModel, type ParsedSVG } from '../slidesets/models.js'
 import {
   handleFullScreen,
   handleShortcut,
@@ -13,10 +13,15 @@ import {
   updateSlidesAppearance,
   type DOMContext
 } from './client.js'
-import { FreyaContextRoot, type CSSClassToken } from './context.js'
+import {
+  ClientContextInstance,
+  createClientContextValue,
+  SlideContextInstance,
+  type CSSClassToken
+} from './contexts.js'
 import { Navigator } from './navigator.js'
 import { Presenter } from './presenter.js'
-import { CurrentSlide, LayoutContext } from './slide.js'
+import { LayoutContext, SlideComponent } from './slide.js'
 import { SvgDefinitions } from './svg.js'
 
 // @ts-expect-error Replaced at compile time
@@ -93,7 +98,7 @@ function resolveClasses(
   return expanded.join(' ')
 }
 
-function Application({ context }: { context: ClientContext } & RoutableProps): VNode | null {
+function Application({ context }: { context: ClientContextModel } & RoutableProps): VNode | null {
   const {
     id,
     talk: {
@@ -105,6 +110,7 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
   } = context
 
   const [index, setIndex] = useState<number>()
+  const [previousIndex, setPreviousIndex] = useState(0)
   const [isNavigating, setIsNavigating] = useState(false)
   const [isPresenting, setIsPresenting] = useState(false)
   const [presentationDuration, setPresentationDuration] = useState(0)
@@ -113,6 +119,8 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
   const remoteChannel = useRef<Channel>()
   // @ts-expect-error Invalid handling of moduleResolution
   const pusher = useRef<Pusher>()
+
+  const slide = typeof index === 'number' ? slides[index - 1] : undefined
 
   const hookMethods = {
     resolveClasses: resolveClasses.bind(
@@ -211,6 +219,7 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
       const parsed = parseInt(rawIndex, 10)
 
       const current = isNaN(parsed) || parsed < 1 ? 1 : parsed
+      setPreviousIndex(index ?? current)
       setIndex(current)
 
       if (existingIndex && isPresenting) {
@@ -218,7 +227,7 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
         remoteChannel.current?.trigger('client-update', { id, current })
       }
     },
-    [setIndex, index, isPresenting, localChannel]
+    [index, isPresenting, localChannel, setIndex, setPreviousIndex]
   )
 
   const handleSynchronizationUpdate = useCallback(
@@ -366,36 +375,40 @@ function Application({ context }: { context: ClientContext } & RoutableProps): V
   }, [pusher, remoteChannel, handleSynchronizationUpdate])
 
   return (
-    <FreyaContextRoot context={context} {...hookMethods}>
+    <ClientContextInstance.Provider value={createClientContextValue(context, hookMethods)}>
       <Router onChange={handleRoute}>
-        <CurrentSlide path={`/${context.id}/:id?`} index={index!} />
+        <Fragment path={`/${context.id}/:id?`} />
       </Router>
 
-      {(isNavigating || isPresenting) && <div className={hookMethods.resolveClasses('freya@overlay')} />}
-      {isNavigating && <Navigator current={index!} slides={slides} close={closeNavigator} />}
-      {!isNavigating && isPresenting && (
-        <Presenter
-          current={index!}
-          slides={slides}
-          close={closePresenter}
-          paused={presentationPaused}
-          duration={presentationDuration}
-          startPresentation={startPresentation}
-          togglePresentation={togglePresentation}
-        />
+      {slide && index && (
+        <SlideContextInstance.Provider value={{ slide, index, previousIndex }}>
+          <SlideComponent />
+
+          {(isNavigating || isPresenting) && <div className={hookMethods.resolveClasses('freya@overlay')} />}
+          {isNavigating && <Navigator close={closeNavigator} />}
+          {!isNavigating && isPresenting && (
+            <Presenter
+              close={closePresenter}
+              paused={presentationPaused}
+              duration={presentationDuration}
+              startPresentation={startPresentation}
+              togglePresentation={togglePresentation}
+            />
+          )}
+        </SlideContextInstance.Provider>
       )}
 
       <SvgDefinitions
         definitions={context.assets.svgsDefinitions}
         className={hookMethods.resolveClasses('freya@svg-definitions')}
       />
-    </FreyaContextRoot>
+    </ClientContextInstance.Provider>
   )
 }
 
 if (globalThis.document) {
   // @ts-expect-error Replaced at compile time
-  const context: ClientContext = ((globalThis as Record<string, unknown>).freya = __replace_placeholder_context__)
+  const context: ClientContextModel = ((globalThis as Record<string, unknown>).freya = __replace_placeholder_context__)
 
   // @ts-expect-error Replaced at compile time
   const layouts = __replace_placeholder_layouts__

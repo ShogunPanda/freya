@@ -21,7 +21,7 @@ import { filterWhitelistedTalks } from './configuration.js'
 import { resolveSVG } from './rendering/svg.js'
 import { createCSSClassesResolver, parseContent, prepareClientContext } from './slidesets/generators.js'
 import { getAllTalks, getTalk, getTheme, resolveImageUrl } from './slidesets/loaders.js'
-import { type Slide, type SlideRenderer, type Talk } from './slidesets/models.js'
+import { type SlideRenderer, type Talk } from './slidesets/models.js'
 import { header, page } from './templates/page.js'
 import { SlideComponent } from './templates/slide.js'
 import { body as speakerNotesBody, page as speakerNotesPage } from './templates/speaker-notes.js'
@@ -225,7 +225,7 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
         (slide.layout ?? 'default') + '.js'
       )
 
-      const { default: layout }: { default: SlideRenderer<Slide> } = await import(layoutPath)
+      const { default: layout }: { default: SlideRenderer } = await import(layoutPath)
       layouts[slide.layout ?? 'default'] = layoutPath
 
       const body =

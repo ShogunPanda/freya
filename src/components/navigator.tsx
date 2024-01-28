@@ -1,15 +1,13 @@
-import { type VNode } from 'preact'
-import { useCallback, useLayoutEffect, useRef } from 'preact/hooks'
+import { type Context, type VNode } from 'preact'
 import { route } from 'preact-router'
+import { useCallback, useLayoutEffect, useRef } from 'preact/hooks'
 import { type Slide } from '../slidesets/models.js'
 import { shouldAbortSlideChange, slideUrl } from './client.js'
-import { useFreya, type CSSClassToken } from './context.js'
-import { Slide as SlideComponent } from './slide.js'
+import { SlideContextInstance, useClient, useSlide, type CSSClassToken, type SlideContextProps } from './contexts.js'
+import { SlideComponent } from './slide.js'
 import { SvgCloseIcon } from './svg.js'
 
 interface NavigatorProps {
-  current: number
-  slides: Slide[]
   close: () => void
   className?: string
 }
@@ -42,14 +40,16 @@ export const navigatorCssClasses: CSSClassToken[] = [
   'freya@navigator__close__image'
 ]
 
-export function Navigator({ current, slides, className, close }: NavigatorProps): VNode {
+export function Navigator({ className, close }: NavigatorProps): VNode {
   const {
     id,
     resolveClasses,
     dimensions,
-    talk: { slidesPadding }
-  } = useFreya()
+    talk: { slides, slidesPadding }
+  } = useClient()
+  const { index: current } = useSlide()
   const root = useRef<HTMLElement>(null)
+  const SlideContextWithModel = SlideContextInstance as unknown as Context<SlideContextProps<Slide>>
 
   useLayoutEffect(() => {
     if (!root.current) {
@@ -100,7 +100,10 @@ export function Navigator({ current, slides, className, close }: NavigatorProps)
           )}
           onClick={goto.bind(null, index)}
         >
-          <SlideComponent slide={slide} index={index} className={resolveClasses('freya@navigator__slide__contents')} />
+          <SlideContextWithModel.Provider value={{ slide, index, previousIndex: index, navigator: true }}>
+            <SlideComponent className={resolveClasses('freya@navigator__slide__contents')} />
+          </SlideContextWithModel.Provider>
+
           <span className={resolveClasses('freya@navigator__slide__number')}>{index + 1}</span>
         </div>
       ))}

@@ -1,21 +1,22 @@
 import { type VNode } from 'preact'
-import { useFreya } from './context.js'
+import { useClient, useSlide } from './contexts.js'
 
 interface ProgressProps {
   current: number
   className?: string
 }
 
-export function Progress({ current, className }: ProgressProps): VNode {
+export function Progress({ className }: ProgressProps): VNode {
   const {
     talk: { slidesCount },
     resolveClasses
-  } = useFreya()
+  } = useClient()
+  const { index } = useSlide()
 
   return (
     <div
       className={resolveClasses('freya@progress', className)}
-      style={{ '--freya-slide-progress': ((current / slidesCount) * 100).toFixed(2) }}
+      style={{ '--freya-slide-progress': ((index / slidesCount) * 100).toFixed(2) }}
     />
   )
 }

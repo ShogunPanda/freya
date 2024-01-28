@@ -1,5 +1,5 @@
 import { type JSX, type VNode } from 'preact'
-import { useFreya } from './context.js'
+import { useClient } from './contexts.js'
 
 interface SvgProps extends JSX.SVGAttributes<SVGSVGElement> {
   src: string
@@ -68,7 +68,7 @@ export function normalizeSVGProps(props: Record<string, string | undefined>): JS
   }
 }
 
-// Since this is used also in export, it cannot use useFreya and resolveClasses must be called in the caller
+// Since this is used also in export, it cannot use useClient and resolveClasses must be called in the caller
 export function SvgDefinitions({ definitions, className }: SvgDefinitionsProps): VNode {
   return (
     <svg
@@ -88,7 +88,7 @@ export function Svg({ src: path, className, ...props }: SvgProps): VNode {
     theme: { id: themeId },
     resolveClasses,
     resolveSVG
-  } = useFreya()
+  } = useClient()
 
   const [id, viewBox] = resolveSVG(themeId, talkId, path)
 

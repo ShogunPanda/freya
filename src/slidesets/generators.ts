@@ -118,7 +118,7 @@ export async function ensureRenderedCode(context: BuildContext, code: CodeDefini
   const classes: Record<string, string> = {}
 
   const resolveClasses = context.extensions.freya.resolveClasses
-  classes.root = resolveClasses('freya@code__wrapper', userClasses.root)
+  classes.root = resolveClasses('freya@code', userClasses.root)
   classes.line = resolveClasses('freya@code__line', userClasses.line)
   classes.lineHighlighted = resolveClasses('freya@code__line--highlighted', userClasses.lineHighlighted)
   classes.lineNotHighlighted = resolveClasses('freya@code__line--not-highlighted', userClasses.lineNotHighlighted)
@@ -387,7 +387,7 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
       (slide.layout ?? 'default') + '.js'
     )
 
-    const { default: layout }: { default: SlideRenderer<Slide> } = await import(layoutPath)
+    const { default: layout }: { default: SlideRenderer } = await import(layoutPath)
     layouts[slide.layout ?? 'default'] = layoutPath
 
     render(

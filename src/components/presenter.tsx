@@ -1,13 +1,11 @@
-import { type VNode } from 'preact'
+import { type Context, type VNode } from 'preact'
 import { useLayoutEffect, useMemo, useRef } from 'preact/hooks'
 import { type Slide } from '../slidesets/models.js'
-import { useFreya, type CSSClassToken } from './context.js'
-import { Slide as SlideComponent } from './slide.js'
+import { SlideContextInstance, useClient, useSlide, type CSSClassToken, type SlideContextProps } from './contexts.js'
+import { SlideComponent } from './slide.js'
 import { SvgCloseIcon } from './svg.js'
 
 interface PresenterProps {
-  current: number
-  slides: Slide[]
   close: () => void
   paused: boolean
   duration: number
@@ -55,8 +53,6 @@ function updatePresenterAppearance(elements: HTMLElement[], slideWidth: number, 
 }
 
 export function Presenter({
-  current,
-  slides,
   paused,
   duration,
   startPresentation,
@@ -73,10 +69,13 @@ export function Presenter({
     resolveClasses,
     parseContent,
     dimensions,
-    talk: { slidesPadding, slidesCount }
-  } = useFreya()
+    talk: { slides, slidesPadding, slidesCount }
+  } = useClient()
+  const { slide, index, previousIndex } = useSlide()
 
-  const currentSlide = slides[current - 1]
+  const SlideContextWithModel = SlideContextInstance as unknown as Context<SlideContextProps<Slide>>
+
+  const currentSlide = slides[index - 1]
 
   const time = useMemo(() => {
     const hour = Math.floor(duration / 60)
@@ -110,7 +109,7 @@ export function Presenter({
       window.removeEventListener('resize', boundUpdatePresenterAppearance, false)
       document.removeEventListener('fullscreenchange', boundUpdatePresenterAppearance, false)
     }
-  }, [current, previousElement, currentElement, nextElement])
+  }, [index, previousElement, currentElement, nextElement])
 
   return (
     <section
@@ -122,7 +121,7 @@ export function Presenter({
     >
       <header className={resolveClasses('freya@presenter__header')}>
         <span className={resolveClasses('freya@presenter__header__label')}>
-          {current.toString().padStart(slidesPadding, '0')}/{slidesCount}
+          {index.toString().padStart(slidesPadding, '0')}/{slidesCount}
         </span>
         <a href="#" className={resolveClasses('freya@presenter__header__action')} onClick={togglePresentation}>
           &#x23EF;&#xFE0F;
@@ -144,17 +143,17 @@ export function Presenter({
         </a>
       </header>
 
-      {showPrevious && current > 1 && (
+      {showPrevious && index > 1 && (
         <aside
           ref={previousElement}
           className={resolveClasses('freya@presenter__slide', 'freya@presenter__slide--previous')}
         >
-          <SlideComponent
-            slide={slides[current - 2]}
-            index={current - 1}
-            className={resolveClasses('freya@presenter__slide__contents')}
-          />
-          <span className={resolveClasses('freya@presenter__slide__number')}>{current - 1}</span>
+          <SlideContextWithModel.Provider
+            value={{ slide: slides[index - 2], index: index - 1, previousIndex: index, presenter: true }}
+          >
+            <SlideComponent className={resolveClasses('freya@presenter__slide__contents')} />
+          </SlideContextWithModel.Provider>
+          <span className={resolveClasses('freya@presenter__slide__number')}>{index - 1}</span>
         </aside>
       )}
 
@@ -162,22 +161,20 @@ export function Presenter({
         ref={currentElement}
         className={resolveClasses('freya@presenter__slide', 'freya@presenter__slide--current')}
       >
-        <SlideComponent
-          slide={currentSlide}
-          index={current}
-          className={resolveClasses('freya@presenter__slide__contents')}
-        />
-        <span className={resolveClasses('freya@presenter__slide__number')}>{current}</span>
+        <SlideContextWithModel.Provider value={{ slide: slide as Slide, index, previousIndex }}>
+          <SlideComponent className={resolveClasses('freya@presenter__slide__contents')} />
+        </SlideContextWithModel.Provider>
+        <span className={resolveClasses('freya@presenter__slide__number')}>{index}</span>
       </main>
 
-      {current < slidesCount && (
+      {index < slidesCount && (
         <aside ref={nextElement} className={resolveClasses('freya@presenter__slide', 'freya@presenter__slide--next')}>
-          <SlideComponent
-            slide={slides[current]}
-            index={current + 1}
-            className={resolveClasses('freya@presenter__slide__contents')}
-          />
-          <span className={resolveClasses('freya@presenter__slide__number')}>{current + 1}</span>
+          <SlideContextWithModel.Provider
+            value={{ slide: slides[index], index: index + 1, previousIndex: index, presenter: true }}
+          >
+            <SlideComponent className={resolveClasses('freya@presenter__slide__contents')} />
+          </SlideContextWithModel.Provider>
+          <span className={resolveClasses('freya@presenter__slide__number')}>{index + 1}</span>
         </aside>
       )}
 

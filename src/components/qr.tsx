@@ -1,7 +1,7 @@
 import { type ComponentChildren, type VNode } from 'preact'
 import QRCodeGenerator from 'qrcode-generator'
 import { getAlignments, getCover, isAlignment, isCovered, isFinder } from '../rendering/qr.js'
-import { useFreya } from './context.js'
+import { useClient } from './contexts.js'
 import { Image } from './image.js'
 
 type QRCodeGeneratorInterface = typeof QRCodeGenerator
@@ -128,7 +128,7 @@ export function generateQR(
 }
 
 export function QRCode({ data, image, imageRatio, label, className }: QRCodeProps): VNode {
-  const { resolveClasses } = useFreya()
+  const { resolveClasses } = useClient()
 
   const { root: rootClassName, code: codeClassName, label: labelClassName, image: imageClassName } = className ?? {}
 

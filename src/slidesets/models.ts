@@ -89,10 +89,8 @@ export interface ClientContext {
   serverData?: Record<string, any>
 }
 
-export interface SlideProps<T = Slide> {
-  slide: T
-  index: number
+export interface SlideProps {
   className?: string
 }
 
-export type SlideRenderer<T> = (props: SlideProps<T>) => VNode
+export type SlideRenderer = (props: SlideProps) => VNode

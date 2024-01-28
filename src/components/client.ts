@@ -10,6 +10,7 @@ interface Touch {
   y: number
 }
 
+// TODO@PI: For touch events, use a HUD
 export interface DOMContext {
   id: string
   talk: Talk

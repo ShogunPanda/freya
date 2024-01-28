@@ -1,16 +1,29 @@
 import { type ComponentType, type VNode } from 'preact'
-import { FreyaContextRoot, type FreyaContextProps } from '../components/context.js'
-import { type SlideProps } from '../slidesets/models.js'
+import {
+  ClientContextInstance,
+  SlideContextInstance,
+  createClientContextValue,
+  type ClientContextMethods
+} from '../components/contexts.js'
+import { type ClientContext as ClientContextModel, type Slide, type SlideProps } from '../slidesets/models.js'
 
-type SlideComponentProps = SlideProps & FreyaContextProps & { layout: ComponentType<SlideProps> }
+interface SlideComponentProps {
+  context: ClientContextModel
+  layout: ComponentType<SlideProps>
+  slide: Slide
+  index: number
+}
 
-export function SlideComponent(props: SlideComponentProps): VNode {
-  const { context, layout: Layout, parseContent, resolveImage, resolveClasses, resolveSVG } = props
-  const freyaProps = { context, resolveClasses, resolveImage, resolveSVG, parseContent }
+export function SlideComponent(props: SlideProps & ClientContextMethods & SlideComponentProps): VNode {
+  const { context, layout: Layout, slide, index, parseContent, resolveImage, resolveClasses, resolveSVG } = props
 
   return (
-    <FreyaContextRoot {...freyaProps}>
-      <Layout {...props} />
-    </FreyaContextRoot>
+    <ClientContextInstance.Provider
+      value={createClientContextValue(context, { resolveClasses, resolveImage, resolveSVG, parseContent })}
+    >
+      <SlideContextInstance.Provider value={{ slide, index, previousIndex: index }}>
+        <Layout {...props} />
+      </SlideContextInstance.Provider>
+    </ClientContextInstance.Provider>
   )
 }
