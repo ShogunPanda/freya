@@ -1,6 +1,6 @@
 import { Fragment, render, type VNode } from 'preact'
-import { route, Router, type RoutableProps, type RouterOnChangeArgs } from 'preact-router'
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
+import { route, Router, type RoutableProps, type RouterOnChangeArgs } from 'preact-router'
 import Pusher, { type Channel } from 'pusher-js'
 import { type ClientContext as ClientContextModel, type ParsedSVG } from '../slidesets/models.js'
 import {
