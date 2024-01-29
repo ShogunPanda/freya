@@ -6,6 +6,11 @@ interface SvgProps extends JSX.SVGAttributes<SVGSVGElement> {
   className?: string
 }
 
+interface SvgIconProps {
+  name: string
+  className?: string
+}
+
 interface SvgDefinitionsProps {
   definitions: string[]
   className?: string
@@ -114,6 +119,18 @@ export function SvgCloseIcon(props: JSX.SVGAttributes<SVGSVGElement>): VNode {
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  )
+}
+
+export function SvgIcon({ name, className }: SvgIconProps): VNode {
+  const { assets, resolveClasses } = useClient()
+
+  const [id, viewBox] = assets.svgs[name]
+
+  return (
+    <svg className={resolveClasses('freya@svg', className)} viewBox={viewBox}>
+      <use xlinkHref={`#${id}`} />
     </svg>
   )
 }

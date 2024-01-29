@@ -10,9 +10,12 @@ export type UnoRuleDefinition = [
 ]
 
 export const systemFonts =
-  "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'"
+  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"'
 
-export const systemMonospaceFonts = "ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace"
+export const systemMonospaceFonts = 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'
+
+export const emojiFonts =
+  '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Android Emoji","EmojiOne Mozilla","Twemoji Mozilla","Noto Emoji","Segoe UI Symbol",EmojiSymbols,emoji;'
 
 export const customUnits: Record<string, [number, string]> = {
   ch: [1, 'ch'],
@@ -238,18 +241,18 @@ export const unocssConfig = defineUnoConfig({
   transformers: [transformerDirectives()],
   theme: {
     colors: {
-      'fs-bg': 'var(--fs-color-bg)',
-      'fs-bg-darker': 'var(--fs-color-bg-darker)',
-      'fs-fg': 'var(--fs-color-fg)',
-      'fs-grey': 'var(--fs-color-grey)',
-      'fs-yellow': 'var(--fs-color-yellow)',
-      'fs-blue': 'var(--fs-color-blue)'
+      'fs-bg': 'var(--freya-color-bg)',
+      'fs-bg-darker': 'var(--freya-color-bg-darker)',
+      'fs-fg': 'var(--freya-color-fg)',
+      'fs-grey': 'var(--freya-color-grey)',
+      'fs-yellow': 'var(--freya-color-yellow)',
+      'fs-blue': 'var(--freya-color-blue)'
     },
     boxShadow: {
       'freya-assets': '5px 5px 10px -5px'
     },
     shadowColor: {
-      'freya-assets-shadow-color': 'var(--fs-color-shadow)'
+      'freya-assets-shadow-color': 'var(--freya-color-shadow)'
     }
   },
   rules: [
@@ -300,6 +303,7 @@ export const unocssConfig = defineUnoConfig({
     ],
     ['font-system-fonts', { 'font-family': systemFonts }],
     ['font-monospace-system-fonts', { 'font-family': systemMonospaceFonts }],
+    ['font-emoji', { 'font-family': emojiFonts }],
     ['font-varela', { 'font-family': `"Varela Round", ${systemFonts}` }],
     ['font-noto-sans', { 'font-family': `'Noto Sans', ${systemMonospaceFonts}` }]
   ],

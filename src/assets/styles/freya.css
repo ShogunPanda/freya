@@ -3,24 +3,24 @@
 @import '@theme/fonts';
 
 html {
-  --fs-color-bg: rgb(242, 242, 247);
-  --fs-color-bg-darker: rgb(224, 224, 224);
-  --fs-color-fg: rgb(44, 44, 46);
-  --fs-color-grey: rgb(108, 108, 112);
-  --fs-color-yellow: rgb(236, 178, 46);
-  --fs-color-blue: rgb(33, 101, 227);
-  --fs-color-shadow: rgb(105, 105, 110);
+  --freya-color-bg: rgb(242, 242, 247);
+  --freya-color-bg-darker: rgb(224, 224, 224);
+  --freya-color-fg: rgb(44, 44, 46);
+  --freya-color-grey: rgb(108, 108, 112);
+  --freya-color-yellow: rgb(236, 178, 46);
+  --freya-color-blue: rgb(33, 101, 227);
+  --freya-color-shadow: rgb(105, 105, 110);
 }
 
 @media (prefers-color-scheme: dark) {
   html {
-    --fs-color-bg: rgb(44, 44, 46);
-    --fs-color-bg-darker: rgb(20, 20, 20);
-    --fs-color-fg: rgb(242, 242, 247);
-    --fs-color-grey: rgb(108, 108, 112);
-    --fs-color-yellow: rgb(236, 178, 46);
-    --fs-color-blue: rgb(33, 101, 227);
-    --fs-color-shadow: rgb(105, 105, 110);
+    --freya-color-bg: rgb(44, 44, 46);
+    --freya-color-bg-darker: rgb(20, 20, 20);
+    --freya-color-fg: rgb(242, 242, 247);
+    --freya-color-grey: rgb(108, 108, 112);
+    --freya-color-yellow: rgb(236, 178, 46);
+    --freya-color-blue: rgb(33, 101, 227);
+    --freya-color-shadow: rgb(105, 105, 110);
   }
 }
 

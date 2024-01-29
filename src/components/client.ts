@@ -4,38 +4,20 @@ import { type Talk, type Theme } from '../slidesets/models.js'
 
 type Shortcuts = Record<string, (...args: any[]) => void>
 
-interface Touch {
-  timestamp: number
-  x: number
-  y: number
-}
-
-// TODO@PI: For touch events, use a HUD
 export interface DOMContext {
   id: string
   talk: Talk
   theme: Theme
   index: number
   handleEscape: () => void
+  toggleController: () => void
   toggleNavigator: () => void
   togglePresenter: () => void
   startPresentation: () => void
   togglePresentation: () => void
-  firstTouch?: Touch
-  lastTouch?: Touch
 }
 
 export const clientCssClasses: CSSClassToken[] = ['freya@overlay', 'freya@image', 'freya@svg', 'freya@svg-definitions']
-
-function serializeTouchEvent(ev: TouchEvent): Touch {
-  const touch = ev.touches[0]
-
-  return {
-    timestamp: Date.now(),
-    x: touch.clientX,
-    y: touch.clientY
-  }
-}
 
 export function slideUrl(id: string, index: number, slidesPadding: number): string {
   return `/${id}/${index.toString().padStart(slidesPadding, '0')}`
@@ -96,71 +78,29 @@ export function updateSlide(context: DOMContext, modifier: number): void {
   route(slideUrl(id, index, slidesPadding))
 }
 
-export function handleTouchStart(context: DOMContext, ev: TouchEvent): void {
-  const speedTolerance = 500
-  const movementTolerance = 100
-  const currentTouch = serializeTouchEvent(ev)
-
-  // Detect double tap for full screen toggling
-  if (context.firstTouch) {
-    const xShift = Math.abs(currentTouch.x - context.firstTouch.x)
-    const yShift = Math.abs(currentTouch.y - context.firstTouch.y)
-
-    if (
-      Date.now() - context.firstTouch.timestamp < speedTolerance &&
-      xShift < movementTolerance &&
-      yShift < movementTolerance
-    ) {
-      ev.preventDefault()
-      context.firstTouch = currentTouch
-      handleFullScreen(ev)
-      return
-    }
-  }
-
-  context.firstTouch = currentTouch
-}
-
-export function handleTouchMove(context: DOMContext, ev: TouchEvent): void {
-  context.lastTouch = serializeTouchEvent(ev)
-}
-
-export function handleTouchEnd(context: DOMContext): void {
-  if (!context.firstTouch || !context.lastTouch) {
-    return
-  }
-
-  const tolerance = 100
-  const xShift = context.firstTouch.x - context.lastTouch.x
-  const yShift = context.firstTouch.y - context.lastTouch.y
-  const absoluteXShift = Math.abs(xShift)
-  const absoluteYShift = Math.abs(yShift)
-  let direction = ''
-
-  if (absoluteXShift > tolerance && absoluteYShift < tolerance) {
-    // Horizontal swipe
-    direction = xShift < 0 ? 'previous' : 'next'
-  } else if (absoluteYShift > tolerance && absoluteXShift < tolerance) {
-    // Vertical swipe
-    direction = yShift < 0 ? 'previous' : 'next'
-  }
-
-  updateSlide(context, direction === 'previous' ? -1 : +1)
-}
-
-export function handleFullScreen(ev: Event): void {
+export function handleFullScreen(ev?: Event): void {
   if (typeof ev?.preventDefault === 'function') {
     ev.preventDefault()
   }
 
   if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(error => {
-      console.error(`Cannot go fullscreen: ${error.message}`)
-    })
+    document.documentElement
+      .requestFullscreen()
+      .then(() => {
+        window.dispatchEvent(new Event('freya:fullScreen:toggled'))
+      })
+      .catch(error => {
+        console.error(`Cannot go fullscreen: ${error.message}`)
+      })
   } else {
-    document.exitFullscreen().catch(error => {
-      console.error(`Cannot exit fullscreen: ${error.message}`)
-    })
+    document
+      .exitFullscreen()
+      .then(() => {
+        window.dispatchEvent(new Event('freya:fullScreen:toggled'))
+      })
+      .catch(error => {
+        console.error(`Cannot exit fullscreen: ${error.message}`)
+      })
   }
 }
 
@@ -179,6 +119,7 @@ export function handleShortcut(context: DOMContext, ev: KeyboardEvent): void {
     Enter: handleFullScreen,
     Escape: context.handleEscape,
     Tab: context.toggleNavigator,
+    c: context.toggleController,
     g: context.toggleNavigator,
     l: context.toggleNavigator,
     p: context.togglePresenter,

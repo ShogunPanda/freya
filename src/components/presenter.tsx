@@ -3,7 +3,7 @@ import { useLayoutEffect, useMemo, useRef } from 'preact/hooks'
 import { type Slide } from '../slidesets/models.js'
 import { SlideContextInstance, useClient, useSlide, type CSSClassToken, type SlideContextProps } from './contexts.js'
 import { SlideComponent } from './slide.js'
-import { SvgCloseIcon } from './svg.js'
+import { SvgIcon } from './svg.js'
 
 interface PresenterProps {
   close: () => void
@@ -23,6 +23,8 @@ export const presenterCssClasses: CSSClassToken[] = [
   'freya@presenter__header__label',
   'freya@presenter__header__label--paused',
   'freya@presenter__header__action',
+  'freya@presenter__header__action__icon',
+  'freya@presenter__header__action__icon--active',
   'freya@presenter__slide',
   'freya@presenter__slide--previous',
   'freya@presenter__slide--current',
@@ -124,10 +126,17 @@ export function Presenter({
           {index.toString().padStart(slidesPadding, '0')}/{slidesCount}
         </span>
         <a href="#" className={resolveClasses('freya@presenter__header__action')} onClick={togglePresentation}>
-          &#x23EF;&#xFE0F;
+          <SvgIcon
+            name="play"
+            className={resolveClasses(
+              'freya@svg-icon',
+              'freya@presenter__header__action__icon',
+              !paused && 'freya@presenter__header__action__icon--active'
+            )}
+          />
         </a>
         <a href="#" className={resolveClasses('freya@presenter__header__action')} onClick={startPresentation}>
-          &#x1F504;
+          <SvgIcon name="reset" className={resolveClasses('freya@svg-icon', 'freya@presenter__header__action__icon')} />
         </a>
         <span
           className={resolveClasses(
@@ -139,7 +148,7 @@ export function Presenter({
         </span>
 
         <a href="#" className={resolveClasses('freya@presenter__close')} onClick={close}>
-          <SvgCloseIcon className={resolveClasses('freya@presenter__close__image')} />
+          <SvgIcon name="close" className={resolveClasses('freya@svg-icon', 'freya@presenter__close__image')} />
         </a>
       </header>
 

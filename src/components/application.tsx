@@ -1,24 +1,16 @@
 import { Fragment, render, type VNode } from 'preact'
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
 import { route, Router, type RoutableProps, type RouterOnChangeArgs } from 'preact-router'
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
 import Pusher, { type Channel } from 'pusher-js'
 import { type ClientContext as ClientContextModel, type ParsedSVG } from '../slidesets/models.js'
-import {
-  handleFullScreen,
-  handleShortcut,
-  handleTouchEnd,
-  handleTouchMove,
-  handleTouchStart,
-  slideUrl,
-  updateSlidesAppearance,
-  type DOMContext
-} from './client.js'
+import { handleFullScreen, handleShortcut, slideUrl, updateSlidesAppearance, type DOMContext } from './client.js'
 import {
   ClientContextInstance,
   createClientContextValue,
   SlideContextInstance,
   type CSSClassToken
 } from './contexts.js'
+import { Controller } from './controller.js'
 import { Navigator } from './navigator.js'
 import { Presenter } from './presenter.js'
 import { LayoutContext, SlideComponent } from './slide.js'
@@ -106,13 +98,15 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
       slides,
       slidesPadding,
       slidesCount
-    }
+    },
+    isExporting
   } = context
 
   const [index, setIndex] = useState<number>()
   const [previousIndex, setPreviousIndex] = useState(0)
   const [isNavigating, setIsNavigating] = useState(false)
   const [isPresenting, setIsPresenting] = useState(false)
+  const [isControlling, setIsControlling] = useState(window?.matchMedia('(hover: none)')?.matches)
   const [presentationDuration, setPresentationDuration] = useState(0)
   const [presentationPaused, setPresentationPaused] = useState(true)
   const localChannel = useRef<BroadcastChannel>()
@@ -133,6 +127,15 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     resolveSVG: resolveSVG.bind(null, context.assets.svgs),
     parseContent: markdownParser.bind(null, context.assets.content)
   }
+
+  const toggleController = useCallback(
+    (ev?: Event) => {
+      ev?.preventDefault()
+      setIsControlling(current => !current)
+      window.dispatchEvent(new Event('freya:controller:toggled'))
+    },
+    [setIsNavigating]
+  )
 
   const toggleNavigator = useCallback(
     (ev?: Event) => {
@@ -255,6 +258,7 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
       theme: context.theme,
       index,
       handleEscape,
+      toggleController,
       toggleNavigator,
       togglePresenter,
       startPresentation,
@@ -268,20 +272,15 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     )
 
     const boundHandleShortcut = handleShortcut.bind(null, domContext)
-    const boundHandleTouchStart = handleTouchStart.bind(null, domContext)
-    const boundHandleTouchMove = handleTouchMove.bind(null, domContext)
-    const boundHandleTouchEnd = handleTouchEnd.bind(null, domContext)
 
     window.addEventListener('resize', boundUpdateSlidesAppearance, false)
     document.addEventListener('fullscreenchange', boundUpdateSlidesAppearance, false)
     document.addEventListener('dblclick', handleFullScreen, false)
     document.addEventListener('keydown', boundHandleShortcut, false)
-    document.addEventListener('touchstart', boundHandleTouchStart, false)
-    document.addEventListener('touchmove', boundHandleTouchMove, false)
-    document.addEventListener('touchend', boundHandleTouchEnd, false)
 
     boundUpdateSlidesAppearance()
     window.dispatchEvent(new Event('freya:ready'))
+    window.dispatchEvent(new Event('freya:controller:toggled'))
 
     return () => {
       window.removeEventListener('resize', boundUpdateSlidesAppearance, false)
@@ -395,6 +394,7 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
               togglePresentation={togglePresentation}
             />
           )}
+          {!isExporting && isControlling && <Controller />}
         </SlideContextInstance.Provider>
       )}
 

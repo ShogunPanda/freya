@@ -13,6 +13,15 @@
 
   &svg {
     @apply block;
+
+    &-icon {
+      @apply line-height-1;
+      @apply inline-block;
+      @apply align-middle;
+      @apply stroke-0;
+      @apply stroke-current;
+      @apply fill-current;
+    }
   }
 
   &svg-definitions {
@@ -35,11 +44,11 @@
   }
 
   &progress {
-    @apply display-[--freya-slide-display-progress];
+    @apply display-[--freya-display-progress];
     @apply absolute;
     @apply bottom-0;
     @apply left-0;
-    @apply w-[calc(var(--freya-slide-progress)_*_1%)];
+    @apply w-[calc(var(--freya-progress)_*_1%)];
     @apply h-0_03sp;
     @apply bg-#5AC3EA;
     @apply z-10;
@@ -84,6 +93,54 @@
     @apply z-2;
   }
 
+  &controller {
+    @apply var-[freya-controller-actions]-[6];
+    @apply var-[freya-controller-action-size]-[4rem];
+    @apply var-[freya-controller-padding]-[1rem];
+    @apply absolute;
+    @apply z-10;
+    @apply opacity-80;
+    /* 
+      The total size of the element is:
+        (--freya-controller-action-size * --freya-controller-actions) + <-- Width of the items
+        (--freya-controller-padding * (--freya-controller-actions - 1)) + <-- Width of the internal padding
+        (--freya-controller-padding * 2) = <-- External padding
+    */
+    @apply top-[calc(50%-((var(--freya-controller-action-size)*var(--freya-controller-actions))+(var(--freya-controller-padding)*(var(--freya-controller-actions)+1)))/2)];
+    @apply right-0;
+    @apply p-[--freya-controller-padding];
+    @apply rounded-tl-1rem;
+    @apply rounded-bl-1rem;
+    @apply flex;
+    @apply flex-col;
+    @apply items-center;
+    @apply gap-[--freya-controller-padding];
+    @apply bg-[rgb(30,30,30)];
+
+    &__action {
+      @apply h-[--freya-controller-action-size];
+      @apply flex;
+      @apply items-center;
+      @apply justify-center;
+      @apply font-emoji;
+      @apply text-white;
+      @apply hover:text-#5AC3EA;
+      @apply focus:text-#5AC3EA;
+      @apply active:text-white;
+      @apply visited:text-white;
+
+      &__icon {
+        @apply h-[calc(var(--freya-controller-action-size)*0.75)];
+        @apply line-height-1;
+        @apply inline-block;
+        @apply align-middle;
+        @apply stroke-0;
+        @apply stroke-current;
+        @apply fill-current;
+      }
+    }
+  }
+
   &navigator {
     @apply var-[freya-slide-display-progress]-[none];
     @apply absolute;
@@ -93,8 +150,8 @@
     @apply min-h-full;
     @apply max-h-full;
 
-    @apply p-0_25sp;
-    @apply pr-0_5sp;
+    @apply p-0_2sp;
+    @apply pr-0_9sp;
     @apply z-3;
     @apply grid;
     @apply gap-y-0_3sp;
@@ -106,21 +163,20 @@
 
     &__close {
       @apply fixed;
-      @apply top-0_125sp;
-      @apply right-0_125sp;
+      @apply top-0_2sp;
+      @apply right-0_2sp;
       @apply flex;
       @apply items-center;
       @apply justify-center;
       @apply text-white;
 
       @apply hover:text-#5AC3EA;
-      @apply active:text-#5AC3EA;
       @apply focus:text-#5AC3EA;
+      @apply active:text-white;
       @apply visited:text-white;
 
       &__image {
-        @apply w-0_25sp;
-        @apply stroke-width-3;
+        @apply h-0_3sp;
       }
     }
 
@@ -174,8 +230,8 @@
     @apply left-0;
     @apply w-full;
     @apply min-h-full;
-    @apply p-0_25sp;
-    @apply pr-0_5sp;
+    @apply p-0_2sp;
+    @apply pr-0_9sp;
     @apply z-3;
     @apply grid;
     @apply gap-0_3sp;
@@ -204,30 +260,47 @@
       &__label {
         @apply font-noto-sans;
         @apply font-semibold;
+        @apply line-height-0_3sp;
 
         &--paused {
           @apply opacity-40;
+        }
+      }
+
+      &__action {
+        @apply font-emoji;
+        @apply text-white;
+        @apply hover:text-#5AC3EA;
+        @apply focus:text-#5AC3EA;
+        @apply active:text-white;
+        @apply visited:text-white;
+
+        &__icon {
+          @apply h-0_25sp;
+
+          &--active {
+            @apply text-#5AC3EA;
+          }
         }
       }
     }
 
     &__close {
       @apply fixed;
-      @apply top-0_125sp;
-      @apply right-0_125sp;
+      @apply top-0_2sp;
+      @apply right-0_2sp;
       @apply flex;
       @apply items-center;
       @apply justify-center;
       @apply text-white;
 
       @apply hover:text-#5AC3EA;
-      @apply active:text-#5AC3EA;
       @apply focus:text-#5AC3EA;
+      @apply active:text-white;
       @apply visited:text-white;
 
       &__image {
-        @apply w-0_25sp;
-        @apply stroke-width-3;
+        @apply h-0_3sp;
       }
     }
 
@@ -398,7 +471,7 @@
       @apply justify-between;
       @apply border-solid;
       @apply border-width-2px;
-      @apply border-[--fs-color-color-shadow];
+      @apply border-[--freya-color-shadow];
       @apply rounded-5px;
       @apply p-2ch;
       @apply m-0;
@@ -406,7 +479,7 @@
       @apply shadow-freya-assets-shadow-color;
       @apply bg-fs-bg-darker;
       @apply hover:bg-fs-yellow;
-      @apply hover:border-[--fs-color-shadow];
+      @apply hover:border-[--freya-color-shadow];
       @apply gap-y-2ch;
 
       &__image {

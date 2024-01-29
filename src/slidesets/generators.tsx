@@ -22,8 +22,10 @@ import { fileURLToPath } from 'node:url'
 import { render } from 'preact-render-to-string'
 import { rollup } from 'rollup'
 import { clientCssClasses } from '../components/client.js'
+import { controllerCssClasses } from '../components/controller.js'
 import { navigatorCssClasses } from '../components/navigator.js'
 import { presenterCssClasses } from '../components/presenter.js'
+import { generateSVGId } from '../components/svg.js'
 import { pusherConfig } from '../configuration.js'
 import { readFile } from '../fs.js'
 import { resolveSVG } from '../rendering/svg.js'
@@ -58,15 +60,15 @@ const ignore: IgnoreLike = {
   }
 }
 
-export const markdownRenderer = markdownIt({
-  html: true,
-  breaks: true,
-  linkify: true
-})
+function camelCase(source: any): string {
+  if (typeof source !== 'string' || !source.length) {
+    return source
+  }
 
-export async function finalizeJs(code: string): Promise<string> {
-  const { code: minified } = await minify(code, { compress: true, mangle: false })
-  return minified
+  return source
+    .toLowerCase()
+    .replaceAll(/[^\d\sa-z]/g, ' ')
+    .replaceAll(/(^.|\s.)/g, (...t) => t[1].toUpperCase())
 }
 
 function assetsSorter(left: string, right: string): number {
@@ -77,6 +79,41 @@ function assetsSorter(left: string, right: string): number {
   }
 
   return left.localeCompare(right)
+}
+
+async function loadIcon(
+  svgs: Record<string, ParsedSVG>,
+  svgsDefinitions: string[],
+  id: string,
+  name: string
+): Promise<void> {
+  const fileName = `fa${camelCase(`${name}`).replaceAll(/\s/g, '')}.js`
+  const path = `node_modules/@fortawesome/free-solid-svg-icons/${fileName}`
+  const { width, height, svgPathData } = await import(resolve(process.cwd(), path))
+  const definitionId = generateSVGId(svgsDefinitions.length)
+
+  // Generate the ID
+  svgs[id] = [definitionId, `0 0 ${width} ${height}`]
+  svgsDefinitions.push(
+    render(
+      <svg id={definitionId} xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${width} ${height}`}>
+        {[svgPathData].flat(1).map((p, i) => (
+          <path key={i} d={p} />
+        ))}
+      </svg>
+    )
+  )
+}
+
+export const markdownRenderer = markdownIt({
+  html: true,
+  breaks: true,
+  linkify: true
+})
+
+export async function finalizeJs(code: string): Promise<string> {
+  const { code: minified } = await minify(code, { compress: true, mangle: false })
+  return minified
 }
 
 export function renderNotes(slide: Slide): string {
@@ -195,6 +232,16 @@ export async function prepareClientContext(context: BuildContext, theme: Theme, 
   const images: Record<string, string> = {}
   const svgsDefinitions: string[] = []
   const svgs: Record<string, ParsedSVG> = {}
+
+  // Load UI icons
+  await loadIcon(svgs, svgsDefinitions, 'arrow-left', 'chevron-left')
+  await loadIcon(svgs, svgsDefinitions, 'arrow-right', 'chevron-right')
+  await loadIcon(svgs, svgsDefinitions, 'navigator', 'table-cells')
+  await loadIcon(svgs, svgsDefinitions, 'maximize', 'expand')
+  await loadIcon(svgs, svgsDefinitions, 'minimize', 'compress')
+  await loadIcon(svgs, svgsDefinitions, 'play', 'play')
+  await loadIcon(svgs, svgsDefinitions, 'reset', 'arrow-rotate-left')
+  await loadIcon(svgs, svgsDefinitions, 'close', 'xmark')
 
   // Load theme and talk data, if any
   const data: Record<string, any> = {}
@@ -409,7 +456,7 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
   }
 
   // Render some classes needed for the SPA
-  resolveClasses(...clientCssClasses, ...navigatorCssClasses, ...presenterCssClasses)
+  resolveClasses(...clientCssClasses, ...navigatorCssClasses, ...presenterCssClasses, ...controllerCssClasses)
 
   // Update some values after rendering
   clientContext.css.compressedClasses = Object.fromEntries(context.css.compressedClasses.entries())
