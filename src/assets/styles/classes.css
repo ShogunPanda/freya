@@ -156,7 +156,7 @@
     @apply grid;
     @apply gap-y-0_3sp;
     @apply gap-x-0_2sp;
-    @apply grid-cols-[repeat(auto-fit,_minmax(250px,_1fr))];
+    @apply grid-cols-[repeat(auto-fit,_minmax(350px,_1fr))];
     @apply grid-rows-[min-content];
     @apply grid-auto-rows-[min-content];
     @apply overflow-auto;

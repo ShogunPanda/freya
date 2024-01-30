@@ -135,7 +135,7 @@ export function handleShortcut(context: DOMContext, ev: KeyboardEvent): void {
   }
 
   const handler = (ev.shiftKey ? shiftShortcuts : shortcuts)[ev.key]
-  if (handler) {
+  if (!ev.metaKey && !ev.ctrlKey && handler) {
     handler(ev)
   }
 }
