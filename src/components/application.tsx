@@ -281,6 +281,7 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     boundUpdateSlidesAppearance()
     window.dispatchEvent(new Event('freya:ready'))
     window.dispatchEvent(new Event('freya:controller:toggled'))
+    document.body.style.setProperty('--freya-progress', `${((index / slidesCount) * 100).toFixed(2)}`)
 
     return () => {
       window.removeEventListener('resize', boundUpdateSlidesAppearance, false)

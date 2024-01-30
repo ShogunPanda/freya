@@ -101,7 +101,7 @@ export function Navigator({ className, close }: NavigatorProps): VNode {
           onClick={goto.bind(null, index)}
         >
           <SlideContextWithModel.Provider value={{ slide, index, previousIndex: index, navigator: true }}>
-            <SlideComponent className={resolveClasses('freya@navigator__slide__contents')} />
+            <SlideComponent className={resolveClasses('freya@navigator__slide__contents')} overrideProgress={true} />
           </SlideContextWithModel.Provider>
 
           <span className={resolveClasses('freya@navigator__slide__number')}>{index + 1}</span>

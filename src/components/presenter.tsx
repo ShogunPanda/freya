@@ -160,7 +160,7 @@ export function Presenter({
           <SlideContextWithModel.Provider
             value={{ slide: slides[index - 2], index: index - 1, previousIndex: index, presenter: true }}
           >
-            <SlideComponent className={resolveClasses('freya@presenter__slide__contents')} />
+            <SlideComponent className={resolveClasses('freya@presenter__slide__contents')} overrideProgress={true} />
           </SlideContextWithModel.Provider>
           <span className={resolveClasses('freya@presenter__slide__number')}>{index - 1}</span>
         </aside>
@@ -171,7 +171,7 @@ export function Presenter({
         className={resolveClasses('freya@presenter__slide', 'freya@presenter__slide--current')}
       >
         <SlideContextWithModel.Provider value={{ slide: slide as Slide, index, previousIndex }}>
-          <SlideComponent className={resolveClasses('freya@presenter__slide__contents')} />
+          <SlideComponent className={resolveClasses('freya@presenter__slide__contents')} overrideProgress={true} />
         </SlideContextWithModel.Provider>
         <span className={resolveClasses('freya@presenter__slide__number')}>{index}</span>
       </main>
@@ -181,7 +181,7 @@ export function Presenter({
           <SlideContextWithModel.Provider
             value={{ slide: slides[index], index: index + 1, previousIndex: index, presenter: true }}
           >
-            <SlideComponent className={resolveClasses('freya@presenter__slide__contents')} />
+            <SlideComponent className={resolveClasses('freya@presenter__slide__contents')} overrideProgress={true} />
           </SlideContextWithModel.Provider>
           <span className={resolveClasses('freya@presenter__slide__number')}>{index + 1}</span>
         </aside>

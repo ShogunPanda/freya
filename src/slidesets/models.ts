@@ -90,7 +90,9 @@ export interface ClientContext {
 }
 
 export interface SlideProps {
+  overrideProgress?: boolean
   className?: string
+  style?: Record<string, string>
 }
 
 export type SlideRenderer = (props: SlideProps) => VNode
