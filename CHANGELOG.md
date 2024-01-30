@@ -1,3 +1,10 @@
+### 2024-01-30 / 0.60.0
+
+- fix: Linted code.
+- fix: Allow browser shortcuts.
+- fix: Fixed progress bar showing.
+- feat: Added HUD for touch devices.
+
 ### 2024-01-28 / 0.59.0
 
 - chore: Linted code.
