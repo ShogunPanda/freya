@@ -1,3 +1,7 @@
+### 2024-02-01 / 0.62.0
+
+- feat: Allow custom units in variables.
+
 ### 2024-02-01 / 0.61.0
 
 - feat: Improve CSS cascading.
