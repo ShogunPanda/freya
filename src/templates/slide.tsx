@@ -1,5 +1,5 @@
 import { type ComponentType, type VNode } from 'preact'
-import { Presenter, SvgDefinitions, cleanCssClasses } from '../client.js'
+import { Presenter, SvgDefinitions } from '../client.js'
 import {
   ClientContextInstance,
   SlideContextInstance,
@@ -45,7 +45,7 @@ export function Widgets(props: SlideProps & ClientContextMethods & SlideComponen
         <Navigator close={noop} />
         <Presenter close={noop} paused={false} duration={300} startPresentation={noop} togglePresentation={noop} />
         <Controller />
-        <SvgDefinitions definitions={[]} className={cleanCssClasses('freya@svg-definitions')} />
+        <SvgDefinitions definitions={[]} className={resolveClasses('freya@svg-definitions')} />
       </SlideContextInstance.Provider>
     </ClientContextInstance.Provider>
   )
