@@ -28,8 +28,13 @@ export const customUnits: Record<string, [number, string]> = {
   sp: [200, 'px']
 }
 
+export const customUnitMatcherBase = '(\\d+(?:_\\d+)?)(@units@)'
+export const customUnitMatcher = new RegExp(
+  customUnitMatcherBase.replace('@units@', Object.keys(customUnits).join('|'))
+)
+
 export function parseNumericValue(raw: string, units: Record<string, [number, string]> = {}): string {
-  const mo = raw.match(/(\d+(?:_\d+)?)([a-z]+)/)
+  const mo = raw.match(customUnitMatcher)
 
   if (!mo) {
     return raw
@@ -298,7 +303,11 @@ export const unocssConfig = defineUnoConfig({
     [
       /^var-\[([^]+)\]-(.+)/,
       ([, name, value]: string[]) => {
-        return { [`--${name}`]: transformCSSValue(value) }
+        return {
+          [`--${name}`]: transformCSSValue(
+            value?.replaceAll(new RegExp(customUnitMatcher, 'g'), raw => parseNumericValue(raw, customUnits))
+          )
+        }
       }
     ],
     ['font-system-fonts', { 'font-family': systemFonts }],
