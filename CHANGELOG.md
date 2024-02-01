@@ -1,3 +1,7 @@
+### 2024-02-01 / 0.62.1
+
+- fix: Render SVG definitions in the server.
+
 ### 2024-02-01 / 0.62.0
 
 - feat: Allow custom units in variables.
