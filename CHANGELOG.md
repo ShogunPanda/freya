@@ -1,3 +1,7 @@
+### 2024-02-01 / 0.61.0
+
+- feat: Improve CSS cascading.
+
 ### 2024-01-30 / 0.60.0
 
 - fix: Linted code.
