@@ -1,6 +1,7 @@
 import { createContext, type Context } from 'preact'
 import { useContext } from 'preact/hooks'
 import { type ClientContext as ClientContextModel, type ParsedSVG } from '../slidesets/models.js'
+import { cleanCssClasses } from './styling.js'
 
 export type CSSClassToken = string | false | undefined | null
 
@@ -29,19 +30,6 @@ export interface SlideContextProps<SlideModel = Record<string, unknown>> {
 export const ClientContextInstance = createContext<ClientContextProps>(undefined as unknown as ClientContextProps)
 export const SlideContextInstance = createContext<SlideContextProps>(undefined as unknown as SlideContextProps)
 
-export function sanitizeClassName(...raw: CSSClassToken[]): string {
-  return raw
-    .filter(c => c && typeof c === 'string')
-    .join(' ')
-    .replaceAll('\n', '')
-    .replaceAll(/\s+/g, ' ')
-    .trim()
-}
-
-export function defaultCSSClassesResolver(...klasses: (CSSClassToken | CSSClassToken[])[]): string {
-  return sanitizeClassName(...(klasses.flat(Number.MAX_VALUE).filter(Boolean) as string[]))
-}
-
 export function defaultImagesResolver(_theme: string, _talk: string, url?: string): string {
   return url ?? ''
 }
@@ -59,7 +47,7 @@ export function createClientContextValue(context: ClientContextModel, hooks: Cli
 
   return {
     ...context,
-    resolveClasses: resolveClasses ?? defaultCSSClassesResolver,
+    resolveClasses: resolveClasses ?? cleanCssClasses,
     resolveImage: resolveImage ?? defaultImagesResolver,
     resolveSVG: resolveSVG ?? defaultSVGResolver,
     parseContent: parseContent ?? defaultMarkdownParser

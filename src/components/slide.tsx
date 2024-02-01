@@ -2,12 +2,12 @@ import { createContext, type FunctionComponent, type VNode } from 'preact'
 import { useContext } from 'preact/hooks'
 import { type Slide as SlideModel, type SlideProps } from '../slidesets/models.js'
 import { useClient, useSlide } from './contexts.js'
+import { cleanCssClasses } from './styling.js'
 
 export const LayoutContext = createContext<Record<string, FunctionComponent<SlideProps>>>({})
 
 export function SlideComponent({ overrideProgress, className }: SlideProps): VNode {
   const {
-    resolveClasses,
     talk: { slidesCount }
   } = useClient()
   const { slide, index } = useSlide<SlideModel>()
@@ -21,5 +21,5 @@ export function SlideComponent({ overrideProgress, className }: SlideProps): VNo
 
   const Layout = layouts[slide.layout ?? 'default']
 
-  return <Layout className={resolveClasses(className)} style={style} />
+  return <Layout className={cleanCssClasses(className)} style={style} />
 }

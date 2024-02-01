@@ -11,9 +11,10 @@ import {
   type CSSClassToken
 } from './contexts.js'
 import { Controller } from './controller.js'
-import { Navigator } from './navigator.js'
+import { Navigator, Overlay } from './navigator.js'
 import { Presenter } from './presenter.js'
 import { LayoutContext, SlideComponent } from './slide.js'
+import { sortCssClasses, tokenizeCssClasses } from './styling.js'
 import { SvgDefinitions } from './svg.js'
 
 // @ts-expect-error Replaced at compile time
@@ -48,16 +49,6 @@ function resolveSVG(cache: Record<string, ParsedSVG>, theme: string, talk: strin
   return cache[key]
 }
 
-function tokenizeCssClasses(klass: (CSSClassToken | CSSClassToken[])[]): string[] {
-  return klass
-    .flat(Number.MAX_SAFE_INTEGER)
-    .filter(k => k)
-    .map(k => (k as string).split(' '))
-    .flat(Number.MAX_SAFE_INTEGER)
-    .map(k => (k as string).trim())
-    .filter(k => k)
-}
-
 function resolveClasses(
   keepExpanded: boolean,
   classes: Record<string, string[]>,
@@ -69,7 +60,7 @@ function resolveClasses(
 
   while (changed) {
     changed = false
-    replaced = tokenizeCssClasses(replaced).map(klass => {
+    replaced = tokenizeCssClasses(...replaced).map(klass => {
       const replacement = classes[klass]
 
       if (replacement) {
@@ -81,7 +72,7 @@ function resolveClasses(
     })
   }
 
-  let expanded = Array.from(new Set(tokenizeCssClasses(replaced)))
+  let expanded = Array.from(new Set(tokenizeCssClasses(...replaced))).map(sortCssClasses)
 
   if (!keepExpanded) {
     expanded = expanded.map(klass => compressedClasses[klass])
@@ -384,7 +375,7 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
         <SlideContextInstance.Provider value={{ slide, index, previousIndex }}>
           <SlideComponent />
 
-          {(isNavigating || isPresenting) && <div className={hookMethods.resolveClasses('freya@overlay')} />}
+          {(isNavigating || isPresenting) && <Overlay />}
           {isNavigating && <Navigator close={closeNavigator} />}
           {!isNavigating && isPresenting && (
             <Presenter

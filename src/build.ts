@@ -59,7 +59,7 @@ export async function cssConfig(context: BuildContext): Promise<UserConfig<objec
   let id = basename(context.currentPage ?? '', '.html')
 
   if (id && context.extensions.freya.export) {
-    id = id.endsWith('--notes') ? 'speaker-notes' : id.split('--')!.shift()!
+    id = id.endsWith('--notes') ? 'speaker-notes' : id.split('--').shift()!
   }
 
   if (!id || id === '404' || id === 'index' || id.endsWith('_assets') || id === 'speaker-notes') {
@@ -80,7 +80,7 @@ export async function css(context: BuildContext): Promise<string> {
   let id = basename(context.currentPage ?? '', '.html')
 
   if (id && context.extensions.freya.export) {
-    id = id.endsWith('--notes') ? 'speaker-notes' : id.split('--')!.shift()!
+    id = id.endsWith('--notes') ? 'speaker-notes' : id.split('--').shift()!
   }
 
   let themeFile: string

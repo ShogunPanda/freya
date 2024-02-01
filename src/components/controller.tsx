@@ -1,18 +1,12 @@
 import { type VNode } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
-import { useClient, type CSSClassToken } from './contexts.js'
+import { useClient } from './contexts.js'
+import { cleanCssClasses } from './styling.js'
 import { SvgIcon } from './svg.js'
 
 interface ControllerProps {
   className?: string
 }
-
-export const controllerCssClasses: CSSClassToken[] = [
-  'freya@controller',
-  'freya@controller__action',
-  'freya@svg-icon',
-  'freya@controller__action__icon'
-]
 
 function triggerAction(ev?: Event): void {
   ev?.preventDefault()
@@ -23,12 +17,14 @@ function triggerAction(ev?: Event): void {
 }
 
 export function Controller({ className }: ControllerProps): VNode {
+  const hasDocument = typeof document !== 'undefined' // This is needed on the server
   const { resolveClasses } = useClient()
-  const [isFullScreen, setIsFullScreen] = useState(Boolean(document.fullscreenElement))
+  const [isFullScreen, setIsFullScreen] = useState(Boolean(hasDocument && document.fullscreenElement))
 
   const updateFullScreen = useCallback(() => {
-    setIsFullScreen(Boolean(document.fullscreenElement))
+    setIsFullScreen(Boolean(document?.fullscreenElement))
   }, [setIsFullScreen])
+
   useEffect(() => {
     window.addEventListener('freya:fullScreen:toggled', updateFullScreen, false)
 
@@ -45,7 +41,7 @@ export function Controller({ className }: ControllerProps): VNode {
         data-freya-key="ArrowLeft"
         onClick={triggerAction}
       >
-        <SvgIcon name="arrow-left" className={resolveClasses('freya@svg-icon', 'freya@controller__action__icon')} />
+        <SvgIcon name="arrow-left" className={cleanCssClasses('freya@svg-icon', 'freya@controller__action__icon')} />
       </a>
       <a
         href="#"
@@ -53,22 +49,22 @@ export function Controller({ className }: ControllerProps): VNode {
         data-freya-key="ArrowRight"
         onClick={triggerAction}
       >
-        <SvgIcon name="arrow-right" className={resolveClasses('freya@svg-icon', 'freya@controller__action__icon')} />
+        <SvgIcon name="arrow-right" className={cleanCssClasses('freya@svg-icon', 'freya@controller__action__icon')} />
       </a>
       <a href="#" className={resolveClasses('freya@controller__action')} data-freya-key="f" onClick={triggerAction}>
         <SvgIcon
           name={isFullScreen ? 'minimize' : 'maximize'}
-          className={resolveClasses('freya@svg-icon', 'freya@controller__action__icon')}
+          className={cleanCssClasses('freya@svg-icon', 'freya@controller__action__icon')}
         />
       </a>
       <a href="#" className={resolveClasses('freya@controller__action')} data-freya-key="g" onClick={triggerAction}>
-        <SvgIcon name="navigator" className={resolveClasses('freya@svg-icon', 'freya@controller__action__icon')} />
+        <SvgIcon name="navigator" className={cleanCssClasses('freya@svg-icon', 'freya@controller__action__icon')} />
       </a>
       <a href="#" className={resolveClasses('freya@controller__action')} data-freya-key="p" onClick={triggerAction}>
-        <SvgIcon name="play" className={resolveClasses('freya@svg-icon', 'freya@controller__action__icon')} />
+        <SvgIcon name="play" className={cleanCssClasses('freya@svg-icon', 'freya@controller__action__icon')} />
       </a>
       <a href="#" className={resolveClasses('freya@controller__action')} data-freya-key="c" onClick={triggerAction}>
-        <SvgIcon name="close" className={resolveClasses('freya@svg-icon', 'freya@controller__action__icon')} />
+        <SvgIcon name="close" className={cleanCssClasses('freya@svg-icon', 'freya@controller__action__icon')} />
       </a>
     </nav>
   )

@@ -3,9 +3,14 @@ import { useCallback, useLayoutEffect, useRef } from 'preact/hooks'
 import { route } from 'preact-router'
 import { type Slide } from '../slidesets/models.js'
 import { shouldAbortSlideChange, slideUrl } from './client.js'
-import { SlideContextInstance, useClient, useSlide, type CSSClassToken, type SlideContextProps } from './contexts.js'
+import { SlideContextInstance, useClient, useSlide, type SlideContextProps } from './contexts.js'
 import { SlideComponent } from './slide.js'
+import { cleanCssClasses } from './styling.js'
 import { SvgIcon } from './svg.js'
+
+interface OverlayProps {
+  className?: string
+}
 
 interface NavigatorProps {
   close: () => void
@@ -30,15 +35,11 @@ function updateNavigatorAppearance(root: HTMLElement, slideWidth: number, slideH
   root.style.setProperty('--freya-navigator-slide-height', `${navigatorSlideHeight}px`)
 }
 
-export const navigatorCssClasses: CSSClassToken[] = [
-  'freya@navigator',
-  'freya@navigator__slide',
-  'freya@navigator__slide--active',
-  'freya@navigator__slide__contents',
-  'freya@navigator__slide__number',
-  'freya@navigator__close',
-  'freya@navigator__close__image'
-]
+export function Overlay({ className }: OverlayProps): VNode {
+  const { resolveClasses } = useClient()
+
+  return <div className={resolveClasses('freya@overlay', className)} />
+}
 
 export function Navigator({ className, close }: NavigatorProps): VNode {
   const {
@@ -88,7 +89,7 @@ export function Navigator({ className, close }: NavigatorProps): VNode {
   return (
     <nav ref={root} className={resolveClasses('freya@navigator', className)}>
       <a href="#" className={resolveClasses('freya@navigator__close')} onClick={close}>
-        <SvgIcon name="close" className={resolveClasses('freya@svg-icon', 'freya@navigator__close__image')} />
+        <SvgIcon name="close" className={cleanCssClasses('freya@svg-icon', 'freya@navigator__close__image')} />
       </a>
 
       {slides.map((slide, index) => (
@@ -101,7 +102,7 @@ export function Navigator({ className, close }: NavigatorProps): VNode {
           onClick={goto.bind(null, index)}
         >
           <SlideContextWithModel.Provider value={{ slide, index, previousIndex: index, navigator: true }}>
-            <SlideComponent className={resolveClasses('freya@navigator__slide__contents')} overrideProgress={true} />
+            <SlideComponent className={cleanCssClasses('freya@navigator__slide__contents')} overrideProgress={true} />
           </SlideContextWithModel.Provider>
 
           <span className={resolveClasses('freya@navigator__slide__number')}>{index + 1}</span>

@@ -40,6 +40,7 @@
     @apply p-0_5sp;
     @apply overflow-hidden;
     @apply transform-[var(--freya-slide-transform)];
+    @apply transform-origin-[var(--freya-slide-transform-origin,initial)];
     @apply bg-white;
   }
 
@@ -188,15 +189,15 @@
       @apply border-8px;
       @apply border-transparent;
       @apply h-[--freya-navigator-slide-height];
-      @apply freya@hover:border-#5AC3EA;
+      @apply hover:border-#5AC3EA;
       @apply cursor-pointer;
+      @apply var-[freya-slide-transform-origin]-[0_0];
 
       &--active {
-        @apply freya@border-#5AC3EA;
+        @apply border-#5AC3EA;
       }
 
       &__contents {
-        @apply transform-origin-[0_0];
         @apply select-none;
         @apply pointer-events-none;
       }
@@ -312,6 +313,7 @@
       @apply border-8px;
       @apply border-transparent;
       @apply h-[--freya-presenter-slide-height];
+      @apply var-[freya-slide-transform-origin]-[0_0];
 
       &--previous {
         @apply grid-area-[previous];
@@ -319,7 +321,7 @@
 
       &--current {
         @apply grid-area-[current];
-        @apply freya@border-#5AC3EA;
+        @apply border-#5AC3EA;
       }
 
       &--next {
@@ -329,7 +331,6 @@
       &__contents {
         @apply pointer-events-none;
         @apply select-none;
-        @apply transform-origin-[0_0];
       }
 
       &__number {

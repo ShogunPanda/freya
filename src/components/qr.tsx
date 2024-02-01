@@ -3,6 +3,7 @@ import QRCodeGenerator from 'qrcode-generator'
 import { getAlignments, getCover, isAlignment, isCovered, isFinder } from '../rendering/qr.js'
 import { useClient } from './contexts.js'
 import { Image } from './image.js'
+import { cleanCssClasses } from './styling.js'
 
 type QRCodeGeneratorInterface = typeof QRCodeGenerator
 
@@ -180,7 +181,7 @@ export function QRCode({ data, image, imageRatio, label, className }: QRCodeProp
   }
 
   if (image && typeof image === 'string') {
-    image = <Image src={image} className={resolveClasses('freya@qr__image', imageClassName)} />
+    image = <Image src={image} className={cleanCssClasses('freya@qr__image', imageClassName)} />
   }
 
   return (

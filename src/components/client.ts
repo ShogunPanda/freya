@@ -1,4 +1,3 @@
-import { type CSSClassToken } from '@perseveranza-pets/dante'
 import { route } from 'preact-router'
 import { type Talk, type Theme } from '../slidesets/models.js'
 
@@ -16,8 +15,6 @@ export interface DOMContext {
   startPresentation: () => void
   togglePresentation: () => void
 }
-
-export const clientCssClasses: CSSClassToken[] = ['freya@overlay', 'freya@image', 'freya@svg', 'freya@svg-definitions']
 
 export function slideUrl(id: string, index: number, slidesPadding: number): string {
   return `/${id}/${index.toString().padStart(slidesPadding, '0')}`

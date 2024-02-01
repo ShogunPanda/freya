@@ -21,10 +21,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { render } from 'preact-render-to-string'
 import { rollup } from 'rollup'
-import { clientCssClasses } from '../components/client.js'
-import { controllerCssClasses } from '../components/controller.js'
-import { navigatorCssClasses } from '../components/navigator.js'
-import { presenterCssClasses } from '../components/presenter.js'
+import { sortCssClasses } from '../components/styling.js'
 import { generateSVGId } from '../components/svg.js'
 import { pusherConfig } from '../configuration.js'
 import { readFile } from '../fs.js'
@@ -33,7 +30,7 @@ import { page as page404, body as page404Body } from '../templates/404.js'
 import { body as assetsBody, page as assetsPage } from '../templates/assets.js'
 import { page as index, body as indexBody } from '../templates/index.js'
 import { header, page } from '../templates/page.js'
-import { SlideComponent } from '../templates/slide.js'
+import { SlideComponent, Widgets } from '../templates/slide.js'
 import { getTalk, getTheme, resolveImageUrl, resolvePusher } from './loaders.js'
 import {
   type ClientContext,
@@ -187,6 +184,8 @@ export function createCSSClassesResolver(
 
   // Override the default scope
   context.css = context.extensions.freya.css[id]
+
+  context.css.transformer = sortCssClasses
 
   return expandCSSClasses.bind(null, context, classes)
 }
@@ -450,13 +449,29 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
       })
     )
 
+    /*
+      When on the second slide (so presenter will eventually show prev and next),
+      render the hidden UI elements to preload their classes.
+    */
+    if (i === 1) {
+      render(
+        Widgets({
+          context: clientContext,
+          layout,
+          slide,
+          index: i + 1,
+          resolveClasses,
+          resolveImage: resolveImageUrl.bind(null, clientContext.assets.images),
+          resolveSVG: resolveSVG.bind(null, clientContext.assets.svgsDefinitions, clientContext.assets.svgs),
+          parseContent: parseContent.bind(null, clientContext.assets.content)
+        })
+      )
+    }
+
     if (slide.notes) {
       parseContent(clientContext.assets.content, slide.notes)
     }
   }
-
-  // Render some classes needed for the SPA
-  resolveClasses(...clientCssClasses, ...navigatorCssClasses, ...presenterCssClasses, ...controllerCssClasses)
 
   // Update some values after rendering
   clientContext.css.compressedClasses = Object.fromEntries(context.css.compressedClasses.entries())

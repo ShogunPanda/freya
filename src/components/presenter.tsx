@@ -1,8 +1,9 @@
 import { type Context, type VNode } from 'preact'
 import { useLayoutEffect, useMemo, useRef } from 'preact/hooks'
 import { type Slide } from '../slidesets/models.js'
-import { SlideContextInstance, useClient, useSlide, type CSSClassToken, type SlideContextProps } from './contexts.js'
+import { SlideContextInstance, useClient, useSlide, type SlideContextProps } from './contexts.js'
 import { SlideComponent } from './slide.js'
+import { cleanCssClasses } from './styling.js'
 import { SvgIcon } from './svg.js'
 
 interface PresenterProps {
@@ -14,26 +15,6 @@ interface PresenterProps {
   showPrevious?: boolean
   className?: string
 }
-
-export const presenterCssClasses: CSSClassToken[] = [
-  'freya@presenter',
-  'freya@presenter--no-previous',
-  'freya@presenter--with-previous',
-  'freya@presenter__header',
-  'freya@presenter__header__label',
-  'freya@presenter__header__label--paused',
-  'freya@presenter__header__action',
-  'freya@presenter__header__action__icon',
-  'freya@presenter__header__action__icon--active',
-  'freya@presenter__slide',
-  'freya@presenter__slide--previous',
-  'freya@presenter__slide--current',
-  'freya@presenter__slide--next',
-  'freya@presenter__slide__contents',
-  'freya@presenter__notes',
-  'freya@presenter__close',
-  'freya@presenter__close__image'
-]
 
 function updatePresenterAppearance(elements: HTMLElement[], slideWidth: number, slideHeight: number): void {
   for (const element of elements) {
@@ -128,7 +109,7 @@ export function Presenter({
         <a href="#" className={resolveClasses('freya@presenter__header__action')} onClick={togglePresentation}>
           <SvgIcon
             name="play"
-            className={resolveClasses(
+            className={cleanCssClasses(
               'freya@svg-icon',
               'freya@presenter__header__action__icon',
               !paused && 'freya@presenter__header__action__icon--active'
@@ -136,7 +117,10 @@ export function Presenter({
           />
         </a>
         <a href="#" className={resolveClasses('freya@presenter__header__action')} onClick={startPresentation}>
-          <SvgIcon name="reset" className={resolveClasses('freya@svg-icon', 'freya@presenter__header__action__icon')} />
+          <SvgIcon
+            name="reset"
+            className={cleanCssClasses('freya@svg-icon', 'freya@presenter__header__action__icon')}
+          />
         </a>
         <span
           className={resolveClasses(
@@ -148,7 +132,7 @@ export function Presenter({
         </span>
 
         <a href="#" className={resolveClasses('freya@presenter__close')} onClick={close}>
-          <SvgIcon name="close" className={resolveClasses('freya@svg-icon', 'freya@presenter__close__image')} />
+          <SvgIcon name="close" className={cleanCssClasses('freya@svg-icon', 'freya@presenter__close__image')} />
         </a>
       </header>
 
@@ -160,7 +144,7 @@ export function Presenter({
           <SlideContextWithModel.Provider
             value={{ slide: slides[index - 2], index: index - 1, previousIndex: index, presenter: true }}
           >
-            <SlideComponent className={resolveClasses('freya@presenter__slide__contents')} overrideProgress={true} />
+            <SlideComponent className={cleanCssClasses('freya@presenter__slide__contents')} overrideProgress={true} />
           </SlideContextWithModel.Provider>
           <span className={resolveClasses('freya@presenter__slide__number')}>{index - 1}</span>
         </aside>
@@ -171,7 +155,7 @@ export function Presenter({
         className={resolveClasses('freya@presenter__slide', 'freya@presenter__slide--current')}
       >
         <SlideContextWithModel.Provider value={{ slide: slide as Slide, index, previousIndex }}>
-          <SlideComponent className={resolveClasses('freya@presenter__slide__contents')} overrideProgress={true} />
+          <SlideComponent className={cleanCssClasses('freya@presenter__slide__contents')} overrideProgress={true} />
         </SlideContextWithModel.Provider>
         <span className={resolveClasses('freya@presenter__slide__number')}>{index}</span>
       </main>
@@ -181,7 +165,7 @@ export function Presenter({
           <SlideContextWithModel.Provider
             value={{ slide: slides[index], index: index + 1, previousIndex: index, presenter: true }}
           >
-            <SlideComponent className={resolveClasses('freya@presenter__slide__contents')} overrideProgress={true} />
+            <SlideComponent className={cleanCssClasses('freya@presenter__slide__contents')} overrideProgress={true} />
           </SlideContextWithModel.Provider>
           <span className={resolveClasses('freya@presenter__slide__number')}>{index + 1}</span>
         </aside>
