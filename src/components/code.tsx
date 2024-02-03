@@ -2,12 +2,17 @@ import { type VNode } from 'preact'
 import { type CodeDefinition } from '../slidesets/models.js'
 import { useClient, type CSSClassesResolver } from './contexts.js'
 
+// This is needed to avoid compress code class multiple times
+function shouldResolveClass(klass: string): boolean {
+  return /^(font-italic|font-bold|underline|(?:text-#(?:[a-fA-F0-9]+)))$/.test(klass)
+}
+
 function applyCodeClasses(resolveClasses: CSSClassesResolver, rendered: string): [string, string] {
   // Resolve classes
   rendered = rendered
     .replaceAll(
       / dante-code-element="true" class="([^"]+)"/g,
-      (_: string, classes: string) => ` class="${resolveClasses(classes)}"`
+      (_: string, classes: string) => ` class="${shouldResolveClass(classes) ? resolveClasses(classes) : classes}"`
     )
     .replaceAll('$', '&#36;')
 
