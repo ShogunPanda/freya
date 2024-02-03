@@ -1,7 +1,21 @@
-import { applyCodeClasses } from '@perseveranza-pets/dante'
 import { type VNode } from 'preact'
 import { type CodeDefinition } from '../slidesets/models.js'
-import { useClient } from './contexts.js'
+import { useClient, type CSSClassesResolver } from './contexts.js'
+
+function applyCodeClasses(resolveClasses: CSSClassesResolver, rendered: string): [string, string] {
+  // Resolve classes
+  rendered = rendered
+    .replaceAll(
+      / dante-code-element="true" class="([^"]+)"/g,
+      (_: string, classes: string) => ` class="${resolveClasses(classes)}"`
+    )
+    .replaceAll('$', '&#36;')
+
+  // Extract the root element classed and its contents
+  const [, rootClassName, contents] = rendered.match(/<pre dante-code-root="true" class="([^"]+)">(.+)<\/pre>/s)!
+
+  return [rootClassName, contents]
+}
 
 export function Code({ rendered, className }: CodeDefinition): VNode | null {
   const { resolveClasses } = useClient()
