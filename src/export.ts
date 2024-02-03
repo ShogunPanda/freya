@@ -1,6 +1,7 @@
 import {
   baseTemporaryDirectory,
   elapsed,
+  loadFontsFile,
   rootDir,
   type BuildContext,
   type BuildResult,
@@ -11,7 +12,7 @@ import { exec as execCB } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { promisify } from 'node:util'
 import { chromium } from 'playwright'
 import { render } from 'preact-render-to-string'
@@ -144,6 +145,10 @@ export async function createPDF(
 
 export async function exportAllAsPNGs(context: BuildContext, staticDir: string): Promise<void> {
   const operationStart = process.hrtime.bigint()
+
+  context.extensions.freya.fonts = await loadFontsFile(
+    fileURLToPath(new URL('./assets/styles/fonts.yml', import.meta.url))
+  )
 
   // Prepare the output directory
   const fullOutput = resolve(rootDir, staticDir, 'png')
