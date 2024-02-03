@@ -4,6 +4,7 @@ import {
   compileSourceCode,
   createBuildContext,
   initializeSyntaxHighlighting,
+  loadFontsFile,
   rootDir
 } from '@perseveranza-pets/dante'
 import { type Command } from 'commander'
@@ -49,7 +50,10 @@ async function performExport(command: Command, logger: pino.Logger, skipCompilat
     setWhitelistedTalks(only)
     const absoluteStaticDir = resolve(rootDir, staticDir)
     const context = createBuildContext(logger, true, absoluteStaticDir)
-    context.extensions.freya = { export: true }
+    context.extensions.freya = {
+      export: true,
+      fonts: await loadFontsFile(fileURLToPath(new URL('./assets/styles/fonts.yml', import.meta.url)))
+    }
 
     // Temporarily disable logging
     const oldLogger = context.logger
