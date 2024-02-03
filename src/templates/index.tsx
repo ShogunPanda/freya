@@ -4,7 +4,7 @@ import { Fragment, type VNode } from 'preact'
 import { readFile } from '../fs.js'
 import { finalizeJs } from '../slidesets/generators.js'
 import { type Talk } from '../slidesets/models.js'
-import { serviceWorker as serviceWorkerTemplate } from '../templates/service-worker.js'
+import { serviceWorkerRegistration } from '../templates/service-worker.js'
 
 interface BodyProps {
   context: BuildContext
@@ -60,7 +60,7 @@ export async function page(context: BuildContext, bodyClassName: string): Promis
   const siteVersion = `globalThis.__freyaSiteVersion = "${context.version}"`
   const hotReload = !context.isProduction ? await readFile(resolve(danteDir, 'dist/assets/hot-reload.js')) : ''
 
-  const serviceWorker = context.isProduction && !context.extensions.freya.export ? serviceWorkerTemplate(context) : ''
+  const serviceWorker = context.isProduction && !context.extensions.freya.export ? serviceWorkerRegistration() : ''
 
   const js = await finalizeJs([siteVersion, hotReload, serviceWorker].join('\n;\n'))
 

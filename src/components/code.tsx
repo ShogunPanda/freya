@@ -4,7 +4,7 @@ import { useClient, type CSSClassesResolver } from './contexts.js'
 
 // This is needed to avoid compress code class multiple times
 function shouldResolveClass(klass: string): boolean {
-  return /^(font-italic|font-bold|underline|(?:text-#(?:[a-fA-F0-9]+)))$/.test(klass)
+  return /^((font-italic|font-bold|underline|(?:text-#(?:[a-fA-F0-9]+)))\s*)+$/.test(klass)
 }
 
 function applyCodeClasses(resolveClasses: CSSClassesResolver, rendered: string): [string, string] {

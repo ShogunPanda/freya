@@ -93,6 +93,23 @@ function main(): void {
   })
 }
 
+function registerServiceWorker(): void {
+  if (navigator.serviceWorker) {
+    // @ts-expect-error This is valid object
+    const currentVersion = globalThis.__freyaSiteVersion
+    navigator.serviceWorker.addEventListener('message', event => {
+      const { type, payload } = event.data
+
+      if (type === 'new-version-available' && payload.version !== currentVersion) {
+        console.log(`New version available: ${payload.version} (current is ${currentVersion}). Reloading the page.`)
+        location.reload()
+      }
+    })
+
+    navigator.serviceWorker.register('/sw.js').catch(console.error)
+  }
+}
+
 export function serviceWorker(context: BuildContext): string {
   return `
 ${main};
@@ -104,4 +121,8 @@ globalThis.talks = ${JSON.stringify(Array.from(context.extensions.freya.talks as
 
 main()
 `
+}
+
+export function serviceWorkerRegistration(): string {
+  return registerServiceWorker.toString()
 }
