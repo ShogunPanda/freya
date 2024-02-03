@@ -5,6 +5,7 @@ import {
   loadCSSClassesExpansion,
   renderCode,
   rootDir,
+  sanitizeTabularOutputSnippet,
   type BuildContext,
   type CSSClassesResolver,
   type ClassesExpansions
@@ -162,7 +163,7 @@ export async function ensureRenderedCode(context: BuildContext, code: CodeDefini
   let content = code.content
 
   if (language === 'none') {
-    content = content.replaceAll('\u{2502}', '|').replaceAll(/[\u{2500}-\u{257F}]/gu, '-')
+    content = sanitizeTabularOutputSnippet(content)
   }
 
   code.rendered = await renderCode(content, language ?? '', numbers ?? false, highlight ?? '', classes)
