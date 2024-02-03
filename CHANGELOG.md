@@ -1,3 +1,7 @@
+### 2024-02-03 / 0.63.2
+
+- fix: Fixed exporting.
+
 ### 2024-02-03 / 0.63.1
 
 - fix: Do not use dante class on the client.
