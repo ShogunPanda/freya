@@ -361,7 +361,7 @@
   }
 
   &index {
-    @apply width-80p;
+    @apply w-80p;
     @apply max-w-1000px;
     @apply mx-auto;
 
@@ -403,7 +403,7 @@
   }
 
   &page404 {
-    @apply width-80p;
+    @apply w-80p;
     @apply max-w-1000px;
     @apply mx-auto;
 
@@ -505,7 +505,7 @@
   }
 
   &speaker-notes {
-    @apply width-80p;
+    @apply w-80p;
     @apply max-w-1600px;
     @apply mx-auto;
 

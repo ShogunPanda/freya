@@ -6,6 +6,7 @@ import {
   renderCode,
   rootDir,
   sanitizeTabularOutputSnippet,
+  sortCssClassesExpansions,
   type BuildContext,
   type CSSClassesResolver,
   type ClassesExpansions
@@ -22,7 +23,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { render } from 'preact-render-to-string'
 import { rollup } from 'rollup'
-import { sortCssClasses } from '../components/styling.js'
+import { cssClassExpansionPriorities, sortCssClasses } from '../components/styling.js'
 import { generateSVGId } from '../components/svg.js'
 import { pusherConfig } from '../configuration.js'
 import { readFile } from '../fs.js'
@@ -223,6 +224,7 @@ export async function prepareClientContext(context: BuildContext, theme: Theme, 
   const classes = await loadCSSClassesExpansion(
     (await readFile(new URL('../assets/styles/classes.css', import.meta.url))) + themeClasses
   )
+  sortCssClassesExpansions(context, cssClassExpansionPriorities, classes)
 
   const resolveClasses = createCSSClassesResolver(talk.id, context, classes)
   context.extensions.freya.resolveClasses = resolveClasses
@@ -337,6 +339,7 @@ export async function generatePage404(context: BuildContext): Promise<string> {
   const classes = await loadCSSClassesExpansion(
     await readFile(new URL('../assets/styles/classes.css', import.meta.url))
   )
+  sortCssClassesExpansions(context, cssClassExpansionPriorities, classes)
 
   // Generate page 404
   const resolveClasses = createCSSClassesResolver('__404', context, classes)
@@ -352,6 +355,7 @@ export async function generateAssetsListing(context: BuildContext): Promise<Reco
   const classes = await loadCSSClassesExpansion(
     await readFile(new URL('../assets/styles/classes.css', import.meta.url))
   )
+  sortCssClassesExpansions(context, cssClassExpansionPriorities, classes)
 
   const resolveClasses = createCSSClassesResolver('__assets', context, classes)
   context.extensions.freya.resolveClasses = resolveClasses
@@ -529,6 +533,8 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
   const classes = await loadCSSClassesExpansion(
     await readFile(new URL('../assets/styles/classes.css', import.meta.url))
   )
+
+  sortCssClassesExpansions(context, cssClassExpansionPriorities, classes)
 
   const resolveClasses = createCSSClassesResolver('__index', context, classes)
   context.extensions.freya.resolveClasses = resolveClasses

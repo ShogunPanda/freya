@@ -48,7 +48,7 @@
   "dependencies": {
     "@fastify/formbody": "^7.4.0",
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
-    "@perseveranza-pets/dante": "^0.49.0",
+    "@perseveranza-pets/dante": "^0.50.0",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.5",

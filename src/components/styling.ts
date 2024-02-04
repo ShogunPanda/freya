@@ -3,6 +3,48 @@ import { type CSSClassToken } from './contexts.js'
 const cssClassAlphabet = 'abcdefghijklmnopqrstuvwxyz'
 const cssClassAlphabetLength = cssClassAlphabet.length
 
+export const cssClassExpansionPriorities = [
+  /^var-/,
+  /^(relative|absolute|fixed|sticky)$/,
+  /^(block|inline|inline-block|flex|grid)$/,
+  /^display-/,
+  /^flex-(col|row|\d+)/,
+  /^grid-areas-/,
+  /^grid-(auto-)?(cols|rows)-/,
+  /^grid-area-/,
+  /^gap-/,
+  /^[whz]-/,
+  /^(min|max)-[whz]-/,
+  /^(-?)(top|bottom|left|right)-/,
+  /^(-?)([mp])-/,
+  /^(-?)([mp][xy])-/,
+  /^(-?)([mp][tblr])-/,
+  /^border-(?![tblr]-)/,
+  /^border-/,
+  /^rounded-(?!([xytblr]+)-)/,
+  /^rounded-/,
+  /^(self-)?(items|justify|align)-/,
+  /^space-(between|around)$/,
+  /^self-center$/,
+  /^content-/,
+  /^(bg|text|color)-/,
+  /^(font-size|line-height)-/,
+  /^(stroke|fill)-/,
+  /^font-(extralight|light|normal|semibold|bold)$/,
+  /^underline$/,
+  /^font-/,
+  /^leading-/,
+  /^whitespace-/,
+  /^transform-/,
+  /^shadow-/,
+  /^opacity-/,
+  /^overflow-/,
+  /^object-/,
+  /^cursor-/,
+  /^counter-/,
+  /^pointer-events-none|select-none$/
+]
+
 export function tokenizeCssClasses(...klasses: (CSSClassToken | CSSClassToken[])[]): string[] {
   return klasses
     .flat(Number.MAX_SAFE_INTEGER)
