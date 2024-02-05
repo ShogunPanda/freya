@@ -1,3 +1,7 @@
+### 2024-02-05 / 0.65.2
+
+- fix: Fixed Netlify generation.
+
 ### 2024-02-05 / 0.65.1
 
 - fix: Fixed export URLs.
