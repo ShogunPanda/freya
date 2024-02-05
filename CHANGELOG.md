@@ -1,3 +1,7 @@
+### 2024-02-05 / 0.65.0
+
+- fix: Fixed export.
+
 ### 2024-02-05 / 0.64.0
 
 - feat: Restructured Service Workers handling.
