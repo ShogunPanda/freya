@@ -33,11 +33,18 @@ declare module 'fastify' {
   }
 }
 
-function generateNetlifyConfiguration(context: BuildContext): string {
+async function generateNetlifyConfiguration(context: BuildContext): Promise<string> {
   const startTime = process.hrtime.bigint()
   let generated = '[build]\npublish = "site"\nedge_functions = "functions"\n\n'
 
-  for (const talk of context.extensions.freya.talks) {
+  for (const talk of context.extensions.freya.talks as Set<string>) {
+    const {
+      config: { theme }
+    } = await getTalk(talk)
+
+    generated += `[[redirects]]\nfrom = "/${talk}/assets/talk/*"\nto = "/assets/talks/${talk}/:splat"\nstatus = 200\n\n`
+    generated += `[[redirects]]\nfrom = "/${talk}/assets/theme/*"\nto = "/assets/themes/${theme}/:splat"\nstatus = 200\n\n`
+    generated += `[[redirects]]\nfrom = "/${talk}/sw.js"\nto = "/assets/talks/${talk}/sw.js"\nstatus = 200\n\n`
     generated += `[[redirects]]\nfrom = "/${talk}/*"\nto = "/${talk}.html"\nstatus = 200\n\n`
   }
 
@@ -182,7 +189,7 @@ export async function build(context: BuildContext): Promise<BuildResult> {
 
   // Generate Netlify and Pusher, if needed
   if (context.extensions.freya.netlify) {
-    await writeFile(resolve(baseDir, '../netlify.toml'), generateNetlifyConfiguration(context), 'utf8')
+    await writeFile(resolve(baseDir, '../netlify.toml'), await generateNetlifyConfiguration(context), 'utf8')
   }
 
   if (pusherConfig) {
