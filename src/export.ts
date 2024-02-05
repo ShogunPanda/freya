@@ -25,7 +25,7 @@ import {
   parseContent,
   prepareClientContext
 } from './slidesets/generators.js'
-import { getAllTalks, getTalk, getTheme, resolveImageUrl } from './slidesets/loaders.js'
+import { getAllTalks, getTalk, getTheme } from './slidesets/loaders.js'
 import { type SlideRenderer, type Talk } from './slidesets/models.js'
 import { header, page } from './templates/page.js'
 import { SlideComponent } from './templates/slide.js'
@@ -47,8 +47,18 @@ function slideTemporaryNotesName(talk: Talk): string {
   return `${talk.id}--notes.html`
 }
 
-function resolveImage(cache: Record<string, string>, theme: string, talk: string, url?: string): string {
-  return '.' + resolveImageUrl(cache, theme, talk, url)
+function resolveImageUrl(cache: Record<string, string>, theme: string, talk: string, url?: string): string {
+  url = url?.toString()
+  const key = `${theme}:${talk}:${url}`
+
+  if (!url) {
+    return ''
+  } else if (cache[key]) {
+    return cache[key]
+  }
+
+  cache[key] = url.replace('@talk', `./assets/talks/${talk}`).replace('@theme', `./assets/themes/${theme}`)
+  return cache[key]
 }
 
 export async function ensureMagick(): Promise<void> {
@@ -242,7 +252,7 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
             slide,
             index: i + 1,
             resolveClasses,
-            resolveImage: resolveImage.bind(null, clientContext.assets.images),
+            resolveImage: resolveImageUrl.bind(null, clientContext.assets.images),
             resolveSVG: resolveSVG.bind(null, clientContext.assets.svgsDefinitions, clientContext.assets.svgs),
             parseContent: parseContent.bind(null, clientContext.assets.content)
           })
