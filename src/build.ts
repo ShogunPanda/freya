@@ -35,7 +35,7 @@ declare module 'fastify' {
 
 async function generateNetlifyConfiguration(context: BuildContext): Promise<string> {
   const startTime = process.hrtime.bigint()
-  let generated = '[build]\npublish = "site"\nedge_functions = "functions"\n\n'
+  let generated = '[build]\npublish = "site"\n\n'
 
   for (const talk of context.extensions.freya.talks as Set<string>) {
     const {
