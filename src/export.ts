@@ -19,7 +19,12 @@ import { css, cssConfig } from './build.js'
 import { SvgDefinitions } from './client.js'
 import { filterWhitelistedTalks } from './configuration.js'
 import { resolveSVG } from './rendering/svg.js'
-import { createCSSClassesResolver, parseContent, prepareClientContext } from './slidesets/generators.js'
+import {
+  createCSSClassesResolver,
+  listThemeAndTalkImages,
+  parseContent,
+  prepareClientContext
+} from './slidesets/generators.js'
 import { getAllTalks, getTalk, getTheme, resolveImageUrl } from './slidesets/loaders.js'
 import { type SlideRenderer, type Talk } from './slidesets/models.js'
 import { header, page } from './templates/page.js'
@@ -206,6 +211,7 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
     const startTime = process.hrtime.bigint()
     const talk = await getTalk(id)
     const theme = await getTheme(talk.config.theme)
+    const [themeImages, talkImages] = await listThemeAndTalkImages(theme.id, talk.id)
 
     const clientContext = await prepareClientContext(context, theme, talk)
     const resolveClasses: CSSClassesResolver = context.extensions.freya.resolveClasses
@@ -255,6 +261,8 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
             context,
             talk,
             theme,
+            themeImages,
+            talkImages,
             js: ''
           }),
           undefined,
