@@ -1,3 +1,8 @@
+### 2024-02-05 / 0.64.0
+
+- feat: Restructured Service Workers handling.
+- feat: Added CSS sorting.
+
 ### 2024-02-03 / 0.63.5
 
 - fix: Fixed code expression.
