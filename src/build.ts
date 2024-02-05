@@ -14,17 +14,22 @@ import { existsSync } from 'node:fs'
 import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { filterWhitelistedTalks, pusherConfig } from './configuration.js'
+import { filterWhitelistedTalks, isServiceWorkerEnabled, pusherConfig } from './configuration.js'
 import { readFile } from './fs.js'
 import { unocssConfig } from './rendering/unocss.config.js'
-import { generateAllSlidesets, generateAssetsListing, generatePage404 } from './slidesets/generators.js'
-import { getAllTalks, getTalk, getTheme } from './slidesets/loaders.js'
+import {
+  generateAllSlidesets,
+  generateAssetsListing,
+  generatePage404,
+  listThemeAndTalkImages
+} from './slidesets/generators.js'
+import { getAllTalks, getTalk, getTheme, resolveImageUrl } from './slidesets/loaders.js'
 import { type Theme } from './slidesets/models.js'
-import { serviceWorker } from './templates/service-worker.js'
+import { indexServiceWorkerDeclaration, talkServiceWorkerDeclaration } from './templates/service-workers.js'
 
 declare module 'fastify' {
   interface FastifyReply {
-    sendFile: (filename: string) => FastifyReply
+    sendFile: (filename: string, dirname?: string) => FastifyReply
   }
 }
 
@@ -195,6 +200,7 @@ export async function build(context: BuildContext): Promise<BuildResult> {
     } = await getTalk(talk)
     const talkAssets = resolve(rootDir, 'src/talks', talk, 'assets')
     const themeAssets = resolve(rootDir, 'src/themes', theme, 'assets')
+
     if (existsSync(talkAssets)) {
       fileOperations.push(
         cp(talkAssets, resolve(baseDir, 'assets/talks', talk), {
@@ -202,6 +208,7 @@ export async function build(context: BuildContext): Promise<BuildResult> {
         })
       )
     }
+
     if (!themes.has(theme) && existsSync(themeAssets)) {
       fileOperations.push(
         cp(themeAssets, resolve(baseDir, 'assets/themes', theme), {
@@ -209,15 +216,46 @@ export async function build(context: BuildContext): Promise<BuildResult> {
         })
       )
     }
+
     themes.add(theme)
   }
 
   await Promise.all(fileOperations)
   fileOperations = []
 
-  if (context.isProduction) {
-    await writeFile(resolve(baseDir, 'sw.js'), serviceWorker(context), 'utf8')
+  if (isServiceWorkerEnabled(context)) {
+    await writeFile(resolve(baseDir, 'sw.js'), indexServiceWorkerDeclaration(context), 'utf8')
+
+    for (const talk of context.extensions.freya.talks as string[]) {
+      const {
+        config: { theme }
+      } = await getTalk(talk)
+
+      const [themeImages, talkImages] = await listThemeAndTalkImages(theme, talk)
+
+      const swDir = resolve(baseDir, 'assets/talks', talk)
+
+      if (!existsSync(swDir)) {
+        await mkdir(swDir)
+      }
+
+      fileOperations.push(
+        writeFile(
+          resolve(baseDir, 'assets/talks', talk, 'sw.js'),
+          talkServiceWorkerDeclaration(
+            context,
+            talk,
+            [...themeImages, ...talkImages].map(i => resolveImageUrl({}, theme, talk, i))
+          ),
+          'utf8'
+        )
+      )
+      themes.add(theme)
+    }
   }
+
+  await Promise.all(fileOperations)
+  fileOperations = []
 
   // Remove all file and directory starting with a double underscore
   for (const p of await glob(resolve(baseDir, 'assets/*/*/**/__*'))) {

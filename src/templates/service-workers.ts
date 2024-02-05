@@ -9,41 +9,68 @@ declare global {
   // eslint-disable-next-line no-var
   var workbox: any
   // eslint-disable-next-line no-var
-  var precache: string[]
-  // eslint-disable-next-line no-var
-  var talks: string[]
-  // eslint-disable-next-line no-var
   var debug: boolean
   // eslint-disable-next-line no-var
   var version: string
+  // eslint-disable-next-line no-var
+  var talk: string
+  // eslint-disable-next-line no-var
+  var images: string[]
 }
 
-function main(): void {
+function indexServiceWorker(): void {
   globalThis.importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.0.0/workbox-sw.js')
 
+  const workbox = globalThis.workbox
+
+  // General
+  self.skipWaiting().catch(console.error)
+  workbox.setConfig({ debug: globalThis.debug })
+  workbox.core.clientsClaim()
+
+  // Cache Google Fonts
+  workbox.routing.registerRoute(
+    /^(https:\/\/fonts\.gstatic\.com)/,
+    new workbox.strategies.StaleWhileRevalidate({
+      cacheName: 'google-fonts',
+      plugins: [new workbox.cacheableResponse.CacheableResponsePlugin({ statuses: [0, 200] })]
+    })
+  )
+
+  // Notify when the cache has been updated
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  self.addEventListener('activate', async () => {
+    for (const client of await self.clients.matchAll({ type: 'window' })) {
+      client.postMessage({ type: 'new-version-available', payload: { version: globalThis.version } })
+    }
+  })
+}
+
+function talkServiceWorker(): void {
+  globalThis.importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.0.0/workbox-sw.js')
+
+  const workbox = globalThis.workbox
   const rootUrl = self.origin
   const rootUrlHash = Array.from(new Uint8Array(new TextEncoder().encode(self.origin)))
     .map(i => i.toString(16).padStart(2, '0'))
     .join('')
+    .slice(0, 8)
   const cacheId = `freya-${rootUrlHash}`
-
-  const workbox = globalThis.workbox
-  const manifest = globalThis.precache.map(s => ({ url: `${rootUrl}${s}`, revision: globalThis.version }))
-
-  workbox.setConfig({ debug: globalThis.debug })
+  const manifest = globalThis.images.map(s => ({ url: `${rootUrl}${s}`, revision: globalThis.version }))
 
   // General
   self.skipWaiting().catch(console.error)
+  workbox.setConfig({ debug: globalThis.debug })
   workbox.core.clientsClaim()
-  workbox.core.setCacheNameDetails({ prefix: cacheId, suffix: '', precache: 'precache' })
 
   // Precaching
+  workbox.core.setCacheNameDetails({ prefix: cacheId, suffix: '', precache: `precache-${talk}` })
   workbox.precaching.precacheAndRoute(manifest, { cleanUrls: true })
   workbox.precaching.cleanupOutdatedCaches()
 
-  // Register all routes with SWR
+  // Register all slide routes with SWR
   workbox.routing.registerRoute(
-    new RegExp(`^/(?:${globalThis.talks.join('|')})(/\\d{1,2})?`),
+    new RegExp(`^/(?:${talk}})(/\\d{1,3})?`),
     new workbox.strategies.StaleWhileRevalidate({
       cacheName: 'pages',
       plugins: [new workbox.cacheableResponse.CacheableResponsePlugin({ statuses: [0, 200] })]
@@ -59,31 +86,6 @@ function main(): void {
     })
   )
 
-  // Application assets
-  workbox.routing.registerRoute(
-    /\/images\/(?:.*\/)?.*\.(?:png|svg|webp)/,
-    new workbox.strategies.StaleWhileRevalidate({
-      cacheName: 'assets',
-      plugins: [new workbox.cacheableResponse.CacheableResponsePlugin({ statuses: [0, 200] })]
-    })
-  )
-
-  workbox.routing.registerRoute(
-    /\/fonts\/(?:.*\/)?.*\.woff2/,
-    new workbox.strategies.StaleWhileRevalidate({
-      cacheName: 'assets',
-      plugins: [new workbox.cacheableResponse.CacheableResponsePlugin({ statuses: [0, 200] })]
-    })
-  )
-
-  workbox.routing.registerRoute(
-    /.+\.(?:js|mjs|json)$/,
-    new workbox.strategies.StaleWhileRevalidate({
-      cacheName: 'data',
-      plugins: [new workbox.cacheableResponse.CacheableResponsePlugin({ statuses: [0, 200] })]
-    })
-  )
-
   // Notify when the cache has been updated
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   self.addEventListener('activate', async () => {
@@ -93,10 +95,11 @@ function main(): void {
   })
 }
 
-function registerServiceWorker(): void {
+function registerServiceWorker(path: string): void {
   if (navigator.serviceWorker) {
     // @ts-expect-error This is valid object
     const currentVersion = globalThis.__freyaSiteVersion
+
     navigator.serviceWorker.addEventListener('message', event => {
       const { type, payload } = event.data
 
@@ -106,23 +109,37 @@ function registerServiceWorker(): void {
       }
     })
 
-    navigator.serviceWorker.register('/sw.js').catch(console.error)
+    navigator.serviceWorker.register(path).catch(console.error)
   }
 }
 
-export function serviceWorker(context: BuildContext): string {
+export function serviceWorkerRegistration(path: string): string {
   return `
-${main};
+${registerServiceWorker};
+registerServiceWorker("${path}");
+  `
+}
+
+export function indexServiceWorkerDeclaration(context: BuildContext): string {
+  return `
+${indexServiceWorker};
 
 globalThis.debug = ${process.env.FREYA_ENABLE_SERVICE_WORKER === 'true' || !context.isProduction};
 globalThis.version = "${context.version}";
-globalThis.precache = ${JSON.stringify(Array.from(context.extensions.freya.images as Set<string>))};
-globalThis.talks = ${JSON.stringify(Array.from(context.extensions.freya.talks as Set<string>))};
 
-main()
-`
+indexServiceWorker();
+  `
 }
 
-export function serviceWorkerRegistration(): string {
-  return registerServiceWorker.toString()
+export function talkServiceWorkerDeclaration(context: BuildContext, talk: string, images: string[]): string {
+  return `
+${talkServiceWorker};
+
+globalThis.debug = ${process.env.FREYA_ENABLE_SERVICE_WORKER === 'true' || !context.isProduction};
+globalThis.version = "${context.version}";
+globalThis.talk = "${talk}";
+globalThis.images = ${JSON.stringify(images)};
+
+talkServiceWorker();
+  `
 }

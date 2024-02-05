@@ -53,6 +53,12 @@ export function filterWhitelistedTalks(context: BuildContext, talks: Set<string>
   return new Set(whitelisted)
 }
 
+export function isServiceWorkerEnabled(context: BuildContext): boolean {
+  return (
+    (process.env.FREYA_ENABLE_SERVICE_WORKER === 'true' || context.isProduction) && !context.extensions.freya.export
+  )
+}
+
 export const freyaDir = resolve(fileURLToPath(import.meta.url), '../..')
 export let whitelistedTalks: string[]
 export const pusherConfig = loadPusherSettings()

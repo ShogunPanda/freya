@@ -1,35 +1,36 @@
 import { serializeCSSClasses, type BuildContext } from '@perseveranza-pets/dante'
 import { type VNode } from 'preact'
-import { type Talk } from '../slidesets/models.js'
+import { resolveImageUrl } from '../index.js'
+import { type Talk, type Theme } from '../slidesets/models.js'
 
 interface BodyProps {
   context: BuildContext
+  theme: Theme
   talk: Talk
-  talkAssets: [string, string][]
-  themeAssets: [string, string][]
+  talkImages: string[]
+  themeImages: string[]
 }
 
-export function body({ context, talk, talkAssets, themeAssets }: BodyProps): VNode {
+export function body({ context, theme, talk, talkImages, themeImages }: BodyProps): VNode {
   const resolveClasses = context.extensions.freya.resolveClasses
 
   return (
     <main className={resolveClasses('freya@assets')}>
       <h1 className={resolveClasses('freya@assets__title')}>{talk.document.title}</h1>
 
-      {talkAssets.length > 0 && (
+      {talkImages.length > 0 && (
         <>
           <h2 className={resolveClasses('freya@assets__header')}>Talk Assets</h2>
 
           <section className={resolveClasses('freya@assets__section')}>
-            {talkAssets.map(([path, url]) => {
+            {talkImages.map(path => {
               return (
-                <figure
-                  key={path}
-                  className={resolveClasses('freya@assets__figure')}
-                  data-freya-asset-id={`@talk/${path}`}
-                >
+                <figure key={path} className={resolveClasses('freya@assets__figure')} data-freya-asset-id={path}>
                   <div className={resolveClasses('freya@assets__figure__image-wrapper')}>
-                    <img src={url} className={resolveClasses('freya@assets__figure__image')} />
+                    <img
+                      src={resolveImageUrl({}, theme.id, talk.id, path)}
+                      className={resolveClasses('freya@assets__figure__image')}
+                    />
                   </div>
                   <figcaption className={resolveClasses('freya@assets__figure__caption')}>{path}</figcaption>
                 </figure>
@@ -39,22 +40,21 @@ export function body({ context, talk, talkAssets, themeAssets }: BodyProps): VNo
         </>
       )}
 
-      {themeAssets.length > 0 && (
+      {themeImages.length > 0 && (
         <>
-          <h2 className={resolveClasses('freya@assets__header', talkAssets.length > 0 && 'freya@assets__header--next')}>
+          <h2 className={resolveClasses('freya@assets__header', talkImages.length > 0 && 'freya@assets__header--next')}>
             Theme Assets
           </h2>
 
           <section className={resolveClasses('freya@assets__section')}>
-            {themeAssets.map(([path, url]) => {
+            {themeImages.map(path => {
               return (
-                <figure
-                  key={path}
-                  className={resolveClasses('freya@assets__figure')}
-                  data-freya-asset-id={`@theme/${path}`}
-                >
+                <figure key={path} className={resolveClasses('freya@assets__figure')} data-freya-asset-id={path}>
                   <div className={resolveClasses('freya@assets__figure__image-wrapper')}>
-                    <img src={url} className={resolveClasses('freya@assets__figure__image')} />
+                    <img
+                      src={resolveImageUrl({}, theme.id, talk.id, path)}
+                      className={resolveClasses('freya@assets__figure__image')}
+                    />
                   </div>
                   <figcaption className={resolveClasses('freya@assets__figure__caption')}>{path}</figcaption>
                 </figure>

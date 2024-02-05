@@ -110,6 +110,23 @@ export const markdownRenderer = markdownIt({
   linkify: true
 })
 
+export async function listThemeAndTalkImages(theme: string, talk: string): Promise<[string[], string[]]> {
+  const themeImagesPaths = await glob('**/*.{bmp,gif,jpg,jpeg,png,webp,svg}', {
+    cwd: resolve(rootDir, 'src/themes', theme, 'assets'),
+    ignore
+  })
+
+  const talkImagesPaths = await glob('**/*.{bmp,gif,jpg,jpeg,png,webp,svg}', {
+    cwd: resolve(rootDir, 'src/talks', talk, 'assets'),
+    ignore
+  })
+
+  return [
+    themeImagesPaths.sort(assetsSorter).map(a => `@theme/${a}`),
+    talkImagesPaths.sort(assetsSorter).map(a => `@talk/${a}`)
+  ]
+}
+
 export async function finalizeJs(code: string): Promise<string> {
   const { code: minified } = await minify(code, { compress: true, mangle: false })
   return minified
@@ -374,28 +391,11 @@ export async function generateAssetsListing(context: BuildContext): Promise<Reco
     i++
     const startTime = process.hrtime.bigint()
     const talk = await getTalk(id)
+    const theme = await getTheme(talk.config.theme)
 
-    const talkPaths = await glob('**/*.{bmp,gif,jpg,jpeg,png,webp,svg}', {
-      cwd: resolve(rootDir, 'src/talks', id, 'assets'),
-      ignore
-    })
+    const [themeImages, talkImages] = await listThemeAndTalkImages(talk.config.theme, id)
 
-    const themePaths = await glob('**/*.{bmp,gif,jpg,jpeg,png,webp,svg}', {
-      cwd: resolve(rootDir, 'src/themes', talk.config.theme, 'assets'),
-      ignore
-    })
-
-    const talkAssets: [string, string][] = []
-    for (const asset of talkPaths.sort(assetsSorter)) {
-      talkAssets.push([asset, `/assets/talks/${id}/${asset}`])
-    }
-
-    const themeAssets: [string, string][] = []
-    for (const asset of themePaths.sort(assetsSorter)) {
-      themeAssets.push([asset, `/assets/themes/${talk.config.theme}/${asset}`])
-    }
-
-    const body = assetsBody({ context, talk, talkAssets, themeAssets })
+    const body = assetsBody({ context, theme, talk, talkImages, themeImages })
     const page = assetsPage(context, bodyClassName)
     pages[id] = render(page).replace('@BODY@', render(body))
 
@@ -489,6 +489,9 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
   clientContext.serverData = undefined
 
   // Render the page
+
+  const [themeImages, talkImages] = await listThemeAndTalkImages(theme.id, talk.id)
+
   const html = render(
     page(
       talk.document.title,
@@ -496,6 +499,8 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
         context,
         talk,
         theme,
+        themeImages,
+        talkImages,
         js: await finalizeJs([await generateApplicationScript(context, clientContext, layouts), pusher].join('\n;\n'))
       }),
       resolveClasses('freya@loading'),

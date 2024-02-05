@@ -1,18 +1,25 @@
 import fastifyFormBody from '@fastify/formbody'
 import { type ServerResult } from '@perseveranza-pets/dante'
 import { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify'
+import { NOT_FOUND } from 'http-errors-enhanced'
 import { createHmac } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { basename, dirname, resolve } from 'node:path'
 import { pusherConfig } from './configuration.js'
+import { getTalk, resolveImagePath } from './index.js'
+
 interface TalkHandlerParams {
   Params: {
     talk: string
     slide: string
-    id: string
   }
-  Querystring: {
-    export?: string
+}
+
+interface AssetsHandlerParams {
+  Params: {
+    talk: string
+    type: 'talk' | 'theme'
+    '*': string
   }
 }
 
@@ -41,29 +48,45 @@ export async function talkHandler(
   request: FastifyRequest<TalkHandlerParams>,
   reply: FastifyReply
 ): Promise<void> {
-  const talk = request.params.talk
+  const { talk, slide } = request.params
 
   if (talk === '404.html' || talk === '__status.html' || !pageExists(this, talk)) {
-    return reply.code(404).sendFile('404.html')
+    return reply.code(NOT_FOUND).sendFile('404.html')
+  }
+
+  if (slide) {
+    if (slide === 'sw.js') {
+      return reply.sendFile(`assets/talks/${talk}/sw.js`)
+    } else if (!slide.match(/^\d+$/)) {
+      return reply.code(NOT_FOUND).sendFile('404.html')
+    }
   }
 
   return reply.sendFile(`${talk}.html`)
 }
 
-export function assetsHandler(
+export async function assetsHandler(
   this: FastifyInstance,
-  request: FastifyRequest<TalkHandlerParams>,
+  request: FastifyRequest<AssetsHandlerParams>,
   reply: FastifyReply
-): void {
-  const talk = request.params.talk
+): Promise<void> {
+  const { talk, type, '*': path } = request.params
 
-  if (talk === '404.html' || talk === '__status.html' || !pageExists(this, talk)) {
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    reply.code(404).sendFile('404.html')
-    return
+  if (!type) {
+    return reply.sendFile(`${talk}_assets.html`)
+  } else if (!['talk', 'theme'].includes(type)) {
+    return reply.code(NOT_FOUND).sendFile('404.html')
   }
 
-  void reply.sendFile(`${talk}_assets.html`)
+  const {
+    config: { theme }
+  } = await getTalk(talk)
+
+  const finalPath = resolveImagePath({}, theme, talk, `@${type}/${path}`)
+  const finalPathDirname = dirname(finalPath)
+  const finalPathBasename = basename(finalPath)
+
+  return reply.sendFile(finalPathBasename, finalPathDirname)
 }
 
 export function setupServer(server: FastifyInstance, isProduction: boolean): ServerResult {
@@ -112,7 +135,13 @@ export function setupServer(server: FastifyInstance, isProduction: boolean): Ser
 
   server.route({
     method: 'GET',
-    url: '/:talk/:slide(^\\d+)',
+    url: '/:talk/assets/:type/*',
+    handler: assetsHandler
+  })
+
+  server.route({
+    method: 'GET',
+    url: '/:talk/:slide',
     handler: talkHandler
   })
 

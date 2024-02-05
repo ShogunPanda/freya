@@ -6,7 +6,7 @@ import { readdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { pusherConfig } from '../configuration.js'
 import { readFile } from '../fs.js'
-import { type Config, type ParsedSVG, type RawTheme, type Slide, type Talk, type Theme } from './models.js'
+import { type Config, type ParsedSVG, type Slide, type Talk, type Theme } from './models.js'
 
 let commonCache: Record<string, object> | undefined
 let allTalksCache: Set<string> | undefined
@@ -62,7 +62,7 @@ export function resolveImageUrl(cache: Record<string, string>, theme: string, ta
     return cache[key]
   }
 
-  cache[key] = url.replace('@talk', `/assets/talks/${talk}`).replace('@theme', `/assets/themes/${theme}`)
+  cache[key] = url.replace('@talk', `/${talk}/assets/talk`).replace('@theme', `/${talk}/assets/theme`)
   return cache[key]
 }
 
@@ -90,14 +90,8 @@ export async function getTheme(themeName: string): Promise<Theme> {
   }
 
   const themeFile = await readFile(resolve(rootDir, 'src/themes', themeName, 'theme.yml'))
-  const rawTheme = load(themeFile) as RawTheme
-
-  const theme = {
-    id: themeName,
-    urls: {},
-    ...rawTheme,
-    images: Array.from(new Set((rawTheme.images ?? []).map(i => resolveImageUrl({}, themeName, '', i))))
-  }
+  const theme = load(themeFile) as Theme
+  theme.id = themeName
 
   themesCache.set(themeName, theme)
   return theme

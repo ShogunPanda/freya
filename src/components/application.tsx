@@ -427,6 +427,6 @@ if (globalThis.document) {
       }
     })
 
-    navigator.serviceWorker.register('/sw.js').catch(console.error)
+    navigator.serviceWorker.register(`/${context.id}/sw.js`).catch(console.error)
   }
 }

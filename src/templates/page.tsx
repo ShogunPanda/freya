@@ -6,13 +6,15 @@ import { type Talk, type Theme } from '../slidesets/models.js'
 
 interface HeaderProps {
   context: BuildContext
-  talk: Talk
   theme: Theme
+  talk: Talk
+  talkImages: string[]
+  themeImages: string[]
   js: string
 }
 
-export function header({ context, talk, theme, js }: HeaderProps): VNode {
-  const { fonts, images: themeImages, id } = theme
+export function header({ context, theme, talk, talkImages, themeImages, js }: HeaderProps): VNode {
+  const { fonts, id } = theme
 
   const faviconImageUrl = resolveImageUrl({}, id, talk.id, '@theme/favicon.webp')
 
@@ -25,8 +27,8 @@ export function header({ context, talk, theme, js }: HeaderProps): VNode {
       {fonts.urls.map((url: string, index: number) => (
         <link key={index} rel="preload" as="font" href={url} crossOrigin="anonymous" />
       ))}
-      {[...themeImages, ...talk.images].map(url => (
-        <link key={url} rel="preload" as="image" href={(context.extensions.freya.export ? '.' : '') + url} />
+      {[...themeImages, ...talkImages].map(url => (
+        <link key={url} rel="preload" as="image" href={resolveImageUrl({}, id, talk.id, url)} />
       ))}
       <style {...serializeCSSClasses(context)} />
       <script defer={true} type="module" dangerouslySetInnerHTML={{ __html: js }} />

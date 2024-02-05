@@ -51,15 +51,11 @@ export interface Talk extends RawTalk {
   images: string[]
 }
 
-export interface RawTheme {
-  style: string
-  images: string[]
-  fonts: Fonts
-}
-
-export interface Theme extends RawTheme {
+export interface Theme {
   id: string
+  style: string
   urls: Record<string, string>
+  fonts: Fonts
 }
 
 export interface ClientContext {

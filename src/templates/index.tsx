@@ -1,10 +1,11 @@
 import { danteDir, serializeCSSClasses, type BuildContext } from '@perseveranza-pets/dante'
 import { resolve } from 'node:path'
 import { Fragment, type VNode } from 'preact'
+import { isServiceWorkerEnabled } from '../configuration.js'
 import { readFile } from '../fs.js'
 import { finalizeJs } from '../slidesets/generators.js'
 import { type Talk } from '../slidesets/models.js'
-import { serviceWorkerRegistration } from '../templates/service-worker.js'
+import { serviceWorkerRegistration } from './service-workers.js'
 
 interface BodyProps {
   context: BuildContext
@@ -60,7 +61,7 @@ export async function page(context: BuildContext, bodyClassName: string): Promis
   const siteVersion = `globalThis.__freyaSiteVersion = "${context.version}"`
   const hotReload = !context.isProduction ? await readFile(resolve(danteDir, 'dist/assets/hot-reload.js')) : ''
 
-  const serviceWorker = context.isProduction && !context.extensions.freya.export ? serviceWorkerRegistration() : ''
+  const serviceWorker = isServiceWorkerEnabled(context) ? serviceWorkerRegistration('/sw.js') : ''
 
   const js = await finalizeJs([siteVersion, hotReload, serviceWorker].join('\n;\n'))
 
