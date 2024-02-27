@@ -1,4 +1,4 @@
-# @perseveranza-pets/dante
+# @perseveranza-pets/freya
 
 [![Version](https://img.shields.io/npm/v/@perseveranza-pets/dante.svg)](https://npm.im/@perseveranza-pets/dante)
 [![Dependencies](https://img.shields.io/librariesio/release/npm/@perseveranza-pets/dante)](https://libraries.io/npm/@perseveranza-pets/dante)

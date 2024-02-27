@@ -7,6 +7,7 @@ function shouldResolveClass(klass: string): boolean {
   return /^((font-italic|font-bold|underline|(?:text-#(?:[a-fA-F0-9]+)))\s*)+$/.test(klass)
 }
 
+// TODO@PI: Remove me
 function applyCodeClasses(resolveClasses: CSSClassesResolver, rendered: string): [string, string] {
   // Resolve classes
   rendered = rendered
