@@ -1,3 +1,7 @@
+### 2024-02-27 / 0.65.5
+
+- fix: Fixed typo in README.md.
+
 ### 2024-02-07 / 0.65.4
 
 - chore: Updated dependencies.
