@@ -1,20 +1,15 @@
 import { Fragment, render, type VNode } from 'preact'
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
 import { route, Router, type RoutableProps, type RouterOnChangeArgs } from 'preact-router'
+// eslint-disable-next-line import/order
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
 import Pusher, { type Channel } from 'pusher-js'
 import { type ClientContext as ClientContextModel, type ParsedSVG } from '../slidesets/models.js'
 import { handleFullScreen, handleShortcut, slideUrl, updateSlidesAppearance, type DOMContext } from './client.js'
-import {
-  ClientContextInstance,
-  createClientContextValue,
-  SlideContextInstance,
-  type CSSClassToken
-} from './contexts.js'
+import { ClientContextInstance, createClientContextValue, SlideContextInstance } from './contexts.js'
 import { Controller } from './controller.js'
 import { Navigator, Overlay } from './navigator.js'
 import { Presenter } from './presenter.js'
 import { LayoutContext, SlideComponent } from './slide.js'
-import { sortCssClasses, tokenizeCssClasses } from './styling.js'
 import { SvgDefinitions } from './svg.js'
 
 // @ts-expect-error Replaced at compile time
@@ -49,38 +44,6 @@ function resolveSVG(cache: Record<string, ParsedSVG>, theme: string, talk: strin
   return cache[key]
 }
 
-function resolveClasses(
-  keepExpanded: boolean,
-  classes: Record<string, string[]>,
-  compressedClasses: Record<string, string>,
-  ...klasses: (CSSClassToken | CSSClassToken[])[]
-): string {
-  let replaced = klasses
-  let changed = true
-
-  while (changed) {
-    changed = false
-    replaced = tokenizeCssClasses(...replaced).map(klass => {
-      const replacement = classes[klass]
-
-      if (replacement) {
-        changed = true
-        return replacement
-      } else {
-        return klass
-      }
-    })
-  }
-
-  let expanded = Array.from(new Set(tokenizeCssClasses(...replaced))).map(sortCssClasses)
-
-  if (!keepExpanded) {
-    expanded = expanded.map(klass => compressedClasses[klass])
-  }
-
-  return expanded.join(' ')
-}
-
 function Application({ context }: { context: ClientContextModel } & RoutableProps): VNode | null {
   const {
     id,
@@ -108,12 +71,6 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
   const slide = typeof index === 'number' ? slides[index - 1] : undefined
 
   const hookMethods = {
-    resolveClasses: resolveClasses.bind(
-      null,
-      context.css.keepExpanded,
-      context.css.classes,
-      context.css.compressedClasses
-    ),
     resolveImage: resolveImageUrl.bind(null, context.assets.images),
     resolveSVG: resolveSVG.bind(null, context.assets.svgs),
     parseContent: markdownParser.bind(null, context.assets.content)
@@ -390,10 +347,7 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
         </SlideContextInstance.Provider>
       )}
 
-      <SvgDefinitions
-        definitions={context.assets.svgsDefinitions}
-        className={hookMethods.resolveClasses('freya@svg-definitions')}
-      />
+      <SvgDefinitions definitions={context.assets.svgsDefinitions} />
     </ClientContextInstance.Provider>
   )
 }
@@ -406,7 +360,7 @@ if (globalThis.document) {
   const layouts = __replace_placeholder_layouts__
 
   document.addEventListener('DOMContentLoaded', () => {
-    document.body.className = ''
+    document.body.classList.remove('freya@loading')
     document.body.querySelector('h1')?.remove()
 
     render(

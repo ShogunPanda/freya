@@ -1,0 +1,405 @@
+/* stylelint-disable-next-line selector-class-pattern */
+.freya@ {
+  &root {
+    display: flex;
+    overflow: hidden;
+    flex-direction: column;
+    flex: 1 1 0%;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    background-color: black;
+    font-family: var(--freya-font-varela-round);
+  }
+
+  &loading {
+    color: rgb(224, 224, 224);
+
+    &__text {
+      margin: 0;
+    }
+  }
+
+  &image {
+    display: block;
+  }
+
+  &svg {
+    display: block;
+
+    &-icon {
+      display: inline-block;
+      line-height: 1em;
+      vertical-align: middle;
+      stroke: currentColor;
+      stroke-width: 0;
+      fill: currentColor;
+    }
+  }
+
+  &svg-definitions {
+    display: none;
+  }
+
+  &slide {
+    position: relative;
+    display: flex;
+    z-index: 1;
+    overflow: hidden;
+    flex-direction: column;
+    width: 2000px;
+    height: 1120px;
+    min-width: 2000px;
+    min-height: 1120px;
+    padding: 0.5--sp;
+    background-color: white;
+    transform: var(--freya-slide-transform);
+    transform-origin: var(--freya-slide-transform-origin);
+  }
+
+  &progress {
+    position: absolute;
+    display: var(--freya-display-progress);
+    z-index: 10;
+    bottom: 0;
+    left: 0;
+    width: calc(var(--freya-progress) * 1%);
+    height: 0.03--sp;
+    background-color: #5ac3ea;
+  }
+
+  &qr {
+    display: inline-block;
+
+    &__wrapper {
+      position: relative;
+    }
+
+    &__code {
+      width: 100%;
+      height: auto;
+    }
+
+    &__image-wrapper {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    &__image {
+      background-color: white;
+    }
+  }
+
+  &overlay {
+    position: absolute;
+    z-index: 2;
+    opacity: 0.9;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(0, 0, 0);
+  }
+
+  &controller {
+    position: absolute;
+    display: flex;
+    z-index: 10;
+    opacity: 0.8;
+    flex-direction: column;
+    gap: var(--freya-controller-padding);
+    align-items: center;
+    /* stylelint-disable-next-line comment-empty-line-before */
+    /* 
+      The total size of the element is:
+        (--freya-controller-action-size * --freya-controller-actions) + <-- Width of the items
+        (--freya-controller-padding * (--freya-controller-actions - 1)) + <-- Width of the internal padding
+        (--freya-controller-padding * 2) = <-- External padding
+    */
+    top: calc(
+      50% -
+        (
+          (var(--freya-controller-action-size) * var(--freya-controller-actions)) +
+            (var(--freya-controller-padding) * (var(--freya-controller-actions) + 1))
+        ) / 2
+    );
+    right: 0;
+    padding: var(--freya-controller-padding);
+    background-color: rgb(30, 30, 30);
+
+    border-bottom-left-radius: 1.5rem;
+    border-top-left-radius: 1.5rem;
+
+    &__action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: var(--freya-controller-action-size);
+      font-family: var(--freya-font-emoji);
+
+      &,
+      &:active,
+      &:visited {
+        color: white;
+      }
+
+      &:hover,
+      &:focus {
+        color: #5ac3ea;
+      }
+
+      &__icon {
+        display: inline-block;
+        width: calc(var(--freya-controller-action-size) * 0.75);
+        height: calc(var(--freya-controller-action-size) * 0.75);
+        line-height: 1em;
+        vertical-align: middle;
+        stroke: currentColor;
+        stroke-width: 0;
+        fill: currentColor;
+      }
+    }
+  }
+
+  &navigator {
+    --freya-slide-display-progress: none;
+    position: absolute;
+    display: grid;
+    z-index: 3;
+    overflow: auto;
+    grid-template-columns: repeat(auto-fit, minmax(35rem, 1fr));
+    grid-template-rows: min-content;
+    grid-auto-rows: min-content;
+    gap: 0.3--sp 0.2--sp;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 100%;
+    max-height: 100%;
+    padding: 0.2--sp;
+    padding-right: 0.9--sp;
+
+    &__close {
+      position: fixed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      top: 0.2--sp;
+      right: 0.2--sp;
+
+      &,
+      &:active,
+      &:visited {
+        color: white;
+      }
+
+      &:hover {
+        color: #5ac3ea;
+      }
+
+      &__image {
+        height: 0.3--sp;
+      }
+    }
+
+    &__slide {
+      --freya-slide-transform-origin: 0 0;
+      position: relative;
+      display: block;
+      overflow: hidden;
+      height: var(--freya-navigator-slide-height);
+      border-style: solid;
+      border-color: transparent;
+      border-width: 8px;
+      cursor: pointer;
+
+      &:hover {
+        border-color: #5ac3ea;
+      }
+
+      &--active {
+        border-color: #5ac3ea;
+      }
+
+      &__contents {
+        pointer-events: none;
+        user-select: none;
+      }
+
+      &__number {
+        position: absolute;
+        display: flex;
+        z-index: 2;
+        opacity: 0.75;
+        align-items: center;
+        justify-content: center;
+        top: 0;
+        right: 0;
+        width: calc(3ch + 3rem);
+        height: calc(1ch + 3rem);
+        background-color: rgb(0, 0, 0);
+        color: white;
+        font-family: var(--freya-font-noto-sans);
+        font-size: 10--pt;
+        font-weight: 600;
+        pointer-events: none;
+        user-select: none;
+      }
+    }
+  }
+
+  &presenter {
+    --freya-slide-display-progress: none;
+    position: absolute;
+    display: grid;
+    z-index: 3;
+    gap: 0.3--sp;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 100%;
+    padding: 0.2--sp;
+    padding-right: 0.9--sp;
+
+    &--with-previous {
+      grid-template-areas: 'header header header' 'previous current next' 'u1 notes u2';
+      grid-template-columns: 1fr 2fr 1fr;
+      /* stylelint-disable-next-line declaration-block-no-redundant-longhand-properties */
+      grid-template-rows: min-content min-content 1fr;
+    }
+
+    &--no-previous {
+      grid-template-areas: 'header header' 'current next' 'notes unused';
+      grid-template-columns: 2fr 1fr;
+      /* stylelint-disable-next-line declaration-block-no-redundant-longhand-properties */
+      grid-template-rows: min-content min-content 1fr;
+    }
+
+    &__header {
+      display: flex;
+      grid-area: header;
+      column-gap: 1ch;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20--pt;
+
+      &__label {
+        font-family: var(--freya-font-noto-sans);
+        font-weight: 600;
+        line-height: 0.3--sp;
+
+        &--paused {
+          opacity: 0.4;
+        }
+      }
+
+      &__action {
+        font-family: var(--freya-font-emoji);
+
+        &,
+        &:active,
+        &:visited {
+          color: white;
+        }
+
+        &:hover {
+          color: #5ac3ea;
+        }
+
+        &__icon {
+          height: 0.25--sp;
+
+          &--active {
+            color: #5ac3ea;
+          }
+        }
+      }
+    }
+
+    &__close {
+      position: fixed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      top: 0.2--sp;
+      right: 0.2--sp;
+
+      &,
+      &:active,
+      &:visited {
+        color: white;
+      }
+
+      &:hover {
+        color: #5ac3ea;
+      }
+
+      &__image {
+        height: 0.3--sp;
+      }
+    }
+
+    &__slide {
+      --freya-slide-transform-origin: 0 0;
+      position: relative;
+      display: block;
+      overflow: hidden;
+      height: var(--freya-presenter-slide-height);
+      border-style: solid;
+      border-color: transparent;
+      border-width: 8px;
+
+      &--previous {
+        grid-area: previous;
+      }
+
+      &--current {
+        grid-area: current;
+        border-color: #5ac3ea;
+      }
+
+      &--next {
+        grid-area: next;
+      }
+
+      &__contents {
+        pointer-events: none;
+        user-select: none;
+      }
+
+      &__number {
+        position: absolute;
+        display: flex;
+        z-index: 2;
+        opacity: 0.75;
+        align-items: center;
+        justify-content: center;
+        top: 0;
+        right: 0;
+        width: calc(3ch + 3rem);
+        height: calc(1ch + 3rem);
+        background-color: rgb(0, 0, 0);
+        color: white;
+        font-family: var(--freya-font-noto-sans);
+        font-size: 10--pt;
+        font-weight: 600;
+        pointer-events: none;
+        user-select: none;
+      }
+    }
+
+    &__notes {
+      grid-area: notes;
+      color: white;
+    }
+  }
+}

@@ -8,6 +8,10 @@
   outline: none;
 }
 
+body {
+  font-size: 12pt;
+}
+
 body,
 a,
 p,
@@ -67,9 +71,10 @@ ol {
 
 ul.unstyled,
 ol.unstyled {
-  list-style: none;
   margin: 0;
   padding-left: 0;
+
+  list-style: none;
 }
 
 dl {
@@ -82,12 +87,4 @@ dt {
 
 dt:nth-child(n + 1) {
   margin-top: 1rem;
-}
-
-dl {
-  margin: 0;
-}
-
-html {
-  --freya-display-progress: block;
 }

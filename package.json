@@ -36,9 +36,10 @@
   "scripts": {
     "dev": "swc --strip-leading-paths --delete-dir-on-start -D -s -w -d dist src",
     "build": "swc --strip-leading-paths --delete-dir-on-start -D -d dist src",
-    "postbuild": "concurrently npm:lint npm:typecheck",
+    "postbuild": "concurrently npm:lint npm:lint:css npm:typecheck",
     "format": "prettier -w src",
     "lint": "eslint --cache --ext .js,.jsx,.ts,.tsx src",
+    "lint:css": "stylelint --cache src/**/*.css",
     "typecheck": "tsc -p . --emitDeclarationOnly",
     "test": "exit 0",
     "ci": "npm run build",
@@ -48,12 +49,11 @@
   "dependencies": {
     "@fastify/formbody": "^7.4.0",
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
-    "@perseveranza-pets/dante": "^0.50.2",
+    "@perseveranza-pets/dante": "^0.57.0",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.5",
     "@swc/cli": "^0.3.9",
-    "@unocss/preset-wind": "^0.58.5",
     "commander": "^12.0.0",
     "glob": "^10.3.10",
     "js-yaml": "^4.1.0",
@@ -71,6 +71,7 @@
   },
   "devDependencies": {
     "@cowtech/eslint-config": "^9.0.3",
+    "@cowtech/stylelint-config": "^0.2.0",
     "@fortawesome/free-brands-svg-icons": "^6.5.1",
     "@fortawesome/pro-duotone-svg-icons": "^6.5.1",
     "@fortawesome/pro-light-svg-icons": "^6.5.1",
@@ -80,8 +81,9 @@
     "@types/markdown-it": "^13.0.7",
     "@types/wait-on": "^5.3.4",
     "concurrently": "^8.2.2",
-    "eslint": "^8.56.0",
+    "eslint": "^8.57.0",
     "prettier": "^3.2.5",
+    "stylelint": "^16.2.1",
     "typescript": "^5.3.3"
   }
 }

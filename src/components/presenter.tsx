@@ -49,7 +49,6 @@ export function Presenter({
   const nextElement = useRef<HTMLElement>(null)
 
   const {
-    resolveClasses,
     parseContent,
     dimensions,
     talk: { slides, slidesPadding, slidesCount }
@@ -96,17 +95,17 @@ export function Presenter({
 
   return (
     <section
-      className={resolveClasses(
+      className={cleanCssClasses(
         'freya@presenter',
         `freya@presenter--${showPrevious ? 'with' : 'no'}-previous`,
         className
       )}
     >
-      <header className={resolveClasses('freya@presenter__header')}>
-        <span className={resolveClasses('freya@presenter__header__label')}>
+      <header className={cleanCssClasses('freya@presenter__header')}>
+        <span className={cleanCssClasses('freya@presenter__header__label')}>
           {index.toString().padStart(slidesPadding, '0')}/{slidesCount}
         </span>
-        <a href="#" className={resolveClasses('freya@presenter__header__action')} onClick={togglePresentation}>
+        <a href="#" className={cleanCssClasses('freya@presenter__header__action')} onClick={togglePresentation}>
           <SvgIcon
             name="play"
             className={cleanCssClasses(
@@ -116,14 +115,14 @@ export function Presenter({
             )}
           />
         </a>
-        <a href="#" className={resolveClasses('freya@presenter__header__action')} onClick={startPresentation}>
+        <a href="#" className={cleanCssClasses('freya@presenter__header__action')} onClick={startPresentation}>
           <SvgIcon
             name="reset"
             className={cleanCssClasses('freya@svg-icon', 'freya@presenter__header__action__icon')}
           />
         </a>
         <span
-          className={resolveClasses(
+          className={cleanCssClasses(
             'freya@presenter__header__label',
             paused && 'freya@presenter__header__label--paused'
           )}
@@ -131,7 +130,7 @@ export function Presenter({
           {time}
         </span>
 
-        <a href="#" className={resolveClasses('freya@presenter__close')} onClick={close}>
+        <a href="#" className={cleanCssClasses('freya@presenter__close')} onClick={close}>
           <SvgIcon name="close" className={cleanCssClasses('freya@svg-icon', 'freya@presenter__close__image')} />
         </a>
       </header>
@@ -139,41 +138,41 @@ export function Presenter({
       {showPrevious && index > 1 && (
         <aside
           ref={previousElement}
-          className={resolveClasses('freya@presenter__slide', 'freya@presenter__slide--previous')}
+          className={cleanCssClasses('freya@presenter__slide', 'freya@presenter__slide--previous')}
         >
           <SlideContextWithModel.Provider
             value={{ slide: slides[index - 2], index: index - 1, previousIndex: index, presenter: true }}
           >
             <SlideComponent className={cleanCssClasses('freya@presenter__slide__contents')} overrideProgress={true} />
           </SlideContextWithModel.Provider>
-          <span className={resolveClasses('freya@presenter__slide__number')}>{index - 1}</span>
+          <span className={cleanCssClasses('freya@presenter__slide__number')}>{index - 1}</span>
         </aside>
       )}
 
       <main
         ref={currentElement}
-        className={resolveClasses('freya@presenter__slide', 'freya@presenter__slide--current')}
+        className={cleanCssClasses('freya@presenter__slide', 'freya@presenter__slide--current')}
       >
         <SlideContextWithModel.Provider value={{ slide: slide as Slide, index, previousIndex }}>
           <SlideComponent className={cleanCssClasses('freya@presenter__slide__contents')} overrideProgress={true} />
         </SlideContextWithModel.Provider>
-        <span className={resolveClasses('freya@presenter__slide__number')}>{index}</span>
+        <span className={cleanCssClasses('freya@presenter__slide__number')}>{index}</span>
       </main>
 
       {index < slidesCount && (
-        <aside ref={nextElement} className={resolveClasses('freya@presenter__slide', 'freya@presenter__slide--next')}>
+        <aside ref={nextElement} className={cleanCssClasses('freya@presenter__slide', 'freya@presenter__slide--next')}>
           <SlideContextWithModel.Provider
             value={{ slide: slides[index], index: index + 1, previousIndex: index, presenter: true }}
           >
             <SlideComponent className={cleanCssClasses('freya@presenter__slide__contents')} overrideProgress={true} />
           </SlideContextWithModel.Provider>
-          <span className={resolveClasses('freya@presenter__slide__number')}>{index + 1}</span>
+          <span className={cleanCssClasses('freya@presenter__slide__number')}>{index + 1}</span>
         </aside>
       )}
 
       {currentSlide.notes && (
         <footer
-          className={resolveClasses('freya@presenter__notes')}
+          className={cleanCssClasses('freya@presenter__notes')}
           dangerouslySetInnerHTML={{ __html: parseContent(currentSlide.notes) }}
         />
       )}

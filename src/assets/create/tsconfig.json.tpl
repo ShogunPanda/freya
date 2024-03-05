@@ -4,6 +4,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "jsx": "react-jsx",
+    "jsxImportSource": "preact",
     "noEmit": true,
     "outDir": "dist",
     "allowJs": false,

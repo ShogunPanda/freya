@@ -20,11 +20,11 @@ interface SlideComponentProps {
 function noop(): void {}
 
 export function SlideComponent(props: SlideProps & ClientContextMethods & SlideComponentProps): VNode {
-  const { context, layout: Layout, slide, index, parseContent, resolveImage, resolveClasses, resolveSVG } = props
+  const { context, layout: Layout, slide, index, parseContent, resolveImage, resolveSVG } = props
 
   return (
     <ClientContextInstance.Provider
-      value={createClientContextValue(context, { resolveClasses, resolveImage, resolveSVG, parseContent })}
+      value={createClientContextValue(context, { resolveImage, resolveSVG, parseContent })}
     >
       <SlideContextInstance.Provider value={{ slide, index, previousIndex: index }}>
         <Layout {...props} />
@@ -34,18 +34,18 @@ export function SlideComponent(props: SlideProps & ClientContextMethods & SlideC
 }
 
 export function Widgets(props: SlideProps & ClientContextMethods & SlideComponentProps): VNode {
-  const { context, slide, index, parseContent, resolveImage, resolveClasses, resolveSVG } = props
+  const { context, slide, index, parseContent, resolveImage, resolveSVG } = props
 
   return (
     <ClientContextInstance.Provider
-      value={createClientContextValue(context, { resolveClasses, resolveImage, resolveSVG, parseContent })}
+      value={createClientContextValue(context, { resolveImage, resolveSVG, parseContent })}
     >
       <SlideContextInstance.Provider value={{ slide, index, previousIndex: index }}>
         <Overlay />
         <Navigator close={noop} />
         <Presenter close={noop} paused={false} duration={300} startPresentation={noop} togglePresentation={noop} />
         <Controller />
-        <SvgDefinitions definitions={[]} className={resolveClasses('freya@svg-definitions')} />
+        <SvgDefinitions definitions={[]} />
       </SlideContextInstance.Provider>
     </ClientContextInstance.Provider>
   )

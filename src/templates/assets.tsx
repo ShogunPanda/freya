@@ -1,73 +1,18 @@
-import { serializeCSSClasses, type BuildContext } from '@perseveranza-pets/dante'
+import { cleanCssClasses, type BuildContext } from '@perseveranza-pets/dante'
 import { type VNode } from 'preact'
 import { resolveImageUrl } from '../index.js'
 import { type Talk, type Theme } from '../slidesets/models.js'
 
-interface BodyProps {
+interface AssetsProps {
   context: BuildContext
   theme: Theme
   talk: Talk
   talkImages: string[]
   themeImages: string[]
+  bodyClassName: string
 }
 
-export function body({ context, theme, talk, talkImages, themeImages }: BodyProps): VNode {
-  const resolveClasses = context.extensions.freya.resolveClasses
-
-  return (
-    <main className={resolveClasses('freya@assets')}>
-      <h1 className={resolveClasses('freya@assets__title')}>{talk.document.title}</h1>
-
-      {talkImages.length > 0 && (
-        <>
-          <h2 className={resolveClasses('freya@assets__header')}>Talk Assets</h2>
-
-          <section className={resolveClasses('freya@assets__section')}>
-            {talkImages.map(path => {
-              return (
-                <figure key={path} className={resolveClasses('freya@assets__figure')} data-freya-asset-id={path}>
-                  <div className={resolveClasses('freya@assets__figure__image-wrapper')}>
-                    <img
-                      src={resolveImageUrl({}, theme.id, talk.id, path)}
-                      className={resolveClasses('freya@assets__figure__image')}
-                    />
-                  </div>
-                  <figcaption className={resolveClasses('freya@assets__figure__caption')}>{path}</figcaption>
-                </figure>
-              )
-            })}
-          </section>
-        </>
-      )}
-
-      {themeImages.length > 0 && (
-        <>
-          <h2 className={resolveClasses('freya@assets__header', talkImages.length > 0 && 'freya@assets__header--next')}>
-            Theme Assets
-          </h2>
-
-          <section className={resolveClasses('freya@assets__section')}>
-            {themeImages.map(path => {
-              return (
-                <figure key={path} className={resolveClasses('freya@assets__figure')} data-freya-asset-id={path}>
-                  <div className={resolveClasses('freya@assets__figure__image-wrapper')}>
-                    <img
-                      src={resolveImageUrl({}, theme.id, talk.id, path)}
-                      className={resolveClasses('freya@assets__figure__image')}
-                    />
-                  </div>
-                  <figcaption className={resolveClasses('freya@assets__figure__caption')}>{path}</figcaption>
-                </figure>
-              )
-            })}
-          </section>
-        </>
-      )}
-    </main>
-  )
-}
-
-export function page(context: BuildContext, bodyClassName: string): VNode {
+export function page({ context, theme, talk, talkImages, themeImages, bodyClassName }: AssetsProps): VNode {
   const copyAssetScript = `
     document.addEventListener('DOMContentLoaded', () => {
       for (const link of document.querySelectorAll('[data-freya-asset-id]')) {
@@ -89,10 +34,72 @@ export function page(context: BuildContext, bodyClassName: string): VNode {
         {context.extensions.freya.fonts.urls.map((url: string, index: number) => (
           <link key={index} rel="preload" as="font" href={url} crossOrigin="anonymous" />
         ))}
-        <style {...serializeCSSClasses(context)} />
         <script dangerouslySetInnerHTML={{ __html: copyAssetScript }} />
       </head>
-      <body className={bodyClassName}>@BODY@</body>
+      <body className={bodyClassName}>
+        <main className={cleanCssClasses('freya@resources')}>
+          <h1 className={cleanCssClasses('freya@resources__title')}>{talk.document.title}</h1>
+
+          {talkImages.length > 0 && (
+            <>
+              <h2 className={cleanCssClasses('freya@resources__header')}>Talk Assets</h2>
+
+              <section className={cleanCssClasses('freya@resources__section')}>
+                {talkImages.map(path => {
+                  return (
+                    <figure
+                      key={path}
+                      className={cleanCssClasses('freya@resources__figure')}
+                      data-freya-asset-id={path}
+                    >
+                      <div className={cleanCssClasses('freya@resources__figure__image-wrapper')}>
+                        <img
+                          src={resolveImageUrl({}, theme.id, talk.id, path)}
+                          className={cleanCssClasses('freya@resources__figure__image')}
+                        />
+                      </div>
+                      <figcaption className={cleanCssClasses('freya@resources__figure__caption')}>{path}</figcaption>
+                    </figure>
+                  )
+                })}
+              </section>
+            </>
+          )}
+
+          {themeImages.length > 0 && (
+            <>
+              <h2
+                className={cleanCssClasses(
+                  'freya@resources__header',
+                  talkImages.length > 0 && 'freya@resources__header--next'
+                )}
+              >
+                Theme Assets
+              </h2>
+
+              <section className={cleanCssClasses('freya@resources__section')}>
+                {themeImages.map(path => {
+                  return (
+                    <figure
+                      key={path}
+                      className={cleanCssClasses('freya@resources__figure')}
+                      data-freya-asset-id={path}
+                    >
+                      <div className={cleanCssClasses('freya@resources__figure__image-wrapper')}>
+                        <img
+                          src={resolveImageUrl({}, theme.id, talk.id, path)}
+                          className={cleanCssClasses('freya@resources__figure__image')}
+                        />
+                      </div>
+                      <figcaption className={cleanCssClasses('freya@resources__figure__caption')}>{path}</figcaption>
+                    </figure>
+                  )
+                })}
+              </section>
+            </>
+          )}
+        </main>
+      </body>
     </html>
   )
 }

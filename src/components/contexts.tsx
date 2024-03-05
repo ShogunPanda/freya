@@ -1,17 +1,12 @@
 import { createContext, type Context } from 'preact'
 import { useContext } from 'preact/hooks'
 import { type ClientContext as ClientContextModel, type ParsedSVG } from '../slidesets/models.js'
-import { cleanCssClasses } from './styling.js'
 
-export type CSSClassToken = string | false | undefined | null
-
-export type CSSClassesResolver = (...klasses: (CSSClassToken | CSSClassToken[])[]) => string
 export type ImagesResolver = (theme: string, talk: string, url?: string) => string
 export type SVGResolver = (theme: string, talk: string, url?: string) => ParsedSVG
 export type MarkdownParser = (raw?: string) => string
 
 export interface ClientContextMethods {
-  resolveClasses: CSSClassesResolver
   resolveImage: ImagesResolver
   resolveSVG: SVGResolver
   parseContent: MarkdownParser
@@ -43,11 +38,10 @@ export function defaultSVGResolver(_theme: string, _talk: string, _path?: string
 }
 
 export function createClientContextValue(context: ClientContextModel, hooks: ClientContextMethods): ClientContextProps {
-  const { resolveClasses, resolveImage, resolveSVG, parseContent } = hooks
+  const { resolveImage, resolveSVG, parseContent } = hooks
 
   return {
     ...context,
-    resolveClasses: resolveClasses ?? cleanCssClasses,
     resolveImage: resolveImage ?? defaultImagesResolver,
     resolveSVG: resolveSVG ?? defaultSVGResolver,
     parseContent: parseContent ?? defaultMarkdownParser

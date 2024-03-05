@@ -1,5 +1,5 @@
 import { type VNode } from 'preact'
-import { useClient } from './contexts.js'
+import { cleanCssClasses } from './styling.js'
 
 interface ImageProps {
   src: string
@@ -7,6 +7,5 @@ interface ImageProps {
 }
 
 export function Image({ src, className }: ImageProps): VNode {
-  const { resolveClasses } = useClient()
-  return <img className={resolveClasses('freya@image', className)} src={src} />
+  return <img className={cleanCssClasses('freya@image', className)} src={src} />
 }

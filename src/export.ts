@@ -1,10 +1,10 @@
 import {
   baseTemporaryDirectory,
+  cleanCssClasses,
   elapsed,
   rootDir,
   type BuildContext,
-  type BuildResult,
-  type CSSClassesResolver
+  type BuildResult
 } from '@perseveranza-pets/dante'
 import { glob } from 'glob'
 import { exec as execCB } from 'node:child_process'
@@ -15,19 +15,14 @@ import { pathToFileURL } from 'node:url'
 import { promisify } from 'node:util'
 import { chromium } from 'playwright'
 import { render } from 'preact-render-to-string'
-import { css, cssConfig } from './build.js'
 import { SvgDefinitions } from './client.js'
 import { filterWhitelistedTalks } from './configuration.js'
+import { css, postcssPlugins } from './css.js'
 import { resolveSVG } from './rendering/svg.js'
-import {
-  createCSSClassesResolver,
-  listThemeAndTalkImages,
-  parseContent,
-  prepareClientContext
-} from './slidesets/generators.js'
+import { listThemeAndTalkImages, parseContent, prepareClientContext } from './slidesets/generators.js'
 import { getAllTalks, getTalk, getTheme } from './slidesets/loaders.js'
 import { type SlideRenderer, type Talk } from './slidesets/models.js'
-import { header, page } from './templates/page.js'
+import { page } from './templates/page.js'
 import { SlideComponent } from './templates/slide.js'
 import { body as speakerNotesBody, page as speakerNotesPage } from './templates/speaker-notes.js'
 
@@ -224,7 +219,6 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
     const [themeImages, talkImages] = await listThemeAndTalkImages(theme.id, talk.id)
 
     const clientContext = await prepareClientContext(context, theme, talk)
-    const resolveClasses: CSSClassesResolver = context.extensions.freya.resolveClasses
     const layouts: Record<string, string> = {}
 
     // Render the slides
@@ -251,34 +245,24 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
             layout,
             slide,
             index: i + 1,
-            resolveClasses,
             resolveImage: resolveImageUrl.bind(null, clientContext.assets.images),
             resolveSVG: resolveSVG.bind(null, clientContext.assets.svgsDefinitions, clientContext.assets.svgs),
             parseContent: parseContent.bind(null, clientContext.assets.content)
           })
-        ) +
-        render(
-          SvgDefinitions({
-            definitions: clientContext.assets.svgsDefinitions,
-            className: resolveClasses('freya@svg-definitions')
-          })
-        )
+        ) + render(SvgDefinitions({ definitions: clientContext.assets.svgsDefinitions }))
 
       const html = render(
-        page(
-          talk.document.title,
-          header({
-            context,
-            talk,
-            theme,
-            themeImages,
-            talkImages,
-            js: ''
-          }),
-          undefined,
-          undefined,
-          body
-        )
+        page({
+          talk,
+          theme,
+          themeImages,
+          talkImages,
+          js: '',
+          title: talk.document.title,
+          body,
+          bodyClassName: undefined,
+          messageClassName: undefined
+        })
       )
 
       generated[slideTemporaryFileName(talk, i)] = html
@@ -286,15 +270,8 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
 
     // Generate speaker notes if appropriate
     if (talk.slides.some(s => (s.notes ?? '').length > 0)) {
-      const resolveClasses = createCSSClassesResolver(
-        '__speaker-notes',
-        context,
-        context.extensions.freya.loadedClasses as Record<string, string[]>
-      )
-      context.extensions.freya.resolveClasses = resolveClasses
-
-      const bodyClassName = resolveClasses('freya@speaker-notes__body')
-      const body = speakerNotesBody({ talk, resolveClasses })
+      const bodyClassName = cleanCssClasses('freya@root', 'freya@speaker-notes__body')
+      const body = speakerNotesBody({ talk })
       const page = speakerNotesPage(context, bodyClassName)
 
       generated[slideTemporaryNotesName(talk)] = render(page).replace('@BODY@', render(body))
@@ -319,7 +296,6 @@ export async function build(context: BuildContext): Promise<BuildResult> {
   await mkdir(resolve(baseDir, 'assets/themes'), { recursive: true })
 
   // Prepare the context
-  context.extensions.freya.css = {}
   context.extensions.freya.images = new Set()
   context.extensions.freya.talks = filterWhitelistedTalks(context, await getAllTalks())
 
@@ -373,5 +349,5 @@ export async function build(context: BuildContext): Promise<BuildResult> {
 
   await Promise.all(fileOperations)
 
-  return { cssConfig, css }
+  return { css, postcssPlugins }
 }

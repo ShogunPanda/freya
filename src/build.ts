@@ -1,30 +1,19 @@
-import {
-  baseTemporaryDirectory,
-  elapsed,
-  fontsToCss,
-  loadFontsFile,
-  rootDir,
-  type BuildContext,
-  type BuildResult,
-  type Fonts
-} from '@perseveranza-pets/dante'
-import { type UserConfig } from '@unocss/core'
+import { elapsed, loadFontsFile, rootDir, type BuildContext, type BuildResult } from '@perseveranza-pets/dante'
 import { glob } from 'glob'
 import { existsSync } from 'node:fs'
 import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
-import { basename, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { filterWhitelistedTalks, isServiceWorkerEnabled, pusherConfig } from './configuration.js'
+import { css, postcssPlugins } from './css.js'
 import { readFile } from './fs.js'
-import { unocssConfig } from './rendering/unocss.config.js'
 import {
   generateAllSlidesets,
   generateAssetsListing,
   generatePage404,
   listThemeAndTalkImages
 } from './slidesets/generators.js'
-import { getAllTalks, getTalk, getTheme, resolveImageUrl } from './slidesets/loaders.js'
-import { type Theme } from './slidesets/models.js'
+import { getAllTalks, getTalk, resolveImageUrl } from './slidesets/loaders.js'
 import { indexServiceWorkerDeclaration, talkServiceWorkerDeclaration } from './templates/service-workers.js'
 
 declare module 'fastify' {
@@ -67,89 +56,6 @@ async function generatePusherAuthFunction(context: BuildContext): Promise<string
   return functionFile
 }
 
-export async function cssConfig(context: BuildContext): Promise<UserConfig<object>> {
-  let id = basename(context.currentPage ?? '', '.html')
-
-  if (id && context.extensions.freya.export) {
-    id = id.endsWith('--notes') ? 'speaker-notes' : id.split('--').shift()!
-  }
-
-  if (!id || id === '404' || id === 'index' || id.endsWith('_assets') || id === 'speaker-notes') {
-    return unocssConfig
-  }
-
-  const talk = await getTalk(id)
-  const theme = await getTheme(talk.config.theme)
-
-  const { default: unoConfig } = await import(
-    resolve(rootDir, baseTemporaryDirectory, 'themes', theme.id, 'unocss.config.js')
-  )
-
-  return unoConfig
-}
-
-export async function css(context: BuildContext): Promise<string> {
-  let id = basename(context.currentPage ?? '', '.html')
-
-  if (id && context.extensions.freya.export) {
-    id = id.endsWith('--notes') ? 'speaker-notes' : id.split('--').shift()!
-  }
-
-  let themeFile: string
-  let theme: Theme | undefined
-
-  if (!id || id === '404' || id === 'index' || id.endsWith('_assets') || id === 'speaker-notes') {
-    themeFile = await readFile(new URL('./assets/styles/freya.css', import.meta.url))
-  } else {
-    const talk = await getTalk(id)
-    theme = await getTheme(talk.config.theme)
-
-    themeFile = await readFile(resolve(rootDir, 'src/themes', theme.id, 'style.css'))
-  }
-
-  const matcher = /^@import (['"])(.+)(\1);$/m
-  let mo: RegExpMatchArray | null = ['']
-  while (mo) {
-    mo = themeFile.match(matcher)
-
-    if (!mo) {
-      break
-    }
-
-    const id = mo[2]
-    let replacement: string = ''
-
-    if (id === '@theme/fonts') {
-      if (theme) {
-        replacement = fontsToCss(theme.fonts)
-      } else {
-        replacement = fontsToCss(context.extensions.freya.fonts as Fonts)
-      }
-    } else if (id.startsWith('@freya')) {
-      const url = new URL(`./assets/styles/${id.replace('@freya/', '')}`, import.meta.url)
-
-      replacement = await readFile(url)
-    }
-
-    themeFile = themeFile.replaceAll(mo[0], replacement)
-  }
-
-  // Before returning, also swap the context CSS with the subcontext CSS
-  if (!id || id === 'index') {
-    context.css = context.extensions.freya.css.__index
-  } else if (id.endsWith('_assets')) {
-    context.css = context.extensions.freya.css.__assets
-  } else if (id === '404') {
-    context.css = context.extensions.freya.css.__404
-  } else if (id === 'speaker-notes') {
-    context.css = context.extensions.freya.css['__speaker-notes']
-  } else {
-    context.css = context.extensions.freya.css[id]
-  }
-
-  return themeFile
-}
-
 export async function build(context: BuildContext): Promise<BuildResult> {
   context.logger.info(`Building site (version ${context.version}) ...`)
 
@@ -168,7 +74,6 @@ export async function build(context: BuildContext): Promise<BuildResult> {
   context.extensions.freya.fonts = await loadFontsFile(
     fileURLToPath(new URL('./assets/styles/fonts.yml', import.meta.url))
   )
-  context.extensions.freya.css = {}
   context.extensions.freya.images = new Set()
   context.extensions.freya.talks = filterWhitelistedTalks(context, await getAllTalks())
 
@@ -176,7 +81,7 @@ export async function build(context: BuildContext): Promise<BuildResult> {
 
   // Generate the slidesets
   context.extensions.freya.slidesets = await generateAllSlidesets(context)
-  context.extensions.freya.slidesets['404'] = await generatePage404(context)
+  context.extensions.freya.slidesets['404'] = generatePage404(context)
 
   // Write slidesets and track preCache information
   const toPrecache = new Set<string>(context.extensions.freya.images as Set<string>)
@@ -278,5 +183,5 @@ export async function build(context: BuildContext): Promise<BuildResult> {
 
   await Promise.all(fileOperations)
 
-  return { cssConfig, css }
+  return { css, postcssPlugins }
 }

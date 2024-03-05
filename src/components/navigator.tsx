@@ -1,6 +1,7 @@
 import { type Context, type VNode } from 'preact'
-import { useCallback, useLayoutEffect, useRef } from 'preact/hooks'
 import { route } from 'preact-router'
+// eslint-disable-next-line import/order
+import { useCallback, useLayoutEffect, useRef } from 'preact/hooks'
 import { type Slide } from '../slidesets/models.js'
 import { shouldAbortSlideChange, slideUrl } from './client.js'
 import { SlideContextInstance, useClient, useSlide, type SlideContextProps } from './contexts.js'
@@ -36,15 +37,12 @@ function updateNavigatorAppearance(root: HTMLElement, slideWidth: number, slideH
 }
 
 export function Overlay({ className }: OverlayProps): VNode {
-  const { resolveClasses } = useClient()
-
-  return <div className={resolveClasses('freya@overlay', className)} />
+  return <div className={cleanCssClasses('freya@overlay', className)} />
 }
 
 export function Navigator({ className, close }: NavigatorProps): VNode {
   const {
     id,
-    resolveClasses,
     dimensions,
     talk: { slides, slidesPadding }
   } = useClient()
@@ -87,15 +85,15 @@ export function Navigator({ className, close }: NavigatorProps): VNode {
   )
 
   return (
-    <nav ref={root} className={resolveClasses('freya@navigator', className)}>
-      <a href="#" className={resolveClasses('freya@navigator__close')} onClick={close}>
+    <nav ref={root} className={cleanCssClasses('freya@navigator', className)}>
+      <a href="#" className={cleanCssClasses('freya@navigator__close')} onClick={close}>
         <SvgIcon name="close" className={cleanCssClasses('freya@svg-icon', 'freya@navigator__close__image')} />
       </a>
 
       {slides.map((slide, index) => (
         <div
           key={index}
-          className={resolveClasses(
+          className={cleanCssClasses(
             'freya@navigator__slide',
             index + 1 === current && 'freya@navigator__slide--active'
           )}
@@ -105,7 +103,7 @@ export function Navigator({ className, close }: NavigatorProps): VNode {
             <SlideComponent className={cleanCssClasses('freya@navigator__slide__contents')} overrideProgress={true} />
           </SlideContextWithModel.Provider>
 
-          <span className={resolveClasses('freya@navigator__slide__number')}>{index + 1}</span>
+          <span className={cleanCssClasses('freya@navigator__slide__number')}>{index + 1}</span>
         </div>
       ))}
     </nav>

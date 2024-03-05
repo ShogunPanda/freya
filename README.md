@@ -26,7 +26,6 @@ We strongly recommend to use the `createFile` function exported from `dante` to 
 
 The function must return an object containing the following properties:
 
-- `cssConfig`: A `@unocss/core` configuration. This is the only required property.
 - `css`: A css to be injected in each generated HTML page.
 
 All properties can be (async) function that will be called for each page at runtime.

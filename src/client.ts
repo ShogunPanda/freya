@@ -5,5 +5,4 @@
 
 export * from './components/index.js'
 export * from './rendering/qr.js'
-export * from './rendering/unocss.js'
 export * from './slidesets/models.js'

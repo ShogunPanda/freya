@@ -1,5 +1,6 @@
 import { type JSX, type VNode } from 'preact'
 import { useClient } from './contexts.js'
+import { cleanCssClasses } from './styling.js'
 
 interface SvgProps extends JSX.SVGAttributes<SVGSVGElement> {
   src: string
@@ -73,14 +74,13 @@ export function normalizeSVGProps(props: Record<string, string | undefined>): JS
   }
 }
 
-// Since this is used also in export, it cannot use useClient and resolveClasses must be called in the caller
 export function SvgDefinitions({ definitions, className }: SvgDefinitionsProps): VNode {
   return (
     <svg
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
       xmlnsXlink="http://www.w3.org/1999/xlink"
-      className={className}
+      className={cleanCssClasses('freya@svg-definitions', className)}
     >
       <defs dangerouslySetInnerHTML={{ __html: definitions.join('\n') }} />
     </svg>
@@ -91,14 +91,13 @@ export function Svg({ src: path, className, ...props }: SvgProps): VNode {
   const {
     talk: { id: talkId },
     theme: { id: themeId },
-    resolveClasses,
     resolveSVG
   } = useClient()
 
   const [id, viewBox] = resolveSVG(themeId, talkId, path)
 
   return (
-    <svg {...props} className={resolveClasses('freya@svg', className)} viewBox={viewBox}>
+    <svg {...props} className={cleanCssClasses('freya@svg', className)} viewBox={viewBox}>
       <use xlinkHref={`#${id}`} />
     </svg>
   )
@@ -124,12 +123,12 @@ export function SvgCloseIcon(props: JSX.SVGAttributes<SVGSVGElement>): VNode {
 }
 
 export function SvgIcon({ name, className }: SvgIconProps): VNode {
-  const { assets, resolveClasses } = useClient()
+  const { assets } = useClient()
 
   const [id, viewBox] = assets.svgs[name]
 
   return (
-    <svg className={resolveClasses('freya@svg', className)} viewBox={viewBox}>
+    <svg className={cleanCssClasses('freya@svg', className)} viewBox={viewBox}>
       <use xlinkHref={`#${id}`} />
     </svg>
   )

@@ -69,11 +69,6 @@ export interface ClientContext {
     svgs: Record<string, ParsedSVG>
     svgsDefinitions: string[]
   }
-  css: {
-    keepExpanded: boolean
-    classes: Record<string, string[]>
-    compressedClasses: Record<string, string>
-  }
   dimensions: {
     width: number
     height: number

@@ -1,0 +1,204 @@
+/* stylelint-disable-next-line selector-class-pattern */
+.freya@ {
+  &root {
+    color: var(--freya-color-fg);
+    font-family: var(--freya-font-varela-round);
+  }
+
+  &page404 {
+    width: 80%;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+
+    &__body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 100%;
+      padding: 2rem;
+      background-color: var(--freya-color-bg);
+      font-family: var(--freya-font-varela-round);
+    }
+
+    &__subtitle {
+      color: var(--freya-color-grey);
+    }
+
+    &__cta {
+      margin-top: 1ch;
+    }
+  }
+
+  &resources {
+    display: flex;
+    flex-direction: column;
+    width: 95%;
+    margin: 20--pt;
+
+    &__body {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      background-color: var(--freya-color-bg);
+    }
+
+    &__title {
+      font-weight: 700;
+      line-height: 1.4em;
+    }
+
+    &__header {
+      margin-top: 1ch;
+      margin-bottom: 1ch;
+      color: var(--freya-color-grey);
+      line-height: 1.4em;
+
+      &--next {
+        margin-top: 3ch;
+      }
+    }
+
+    &__section {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(200px, 1fr));
+      gap: 2ch;
+    }
+
+    &__figure {
+      display: flex;
+      flex-direction: column;
+      row-gap: 2ch;
+      justify-content: space-between;
+      margin: 0;
+      padding: 2ch;
+      border: 2px solid var(--freya-color-shadow);
+      border-radius: 5px;
+      background-color: var(--freya-color-bg-darker);
+      text-align: center;
+      box-shadow: 5px 5px 1rem -5px var(--freya-color-shadow);
+
+      &:hover {
+        border-color: var(--freya-color-shadow);
+        background-color: var(--freya-color-yellow);
+      }
+
+      &__image {
+        object-fit: contain;
+        width: 100%;
+        max-height: 200px;
+
+        &-wrapper {
+          display: flex;
+          flex-direction: column;
+          flex: 1 1 0%;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+
+      &__caption {
+        text-align: center;
+        white-space: nowrap;
+      }
+    }
+
+    &__slidesets {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(300px, 1fr));
+      gap: 2ch;
+
+      @media (max-width: 900px) {
+        & {
+          grid-template-columns: 1fr;
+        }
+      }
+    }
+
+    &__slideset {
+      display: grid;
+      /* stylelint-disable-next-line comment-empty-line-before */
+      /* title size is 1.4em and line height is 1.4, so each lines counts for 2em */
+      grid-template-rows: min-content calc((var(--freya-index-slideset-title-lines) * 2em) + 2ch) min-content;
+      gap: 1ch;
+      padding: 2ch;
+      border: 2px solid var(--freya-color-shadow);
+      border-radius: 5px;
+      background-color: var(--freya-color-bg-darker);
+      box-shadow: 5px 5px 1rem -5px var(--freya-color-shadow);
+
+      @media (max-width: 1200px) {
+        & {
+          --freya-index-slideset-title-lines: 3;
+        }
+      }
+
+      @media (max-width: 1000px) {
+        & {
+          --freya-index-slideset-title-lines: 4;
+        }
+      }
+
+      @media (max-width: 900px) {
+        & {
+          grid-template-rows: min-content min-content min-content;
+        }
+      }
+
+      &,
+      &:visited,
+      &:active {
+        color: var(--freya-color-fg);
+      }
+
+      &:hover {
+        border-color: var(--freya-color-shadow);
+        background-color: var(--freya-color-yellow);
+        color: var(--freya-color-fg);
+      }
+
+      &__author {
+        color: var(--freya-color-grey);
+        font-size: 1.3em;
+      }
+
+      &__title {
+        color: var(--freya-color-blue);
+        font-size: 1.8em;
+      }
+
+      &__abstract {
+        font-family: var(--freya-font-noto-sans);
+        font-size: 0.8em;
+
+        & p {
+          margin-top: 1ch;
+        }
+      }
+    }
+  }
+
+  &speaker-notes {
+    width: 80%;
+    max-width: 1600px;
+    margin: 0 auto;
+
+    &__body {
+      padding: 2rem;
+      background-color: var(--freya-color-bg);
+    }
+
+    &__subtitle {
+      color: var(--freya-color-grey);
+    }
+
+    &__slide {
+      margin-top: 2rem;
+      color: var(--freya-color-grey);
+    }
+  }
+}
