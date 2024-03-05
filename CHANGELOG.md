@@ -1,3 +1,7 @@
+### 2024-03-05 / 0.66.0
+
+- feat: Rewritten with plain CSS.
+
 ### 2024-02-27 / 0.65.5
 
 - fix: Fixed typo in README.md.
