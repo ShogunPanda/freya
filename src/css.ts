@@ -73,7 +73,7 @@ export async function css(context: BuildContext): Promise<string> {
     ...cssFiles
   ])
 
-  return layers.join('\n\n').replaceAll(/(?:freya|(theme(?:-(?:[a-z0-9-])+)?)|talk)@/g, '$1\\@')
+  return layers.join('\n\n').replaceAll(/(?:freya|theme|talk(?:-(?:[a-z0-9-])+))?)@/g, '$1\\@')
 }
 
 export function customUnitsPlugin({ units }: CustomUnitPluginOptions = {}): Plugin {
