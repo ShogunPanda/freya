@@ -1,3 +1,8 @@
+### 2024-03-06 / 0.66.1
+
+- fix: Improve namespace matcher.
+- fix: Improve namespace matcher.
+
 ### 2024-03-05 / 0.66.0
 
 - feat: Rewritten with plain CSS.
