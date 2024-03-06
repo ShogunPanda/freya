@@ -1,3 +1,7 @@
+### 2024-03-06 / 0.66.2
+
+- fix: Fixed matcher.
+
 ### 2024-03-06 / 0.66.1
 
 - fix: Improve namespace matcher.
