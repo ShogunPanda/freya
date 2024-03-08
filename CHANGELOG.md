@@ -1,3 +1,7 @@
+### 2024-03-08 / 0.67.0
+
+- feat: Added color management.
+
 ### 2024-03-06 / 0.66.2
 
 - fix: Fixed matcher.
