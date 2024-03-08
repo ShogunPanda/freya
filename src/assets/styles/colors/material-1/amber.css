@@ -1,0 +1,16 @@
+:root {
+  --freya-color-amber-50: rgb(255, 248, 225);
+  --freya-color-amber-100: rgb(255, 236, 179);
+  --freya-color-amber-200: rgb(255, 224, 130);
+  --freya-color-amber-300: rgb(255, 213, 79);
+  --freya-color-amber-400: rgb(255, 202, 40);
+  --freya-color-amber-500: rgb(255, 193, 7);
+  --freya-color-amber-600: rgb(255, 179, 0);
+  --freya-color-amber-700: rgb(255, 160, 0);
+  --freya-color-amber-800: rgb(255, 143, 0);
+  --freya-color-amber-900: rgb(255, 111, 0);
+  --freya-color-amber-a100: rgb(255, 229, 127);
+  --freya-color-amber-a200: rgb(255, 215, 64);
+  --freya-color-amber-a400: rgb(255, 196, 0);
+  --freya-color-amber-a700: rgb(255, 171, 0);
+}

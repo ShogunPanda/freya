@@ -1,0 +1,16 @@
+:root {
+  --freya-color-red-50: rgb(255, 235, 238);
+  --freya-color-red-100: rgb(255, 205, 210);
+  --freya-color-red-200: rgb(239, 154, 154);
+  --freya-color-red-300: rgb(229, 115, 115);
+  --freya-color-red-400: rgb(239, 83, 80);
+  --freya-color-red-500: rgb(244, 67, 54);
+  --freya-color-red-600: rgb(229, 57, 53);
+  --freya-color-red-700: rgb(211, 47, 47);
+  --freya-color-red-800: rgb(198, 40, 40);
+  --freya-color-red-900: rgb(183, 28, 28);
+  --freya-color-red-a100: rgb(255, 138, 128);
+  --freya-color-red-a200: rgb(255, 82, 82);
+  --freya-color-red-a400: rgb(255, 23, 68);
+  --freya-color-red-a700: rgb(213, 0, 0);
+}

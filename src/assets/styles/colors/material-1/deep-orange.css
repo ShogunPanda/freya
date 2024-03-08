@@ -1,0 +1,16 @@
+:root {
+  --freya-color-deep-orange-50: rgb(251, 233, 231);
+  --freya-color-deep-orange-100: rgb(255, 204, 188);
+  --freya-color-deep-orange-200: rgb(255, 171, 145);
+  --freya-color-deep-orange-300: rgb(255, 138, 101);
+  --freya-color-deep-orange-400: rgb(255, 112, 67);
+  --freya-color-deep-orange-500: rgb(255, 87, 34);
+  --freya-color-deep-orange-600: rgb(244, 81, 30);
+  --freya-color-deep-orange-700: rgb(230, 74, 25);
+  --freya-color-deep-orange-800: rgb(216, 67, 21);
+  --freya-color-deep-orange-900: rgb(191, 54, 12);
+  --freya-color-deep-orange-a100: rgb(255, 158, 128);
+  --freya-color-deep-orange-a200: rgb(255, 110, 64);
+  --freya-color-deep-orange-a400: rgb(255, 61, 0);
+  --freya-color-deep-orange-a700: rgb(221, 44, 0);
+}

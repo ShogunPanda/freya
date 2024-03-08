@@ -1,0 +1,16 @@
+:root {
+  --freya-color-lime-50: rgb(249, 251, 231);
+  --freya-color-lime-100: rgb(240, 244, 195);
+  --freya-color-lime-200: rgb(230, 238, 156);
+  --freya-color-lime-300: rgb(220, 231, 117);
+  --freya-color-lime-400: rgb(212, 225, 87);
+  --freya-color-lime-500: rgb(205, 220, 57);
+  --freya-color-lime-600: rgb(192, 202, 51);
+  --freya-color-lime-700: rgb(175, 180, 43);
+  --freya-color-lime-800: rgb(158, 157, 36);
+  --freya-color-lime-900: rgb(130, 119, 23);
+  --freya-color-lime-a100: rgb(244, 255, 129);
+  --freya-color-lime-a200: rgb(238, 255, 65);
+  --freya-color-lime-a400: rgb(198, 255, 0);
+  --freya-color-lime-a700: rgb(174, 234, 0);
+}

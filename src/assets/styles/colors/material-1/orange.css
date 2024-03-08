@@ -1,0 +1,16 @@
+:root {
+  --freya-color-orange-50: rgb(255, 243, 224);
+  --freya-color-orange-100: rgb(255, 224, 178);
+  --freya-color-orange-200: rgb(255, 204, 128);
+  --freya-color-orange-300: rgb(255, 183, 77);
+  --freya-color-orange-400: rgb(255, 167, 38);
+  --freya-color-orange-500: rgb(255, 152, 0);
+  --freya-color-orange-600: rgb(251, 140, 0);
+  --freya-color-orange-700: rgb(245, 124, 0);
+  --freya-color-orange-800: rgb(239, 108, 0);
+  --freya-color-orange-900: rgb(230, 81, 0);
+  --freya-color-orange-a100: rgb(255, 209, 128);
+  --freya-color-orange-a200: rgb(255, 171, 64);
+  --freya-color-orange-a400: rgb(255, 145, 0);
+  --freya-color-orange-a700: rgb(255, 109, 0);
+}

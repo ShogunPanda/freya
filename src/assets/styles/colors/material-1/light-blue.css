@@ -1,0 +1,16 @@
+:root {
+  --freya-color-light-blue-50: rgb(225, 245, 254);
+  --freya-color-light-blue-100: rgb(179, 229, 252);
+  --freya-color-light-blue-200: rgb(129, 212, 250);
+  --freya-color-light-blue-300: rgb(79, 195, 247);
+  --freya-color-light-blue-400: rgb(41, 182, 246);
+  --freya-color-light-blue-500: rgb(3, 169, 244);
+  --freya-color-light-blue-600: rgb(3, 155, 229);
+  --freya-color-light-blue-700: rgb(2, 136, 209);
+  --freya-color-light-blue-800: rgb(2, 119, 189);
+  --freya-color-light-blue-900: rgb(1, 87, 155);
+  --freya-color-light-blue-a100: rgb(128, 216, 255);
+  --freya-color-light-blue-a200: rgb(64, 196, 255);
+  --freya-color-light-blue-a400: rgb(0, 176, 255);
+  --freya-color-light-blue-a700: rgb(0, 145, 234);
+}

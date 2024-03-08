@@ -1,0 +1,16 @@
+:root {
+  --freya-color-yellow-50: rgb(255, 253, 231);
+  --freya-color-yellow-100: rgb(255, 249, 196);
+  --freya-color-yellow-200: rgb(255, 245, 157);
+  --freya-color-yellow-300: rgb(255, 241, 118);
+  --freya-color-yellow-400: rgb(255, 238, 88);
+  --freya-color-yellow-500: rgb(255, 235, 59);
+  --freya-color-yellow-600: rgb(253, 216, 53);
+  --freya-color-yellow-700: rgb(251, 192, 45);
+  --freya-color-yellow-800: rgb(249, 168, 37);
+  --freya-color-yellow-900: rgb(245, 127, 23);
+  --freya-color-yellow-a100: rgb(255, 255, 141);
+  --freya-color-yellow-a200: rgb(255, 255, 0);
+  --freya-color-yellow-a400: rgb(255, 234, 0);
+  --freya-color-yellow-a700: rgb(255, 214, 0);
+}

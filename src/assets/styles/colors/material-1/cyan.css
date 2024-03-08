@@ -1,0 +1,16 @@
+:root {
+  --freya-color-cyan-50: rgb(224, 247, 250);
+  --freya-color-cyan-100: rgb(178, 235, 242);
+  --freya-color-cyan-200: rgb(128, 222, 234);
+  --freya-color-cyan-300: rgb(77, 208, 225);
+  --freya-color-cyan-400: rgb(38, 198, 218);
+  --freya-color-cyan-500: rgb(0, 188, 212);
+  --freya-color-cyan-600: rgb(0, 172, 193);
+  --freya-color-cyan-700: rgb(0, 151, 167);
+  --freya-color-cyan-800: rgb(0, 131, 143);
+  --freya-color-cyan-900: rgb(0, 96, 100);
+  --freya-color-cyan-a100: rgb(132, 255, 255);
+  --freya-color-cyan-a200: rgb(24, 255, 255);
+  --freya-color-cyan-a400: rgb(0, 229, 255);
+  --freya-color-cyan-a700: rgb(0, 184, 212);
+}

@@ -1,0 +1,16 @@
+:root {
+  --freya-color-green-50: rgb(232, 245, 233);
+  --freya-color-green-100: rgb(200, 230, 201);
+  --freya-color-green-200: rgb(165, 214, 167);
+  --freya-color-green-300: rgb(129, 199, 132);
+  --freya-color-green-400: rgb(102, 187, 106);
+  --freya-color-green-500: rgb(76, 175, 80);
+  --freya-color-green-600: rgb(67, 160, 71);
+  --freya-color-green-700: rgb(56, 142, 60);
+  --freya-color-green-800: rgb(46, 125, 50);
+  --freya-color-green-900: rgb(27, 94, 32);
+  --freya-color-green-a100: rgb(185, 246, 202);
+  --freya-color-green-a200: rgb(105, 240, 174);
+  --freya-color-green-a400: rgb(0, 230, 118);
+  --freya-color-green-a700: rgb(0, 200, 83);
+}

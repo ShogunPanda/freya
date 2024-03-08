@@ -1,0 +1,16 @@
+:root {
+  --freya-color-indigo-50: rgb(232, 234, 246);
+  --freya-color-indigo-100: rgb(197, 202, 233);
+  --freya-color-indigo-200: rgb(159, 168, 218);
+  --freya-color-indigo-300: rgb(121, 134, 203);
+  --freya-color-indigo-400: rgb(92, 107, 192);
+  --freya-color-indigo-500: rgb(63, 81, 181);
+  --freya-color-indigo-600: rgb(57, 73, 171);
+  --freya-color-indigo-700: rgb(48, 63, 159);
+  --freya-color-indigo-800: rgb(40, 53, 147);
+  --freya-color-indigo-900: rgb(26, 35, 126);
+  --freya-color-indigo-a100: rgb(140, 158, 255);
+  --freya-color-indigo-a200: rgb(83, 109, 254);
+  --freya-color-indigo-a400: rgb(61, 90, 254);
+  --freya-color-indigo-a700: rgb(48, 79, 254);
+}

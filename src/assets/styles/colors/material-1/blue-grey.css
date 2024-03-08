@@ -1,0 +1,12 @@
+:root {
+  --freya-color-blue-grey-50: rgb(236, 239, 241);
+  --freya-color-blue-grey-100: rgb(207, 216, 220);
+  --freya-color-blue-grey-200: rgb(176, 190, 197);
+  --freya-color-blue-grey-300: rgb(144, 164, 174);
+  --freya-color-blue-grey-400: rgb(120, 144, 156);
+  --freya-color-blue-grey-500: rgb(96, 125, 139);
+  --freya-color-blue-grey-600: rgb(84, 110, 122);
+  --freya-color-blue-grey-700: rgb(69, 90, 100);
+  --freya-color-blue-grey-800: rgb(55, 71, 79);
+  --freya-color-blue-grey-900: rgb(38, 50, 56);
+}

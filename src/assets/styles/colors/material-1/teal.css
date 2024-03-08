@@ -1,0 +1,16 @@
+:root {
+  --freya-color-teal-50: rgb(224, 242, 241);
+  --freya-color-teal-100: rgb(178, 223, 219);
+  --freya-color-teal-200: rgb(128, 203, 196);
+  --freya-color-teal-300: rgb(77, 182, 172);
+  --freya-color-teal-400: rgb(38, 166, 154);
+  --freya-color-teal-500: rgb(0, 150, 136);
+  --freya-color-teal-600: rgb(0, 137, 123);
+  --freya-color-teal-700: rgb(0, 121, 107);
+  --freya-color-teal-800: rgb(0, 105, 92);
+  --freya-color-teal-900: rgb(0, 77, 64);
+  --freya-color-teal-a100: rgb(167, 255, 235);
+  --freya-color-teal-a200: rgb(100, 255, 218);
+  --freya-color-teal-a400: rgb(29, 233, 182);
+  --freya-color-teal-a700: rgb(0, 191, 165);
+}

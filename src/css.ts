@@ -1,10 +1,10 @@
 import { rootDir, type BuildContext } from '@perseveranza-pets/dante'
 import { basename, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { Comment, type Declaration, type Plugin } from 'postcss'
+import { Comment, Declaration, Rule, type AtRule, type Plugin } from 'postcss'
 import { readFile } from './fs.js'
 import { getTalk, getTheme } from './slidesets/loaders.js'
-import { type Theme } from './slidesets/models.js'
+import { type Talk, type Theme } from './slidesets/models.js'
 
 export type CustomUnits = Record<string, [number, string]>
 
@@ -45,13 +45,14 @@ export async function css(context: BuildContext): Promise<string> {
   }
 
   let cssFiles: Promise<string>[]
+  let talk: Talk | undefined
   let theme: Theme | undefined
 
   if (!id || id === '404' || id === 'index' || id.endsWith('_assets') || id === 'speaker-notes') {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     cssFiles = [loadLayeredCss('page', fileURLToPath(new URL('./assets/styles/page.css', import.meta.url)))]
   } else {
-    const talk = await getTalk(id)
+    talk = await getTalk(id)
     theme = await getTheme(talk.config.theme)
 
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -64,7 +65,7 @@ export async function css(context: BuildContext): Promise<string> {
   }
 
   const layers = await Promise.all([
-    '@layer normalize, variables, reset, fonts, responsiveness, slideset, theme, talk, page;',
+    '@layer normalize, variables, colors, reset, fonts, responsiveness, slideset, theme, talk, page;',
     loadLayeredCss('normalize', fileURLToPath(new URL('./assets/styles/normalize.css', import.meta.url))),
     loadLayeredCss('variables', fileURLToPath(new URL('./assets/styles/variables.css', import.meta.url))),
     loadLayeredCss('reset', fileURLToPath(new URL('./assets/styles/reset.css', import.meta.url))),
@@ -73,7 +74,67 @@ export async function css(context: BuildContext): Promise<string> {
     ...cssFiles
   ])
 
-  return layers.join('\n\n').replaceAll(/((?:freya|theme|talk)(?:-(?:[a-z0-9-]+))?)@/g, '$1\\@')
+  let css = layers.join('\n\n')
+
+  const matcher = /^@import (['"])(@.+)(\1);$/m
+  let mo: RegExpMatchArray | null = ['']
+  while (mo) {
+    mo = css.match(matcher)
+
+    if (!mo) {
+      break
+    }
+
+    const id = mo[2]
+    let url
+    let replacement = `/* ERROR: import "${id}" not found */`
+
+    if (id.startsWith('@freya/')) {
+      url = fileURLToPath(new URL(`./assets/styles/${id.replace('@freya/', '')}`, import.meta.url))
+
+      replacement = await readFile(url)
+    } else if (id.startsWith('@theme/') && theme) {
+      url = resolve(rootDir, 'src/themes', theme.id, id.replace('@theme/', ''))
+    } else if (id.startsWith('@talk/') && talk) {
+      url = resolve(rootDir, 'src/talks', talk.id, id.replace('@talk/', ''))
+    }
+
+    if (url) {
+      replacement = await readFile(url)
+    }
+
+    css = css.replaceAll(mo[0], replacement)
+  }
+
+  return css.replaceAll(/((?:freya|theme|talk)(?:-(?:[a-z0-9-]+))?)@/g, '$1\\@')
+}
+
+export function declareColorPlugin(): Plugin {
+  const colorMatcher = /color\(([a-z0-9-_.$@]+)\s*,\s*([a-z0-9-_.$@]+)\)/i
+
+  return {
+    postcssPlugin: 'freya.declare-colors',
+    AtRule(node: AtRule) {
+      if (node.name !== 'apply') {
+        return
+      }
+
+      const mo = node.params.match(colorMatcher)
+
+      if (!mo) {
+        return
+      }
+
+      const bg = new Rule({ selector: `&bg-${mo[1]}` })
+      bg.append(new Declaration({ prop: 'background-color', value: `var(--${mo[2]})` }))
+      const fg = new Rule({ selector: `&fg-${mo[1]}` })
+      fg.append(new Declaration({ prop: 'color', value: `var(--${mo[2]})` }))
+
+      node.after(bg)
+      node.after(fg)
+      node.remove()
+    }
+  }
 }
 
 export function customUnitsPlugin({ units }: CustomUnitPluginOptions = {}): Plugin {
@@ -104,4 +165,4 @@ export function customUnitsPlugin({ units }: CustomUnitPluginOptions = {}): Plug
   }
 }
 
-export const postcssPlugins: Plugin[] = [customUnitsPlugin()]
+export const postcssPlugins: Plugin[] = [declareColorPlugin(), customUnitsPlugin()]
