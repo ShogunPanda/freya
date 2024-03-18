@@ -1,0 +1,12 @@
+:root {
+  --freya-color-windi-slate-50: rgb(248, 250, 252);
+  --freya-color-windi-slate-100: rgb(241, 245, 249);
+  --freya-color-windi-slate-200: rgb(226, 232, 240);
+  --freya-color-windi-slate-300: rgb(203, 213, 225);
+  --freya-color-windi-slate-400: rgb(148, 163, 184);
+  --freya-color-windi-slate-500: rgb(100, 116, 139);
+  --freya-color-windi-slate-600: rgb(71, 85, 105);
+  --freya-color-windi-slate-700: rgb(51, 65, 85);
+  --freya-color-windi-slate-800: rgb(30, 41, 59);
+  --freya-color-windi-slate-900: rgb(15, 23, 42);
+}

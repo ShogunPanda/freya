@@ -1,0 +1,12 @@
+:root {
+  --freya-color-windi-fuchsia-50: rgb(253, 244, 255);
+  --freya-color-windi-fuchsia-100: rgb(250, 232, 255);
+  --freya-color-windi-fuchsia-200: rgb(245, 208, 254);
+  --freya-color-windi-fuchsia-300: rgb(240, 171, 252);
+  --freya-color-windi-fuchsia-400: rgb(232, 121, 249);
+  --freya-color-windi-fuchsia-500: rgb(217, 70, 239);
+  --freya-color-windi-fuchsia-600: rgb(192, 38, 211);
+  --freya-color-windi-fuchsia-700: rgb(162, 28, 175);
+  --freya-color-windi-fuchsia-800: rgb(134, 25, 143);
+  --freya-color-windi-fuchsia-900: rgb(112, 26, 117);
+}

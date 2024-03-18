@@ -1,0 +1,12 @@
+:root {
+  --freya-color-windi-purple-50: rgb(250, 245, 255);
+  --freya-color-windi-purple-100: rgb(243, 232, 255);
+  --freya-color-windi-purple-200: rgb(233, 213, 255);
+  --freya-color-windi-purple-300: rgb(216, 180, 254);
+  --freya-color-windi-purple-400: rgb(192, 132, 252);
+  --freya-color-windi-purple-500: rgb(168, 85, 247);
+  --freya-color-windi-purple-600: rgb(147, 51, 234);
+  --freya-color-windi-purple-700: rgb(126, 34, 206);
+  --freya-color-windi-purple-800: rgb(107, 33, 168);
+  --freya-color-windi-purple-900: rgb(88, 28, 135);
+}

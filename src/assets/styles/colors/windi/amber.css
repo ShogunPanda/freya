@@ -1,0 +1,12 @@
+:root {
+  --freya-color-windi-amber-50: rgb(255, 251, 235);
+  --freya-color-windi-amber-100: rgb(254, 243, 199);
+  --freya-color-windi-amber-200: rgb(253, 230, 138);
+  --freya-color-windi-amber-300: rgb(252, 211, 77);
+  --freya-color-windi-amber-400: rgb(251, 191, 36);
+  --freya-color-windi-amber-500: rgb(245, 158, 11);
+  --freya-color-windi-amber-600: rgb(217, 119, 6);
+  --freya-color-windi-amber-700: rgb(180, 83, 9);
+  --freya-color-windi-amber-800: rgb(146, 64, 14);
+  --freya-color-windi-amber-900: rgb(120, 53, 15);
+}

@@ -1,0 +1,12 @@
+:root {
+  --freya-color-windi-dark-50: rgb(74, 74, 74);
+  --freya-color-windi-dark-100: rgb(60, 60, 60);
+  --freya-color-windi-dark-200: rgb(50, 50, 50);
+  --freya-color-windi-dark-300: rgb(45, 45, 45);
+  --freya-color-windi-dark-400: rgb(34, 34, 34);
+  --freya-color-windi-dark-500: rgb(31, 31, 31);
+  --freya-color-windi-dark-600: rgb(28, 28, 30);
+  --freya-color-windi-dark-700: rgb(27, 27, 27);
+  --freya-color-windi-dark-800: rgb(24, 24, 24);
+  --freya-color-windi-dark-900: rgb(15, 15, 15);
+}
