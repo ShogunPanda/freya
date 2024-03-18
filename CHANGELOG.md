@@ -1,3 +1,7 @@
+### 2024-03-18 / 0.68.0
+
+- feat: Added WindiCSS palette.
+
 ### 2024-03-08 / 0.67.0
 
 - feat: Added color management.
