@@ -1,0 +1,26 @@
+:root {
+  --freya-color-windi-rose-500: rgb(244, 63, 94);
+  --freya-color-windi-pink-500: rgb(236, 72, 153);
+  --freya-color-windi-fuchsia-500: rgb(217, 70, 239);
+  --freya-color-windi-purple-500: rgb(168, 85, 247);
+  --freya-color-windi-violet-500: rgb(139, 92, 246);
+  --freya-color-windi-indigo-500: rgb(99, 102, 241);
+  --freya-color-windi-blue-500: rgb(59, 130, 246);
+  --freya-color-windi-sky-500: rgb(14, 165, 233);
+  --freya-color-windi-cyan-500: rgb(6, 182, 212);
+  --freya-color-windi-teal-500: rgb(20, 184, 166);
+  --freya-color-windi-emerald-500: rgb(16, 185, 129);
+  --freya-color-windi-green-500: rgb(34, 197, 94);
+  --freya-color-windi-lime-500: rgb(132, 204, 22);
+  --freya-color-windi-yellow-500: rgb(234, 179, 8);
+  --freya-color-windi-amber-500: rgb(245, 158, 11);
+  --freya-color-windi-orange-500: rgb(249, 115, 22);
+  --freya-color-windi-red-500: rgb(239, 68, 68);
+  --freya-color-windi-gray-500: rgb(107, 114, 128);
+  --freya-color-windi-slate-500: rgb(100, 116, 139);
+  --freya-color-windi-zinc-500: rgb(113, 113, 122);
+  --freya-color-windi-neutral-500: rgb(115, 115, 115);
+  --freya-color-windi-stone-500: rgb(120, 113, 108);
+  --freya-color-windi-dark-500: rgb(31, 31, 31);
+  --freya-color-windi-light-500: rgb(242, 242, 242);
+}

@@ -36,6 +36,8 @@ const colors = [
   'light'
 ]
 
+const tones = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]
+
 const specs = {
   sky: {
     50: '#f0f9ff',
@@ -340,6 +342,22 @@ for (const color of colors) {
 
   single += '}'
   writeFileSync(resolve(process.cwd(), `${color}.css`), single, 'utf-8')
+}
+
+for (const tone of tones) {
+  let single = ':root {\n'
+
+  for (const color of colors) {
+    const value = specs[color][tone]
+    const r = parseInt(value.substring(1, 3), 16)
+    const g = parseInt(value.slice(3, 5), 16)
+    const b = parseInt(value.slice(5, 7), 16)
+
+    single += `  --freya-color-windi-${color}-${tone}: rgb(${r}, ${g}, ${b});\n`
+  }
+
+  single += '}'
+  writeFileSync(resolve(process.cwd(), `${tone}.css`), single, 'utf-8')
 }
 
 writeFileSync(
