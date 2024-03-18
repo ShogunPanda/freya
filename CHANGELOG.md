@@ -1,3 +1,7 @@
+### 2024-03-18 / 0.69.0
+
+- feat: Added WindiCSS palette based on tone.
+
 ### 2024-03-18 / 0.68.0
 
 - feat: Added WindiCSS palette.
