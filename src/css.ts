@@ -97,6 +97,8 @@ export async function css(context: BuildContext): Promise<string> {
       url = resolve(rootDir, 'src/themes', theme.id, id.replace('@theme/', ''))
     } else if (id.startsWith('@talk/') && talk) {
       url = resolve(rootDir, 'src/talks', talk.id, id.replace('@talk/', ''))
+    } else if (id.startsWith('@./')) {
+      url = resolve(rootDir, 'src', id.replace(/^@/, ''))
     }
 
     if (url) {
