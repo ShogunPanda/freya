@@ -156,7 +156,7 @@ export function customUnitsPlugin({ units }: CustomUnitPluginOptions = {}): Plug
       const originalValue = node.value
 
       node.value = node.value.replaceAll(matcher, (_, value: string, custom: string) => {
-        const [ratio, unit] = units![custom]
+        const [ratio, unit] = units[custom]
         const parsed = parseFloat(value)
 
         const converted = `${(parsed * ratio).toFixed(3)}${unit}`
