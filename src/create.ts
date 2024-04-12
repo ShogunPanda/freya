@@ -22,7 +22,7 @@ const templates = {
   '.stylelintrc.json': 'stylelintrc.json',
   '.swcrc': 'swcrc',
   'package.json': 'package.json',
-  'prettier.config.cjs': 'prettier.config.cjs',
+  'prettier.config.js': 'prettier.config.js',
   'tsconfig.json': 'tsconfig.json'
 }
 
