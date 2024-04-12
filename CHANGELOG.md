@@ -1,3 +1,7 @@
+### 2024-04-12 / 0.70.1
+
+- chore: Updated dependencies.
+
 ### 2024-03-20 / 0.70.0
 
 - feat: Support local CSS files.
