@@ -316,10 +316,18 @@ export async function build(context: BuildContext): Promise<BuildResult> {
 
   await Promise.all(fileOperations)
   fileOperations = []
-
-  // Copy themes and talks assets
   const themes = new Set()
 
+  // Copy common assets
+  const commonAssets = resolve(rootDir, 'src/themes/common/assets')
+  fileOperations.push(
+    cp(commonAssets, resolve(baseDir, 'assets/themes/common'), {
+      recursive: true
+    })
+  )
+  themes.add('common')
+
+  // Copy themes and talks assets
   for (const talk of context.extensions.freya.talks as string[]) {
     const {
       config: { theme }
