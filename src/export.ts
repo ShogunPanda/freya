@@ -52,7 +52,10 @@ function resolveImageUrl(cache: Record<string, string>, theme: string, talk: str
     return cache[key]
   }
 
-  cache[key] = url.replace('@talk', `./assets/talks/${talk}`).replace('@theme', `./assets/themes/${theme}`)
+  cache[key] = url
+    .replace('@common', './assets/themes/common')
+    .replace('@theme', `./assets/themes/${theme}`)
+    .replace('@talk', `./assets/talks/${talk}`)
   return cache[key]
 }
 
@@ -216,7 +219,7 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
     const startTime = process.hrtime.bigint()
     const talk = await getTalk(id)
     const theme = await getTheme(talk.config.theme)
-    const [themeImages, talkImages] = await listThemeAndTalkImages(theme.id, talk.id)
+    const [commonImages, themeImages, talkImages] = await listThemeAndTalkImages(theme.id, talk.id)
 
     const clientContext = await prepareClientContext(context, theme, talk)
     const layouts: Record<string, string> = {}
@@ -255,6 +258,7 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
         page({
           talk,
           theme,
+          commonImages,
           themeImages,
           talkImages,
           js: '',

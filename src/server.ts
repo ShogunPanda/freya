@@ -74,7 +74,7 @@ export async function assetsHandler(
 
   if (!type) {
     return reply.sendFile(`${talk}_assets.html`)
-  } else if (!['talk', 'theme'].includes(type)) {
+  } else if (!['common', 'theme', 'talk'].includes(type)) {
     return reply.code(NOT_FOUND).sendFile('404.html')
   }
 

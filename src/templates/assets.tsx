@@ -7,12 +7,21 @@ interface AssetsProps {
   context: BuildContext
   theme: Theme
   talk: Talk
-  talkImages: string[]
+  commonImages: string[]
   themeImages: string[]
+  talkImages: string[]
   bodyClassName: string
 }
 
-export function page({ context, theme, talk, talkImages, themeImages, bodyClassName }: AssetsProps): VNode {
+export function page({
+  context,
+  theme,
+  talk,
+  commonImages,
+  themeImages,
+  talkImages,
+  bodyClassName
+}: AssetsProps): VNode {
   const copyAssetScript = `
     document.addEventListener('DOMContentLoaded', () => {
       for (const link of document.querySelectorAll('[data-freya-asset-id]')) {
@@ -79,6 +88,39 @@ export function page({ context, theme, talk, talkImages, themeImages, bodyClassN
 
               <section className={cleanCssClasses('freya@resources__section')}>
                 {themeImages.map(path => {
+                  return (
+                    <figure
+                      key={path}
+                      className={cleanCssClasses('freya@resources__figure')}
+                      data-freya-asset-id={path}
+                    >
+                      <div className={cleanCssClasses('freya@resources__figure__image-wrapper')}>
+                        <img
+                          src={resolveImageUrl({}, theme.id, talk.id, path)}
+                          className={cleanCssClasses('freya@resources__figure__image')}
+                        />
+                      </div>
+                      <figcaption className={cleanCssClasses('freya@resources__figure__caption')}>{path}</figcaption>
+                    </figure>
+                  )
+                })}
+              </section>
+            </>
+          )}
+
+          {commonImages.length > 0 && (
+            <>
+              <h2
+                className={cleanCssClasses(
+                  'freya@resources__header',
+                  (talkImages.length > 0 || themeImages.length > 0) && 'freya@resources__header--next'
+                )}
+              >
+                Common Assets
+              </h2>
+
+              <section className={cleanCssClasses('freya@resources__section')}>
+                {commonImages.map(path => {
                   return (
                     <figure
                       key={path}

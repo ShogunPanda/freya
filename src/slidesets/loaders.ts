@@ -47,7 +47,10 @@ export function resolveImagePath(cache: Record<string, string>, theme: string, t
   cache[key] = resolve(
     rootDir,
     'src',
-    (path ?? '').replace('@talk', `talks/${talk}/assets`).replace('@theme', `themes/${theme}/assets`)
+    (path ?? '')
+      .replace('@common', 'themes/common/assets')
+      .replace('@theme', `themes/${theme}/assets`)
+      .replace('@talk', `talks/${talk}/assets`)
   )
   return cache[key]
 }
@@ -62,7 +65,10 @@ export function resolveImageUrl(cache: Record<string, string>, theme: string, ta
     return cache[key]
   }
 
-  cache[key] = url.replace('@talk', `/${talk}/assets/talk`).replace('@theme', `/${talk}/assets/theme`)
+  cache[key] = url
+    .replace('@common', `/${talk}/assets/common`)
+    .replace('@theme', `/${talk}/assets/theme`)
+    .replace('@talk', `/${talk}/assets/talk`)
   return cache[key]
 }
 

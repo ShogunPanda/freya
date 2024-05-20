@@ -104,7 +104,12 @@ export const markdownRenderer = markdownIt({
   linkify: true
 })
 
-export async function listThemeAndTalkImages(theme: string, talk: string): Promise<[string[], string[]]> {
+export async function listThemeAndTalkImages(theme: string, talk: string): Promise<[string[], string[], string[]]> {
+  const commonImagesPaths = await glob('**/*.{bmp,gif,jpg,jpeg,png,webp,svg}', {
+    cwd: resolve(rootDir, 'src/themes/common/assets'),
+    ignore
+  })
+
   const themeImagesPaths = await glob('**/*.{bmp,gif,jpg,jpeg,png,webp,svg}', {
     cwd: resolve(rootDir, 'src/themes', theme, 'assets'),
     ignore
@@ -116,6 +121,7 @@ export async function listThemeAndTalkImages(theme: string, talk: string): Promi
   })
 
   return [
+    commonImagesPaths.sort(assetsSorter).map(a => `@common/${a}`),
     themeImagesPaths.sort(assetsSorter).map(a => `@theme/${a}`),
     talkImagesPaths.sort(assetsSorter).map(a => `@talk/${a}`)
   ]
@@ -328,9 +334,9 @@ export async function generateAssetsListing(context: BuildContext): Promise<Reco
     const talk = await getTalk(id)
     const theme = await getTheme(talk.config.theme)
 
-    const [themeImages, talkImages] = await listThemeAndTalkImages(talk.config.theme, id)
+    const [commonImages, themeImages, talkImages] = await listThemeAndTalkImages(talk.config.theme, id)
 
-    pages[id] = render(assetsPage({ context, theme, talk, talkImages, themeImages, bodyClassName }))
+    pages[id] = render(assetsPage({ context, theme, talk, commonImages, themeImages, talkImages, bodyClassName }))
 
     const progress = `[${i.toString().padStart(padding, '0')}/${totalPadded}]`
     context.logger.info(`${progress} Generated assets listing for slideset ${id} in ${elapsed(startTime)} ms.`)
@@ -417,12 +423,13 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
 
   // Render the page
 
-  const [themeImages, talkImages] = await listThemeAndTalkImages(theme.id, talk.id)
+  const [commonImages, themeImages, talkImages] = await listThemeAndTalkImages(theme.id, talk.id)
 
   const html = render(
     page({
       talk,
       theme,
+      commonImages,
       themeImages,
       talkImages,
       js: await finalizeJs([await generateApplicationScript(context, clientContext, layouts), pusher].join('\n;\n')),

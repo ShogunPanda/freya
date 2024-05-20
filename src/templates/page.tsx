@@ -8,6 +8,7 @@ interface PageProps {
   talk: Talk
   talkImages: string[]
   themeImages: string[]
+  commonImages: string[]
   js: string
   title: string
   bodyClassName?: string
@@ -18,8 +19,9 @@ interface PageProps {
 export function page({
   theme,
   talk,
-  talkImages,
+  commonImages,
   themeImages,
+  talkImages,
   js,
   title,
   body,
@@ -47,7 +49,7 @@ export function page({
         {fonts.urls.map((url: string, index: number) => (
           <link key={index} rel="preload" as="font" href={url} crossOrigin="anonymous" />
         ))}
-        {[...themeImages, ...talkImages].map(url => (
+        {[...commonImages, ...themeImages, ...talkImages].map(url => (
           <link key={url} rel="preload" as="image" href={resolveImageUrl({}, id, talk.id, url)} />
         ))}
         <script defer={true} type="module" dangerouslySetInnerHTML={{ __html: js }} />

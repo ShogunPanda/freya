@@ -102,10 +102,19 @@ export async function build(context: BuildContext): Promise<BuildResult> {
     await writeFile(resolve(baseDir, '../functions/pusher-auth.js'), await generatePusherAuthFunction(context), 'utf8')
   }
 
-  // Copy themes and talks assets
   let fileOperations: Promise<void>[] = []
   const themes = new Set()
 
+  // Copy common assets
+  const commonAssets = resolve(rootDir, 'src/themes/common/assets')
+  fileOperations.push(
+    cp(commonAssets, resolve(baseDir, 'assets/themes/common'), {
+      recursive: true
+    })
+  )
+  themes.add('common')
+
+  // Copy themes and talks assets
   for (const talk of context.extensions.freya.talks as string[]) {
     const {
       config: { theme }
@@ -143,7 +152,7 @@ export async function build(context: BuildContext): Promise<BuildResult> {
         config: { theme }
       } = await getTalk(talk)
 
-      const [themeImages, talkImages] = await listThemeAndTalkImages(theme, talk)
+      const [commonImages, themeImages, talkImages] = await listThemeAndTalkImages(theme, talk)
 
       const swDir = resolve(baseDir, 'assets/talks', talk)
 
@@ -157,7 +166,7 @@ export async function build(context: BuildContext): Promise<BuildResult> {
           talkServiceWorkerDeclaration(
             context,
             talk,
-            [...themeImages, ...talkImages].map(i => resolveImageUrl({}, theme, talk, i))
+            [...commonImages, ...themeImages, ...talkImages].map(i => resolveImageUrl({}, theme, talk, i))
           ),
           'utf8'
         )
