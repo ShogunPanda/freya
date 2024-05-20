@@ -1,3 +1,7 @@
+### 2024-05-20 / 0.71.2
+
+- fix: Fix Netlify aliases.
+
 ### 2024-05-20 / 0.71.1
 
 - fix: Also support common assets in export.
