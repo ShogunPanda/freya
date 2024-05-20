@@ -1,3 +1,7 @@
+### 2024-05-20 / 0.71.1
+
+- fix: Also support common assets in export.
+
 ### 2024-05-20 / 0.71.0
 
 - feat: Support common assets.
