@@ -31,8 +31,9 @@ async function generateNetlifyConfiguration(context: BuildContext): Promise<stri
       config: { theme }
     } = await getTalk(talk)
 
-    generated += `[[redirects]]\nfrom = "/${talk}/assets/talk/*"\nto = "/assets/talks/${talk}/:splat"\nstatus = 200\n\n`
+    generated += `[[redirects]]\nfrom = "/${talk}/assets/common/*"\nto = "/assets/themes/common/:splat"\nstatus = 200\n\n`
     generated += `[[redirects]]\nfrom = "/${talk}/assets/theme/*"\nto = "/assets/themes/${theme}/:splat"\nstatus = 200\n\n`
+    generated += `[[redirects]]\nfrom = "/${talk}/assets/talk/*"\nto = "/assets/talks/${talk}/:splat"\nstatus = 200\n\n`
     generated += `[[redirects]]\nfrom = "/${talk}/sw.js"\nto = "/assets/talks/${talk}/sw.js"\nstatus = 200\n\n`
     generated += `[[redirects]]\nfrom = "/${talk}/*"\nto = "/${talk}.html"\nstatus = 200\n\n`
   }
