@@ -1,3 +1,8 @@
+### 2024-05-20 / 0.71.0
+
+- feat: Support common assets.
+- chore: Renamed template file.
+
 ### 2024-04-12 / 0.70.1
 
 - chore: Updated dependencies.
