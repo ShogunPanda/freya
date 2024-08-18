@@ -18,6 +18,19 @@ function parseAbstracts(raw: string): string {
   return paragraphMarkdownRenderer.render(raw).replaceAll(/<a(?:[^>]+)>([^<]+)<\/a>/g, '$1')
 }
 
+function niceJoin(array: string[], lastSeparator: string = ' and ', separator: string = ', '): string {
+  switch (array.length) {
+    case 0:
+      return ''
+    case 1:
+      return array[0]
+    case 2:
+      return array.join(lastSeparator)
+    default:
+      return array.slice(0, -1).join(separator) + lastSeparator + array.at(-1)!
+  }
+}
+
 export async function page(context: BuildContext, talks: Record<string, Talk>, bodyClassName: string): Promise<VNode> {
   const common = await getCommon()
   const authorName = (common.author as Record<string, string>)?.name ?? 'Author'
@@ -53,7 +66,9 @@ export async function page(context: BuildContext, talks: Record<string, Talk>, b
                 {currentTalks.map(([id, talk]) => (
                   <a href={`/${id}`} className={cleanCssClasses('freya@resources__slideset')}>
                     <h4 className={cleanCssClasses('freya@resources__slideset__author')}>
-                      {talk.document.author.name}
+                      {talk.document.authors
+                        ? niceJoin(talk.document.authors.map(({ name }: { name: string }) => name) as string[])
+                        : talk.document.author.name}
                     </h4>
                     <h3 className={cleanCssClasses('freya@resources__slideset__title')}>{talk.document.title}</h3>
 
