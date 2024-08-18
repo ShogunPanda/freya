@@ -1,3 +1,7 @@
+### 2024-08-18 / 0.72.0
+
+- feat: Support multiple authors in index.
+
 ### 2024-05-20 / 0.71.2
 
 - fix: Fix Netlify aliases.
