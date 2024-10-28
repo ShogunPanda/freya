@@ -70,7 +70,7 @@ export function Navigator({ className, close }: NavigatorProps): VNode {
       window.removeEventListener('resize', boundUpdateNavigatorAppearance, false)
       document.removeEventListener('fullscreenchange', boundUpdateNavigatorAppearance, false)
     }
-  }, [root])
+  }, [root, dimensions])
 
   const goto = useCallback(
     (index: number) => {
@@ -81,7 +81,7 @@ export function Navigator({ className, close }: NavigatorProps): VNode {
       route(slideUrl(id, index + 1, slidesPadding))
       close()
     },
-    [route, close]
+    [close, id, slidesPadding]
   )
 
   return (
@@ -97,6 +97,7 @@ export function Navigator({ className, close }: NavigatorProps): VNode {
             'freya@navigator__slide',
             index + 1 === current && 'freya@navigator__slide--active'
           )}
+          // eslint-disable-next-line react/jsx-no-bind
           onClick={goto.bind(null, index)}
         >
           <SlideContextWithModel.Provider value={{ slide, index, previousIndex: index, navigator: true }}>

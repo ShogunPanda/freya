@@ -13,7 +13,7 @@ import { LayoutContext, SlideComponent } from './slide.js'
 import { SvgDefinitions } from './svg.js'
 
 // @ts-expect-error Replaced at compile time
-// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions, camelcase
 __replace_placeholder_imports__
 
 function markdownParser(cache: Record<string, string>, raw?: string): string {
@@ -76,14 +76,11 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     parseContent: markdownParser.bind(null, context.assets.content)
   }
 
-  const toggleController = useCallback(
-    (ev?: Event) => {
-      ev?.preventDefault()
-      setIsControlling(current => !current)
-      window.dispatchEvent(new Event('freya:controller:toggled'))
-    },
-    [setIsNavigating]
-  )
+  const toggleController = useCallback((ev?: Event) => {
+    ev?.preventDefault()
+    setIsControlling(current => !current)
+    window.dispatchEvent(new Event('freya:controller:toggled'))
+  }, [])
 
   const toggleNavigator = useCallback(
     (ev?: Event) => {
@@ -103,14 +100,11 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     [setIsNavigating]
   )
 
-  const closePresenter = useCallback(
-    (ev?: Event) => {
-      ev?.preventDefault()
-      setIsPresenting(false)
-      window.dispatchEvent(new Event('freya:presenter:toggled'))
-    },
-    [setIsNavigating]
-  )
+  const closePresenter = useCallback((ev?: Event) => {
+    ev?.preventDefault()
+    setIsPresenting(false)
+    window.dispatchEvent(new Event('freya:presenter:toggled'))
+  }, [])
 
   const togglePresenter = useCallback(
     (ev?: Event) => {
@@ -178,7 +172,7 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
         remoteChannel.current?.trigger('client-update', { id, current })
       }
     },
-    [index, isPresenting, localChannel, setIndex, setPreviousIndex]
+    [id, index, isPresenting, localChannel, setIndex, setPreviousIndex]
   )
 
   const handleSynchronizationUpdate = useCallback(
@@ -191,7 +185,7 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
         window.dispatchEvent(new MessageEvent('freya:slide:changed', { data: { id, index: current } }))
       }
     },
-    [id, index, isPresenting]
+    [id, index, isPresenting, slidesPadding]
   )
 
   // Setup all DOM Events
@@ -237,7 +231,17 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
       document.removeEventListener('dblclick', handleFullScreen, false)
       document.removeEventListener('keydown', boundHandleShortcut, false)
     }
-  }, [updateSlidesAppearance, handleFullScreen, handleShortcut, toggleNavigator, index])
+  }, [
+    toggleNavigator,
+    index,
+    slidesCount,
+    context,
+    handleEscape,
+    startPresentation,
+    toggleController,
+    togglePresenter,
+    togglePresentation
+  ])
 
   // Validate the initial slide
   useEffect(() => {
@@ -252,7 +256,7 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     }
 
     document.title = `${index.toString().padStart(slidesPadding, '0')} - ${title}`
-  }, [index, slidesCount])
+  }, [id, title, index, slidesCount, slidesPadding])
 
   // Track presentation duration if the timer is active
   useEffect(() => {
@@ -279,7 +283,7 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     return () => {
       localChannel.current?.removeEventListener('message', handleSynchronizationUpdate)
     }
-  }, [localChannel, handleSynchronizationUpdate, isPresenting])
+  }, [localChannel, handleSynchronizationUpdate, isPresenting, context])
 
   // Setup pusher synchronization, if available
   useEffect(() => {
@@ -320,7 +324,7 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     return () => {
       remoteChannel.current!.unbind_all()
     }
-  }, [pusher, remoteChannel, handleSynchronizationUpdate])
+  }, [pusher, remoteChannel, handleSynchronizationUpdate, context])
 
   return (
     <ClientContextInstance.Provider value={createClientContextValue(context, hookMethods)}>
@@ -354,9 +358,11 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
 
 if (globalThis.document) {
   // @ts-expect-error Replaced at compile time
+  // eslint-disable-next-line camelcase
   const context: ClientContextModel = ((globalThis as Record<string, unknown>).freya = __replace_placeholder_context__)
 
   // @ts-expect-error Replaced at compile time
+  // eslint-disable-next-line camelcase
   const layouts = __replace_placeholder_layouts__
 
   document.addEventListener('DOMContentLoaded', () => {

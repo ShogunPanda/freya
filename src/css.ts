@@ -49,13 +49,11 @@ export async function css(context: BuildContext): Promise<string> {
   let theme: Theme | undefined
 
   if (!id || id === '404' || id === 'index' || id.endsWith('_assets') || id === 'speaker-notes') {
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     cssFiles = [loadLayeredCss('page', fileURLToPath(new URL('./assets/styles/page.css', import.meta.url)))]
   } else {
     talk = await getTalk(id)
     theme = await getTheme(talk.config.theme)
 
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     cssFiles = [
       loadLayeredCss('slideset', fileURLToPath(new URL('./assets/styles/slideset.css', import.meta.url))),
       loadLayeredCss('reset', resolve(rootDir, 'src/themes', theme.id, 'reset.css'), true),

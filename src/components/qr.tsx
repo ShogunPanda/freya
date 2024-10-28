@@ -191,7 +191,7 @@ export function QRCode({ data, image, imageRatio, label, className }: QRCodeProp
           width={dimension}
           height={dimension}
           viewBox={`0 0 ${dimension} ${dimension}`}
-        ></svg>
+        />
 
         {image && <div className={cleanCssClasses('freya@qr__image-wrapper')}>{image}</div>}
       </div>

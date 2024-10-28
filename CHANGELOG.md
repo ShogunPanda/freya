@@ -1,3 +1,7 @@
+### 2024-10-28 / 0.73.0
+
+- feat!: Dropped support for Node 18 and updated dependencies.
+
 ### 2024-08-18 / 0.72.0
 
 - feat: Support multiple authors in index.

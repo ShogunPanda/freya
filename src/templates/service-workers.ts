@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference lib="webworker" />
 
 import { type BuildContext } from '@perseveranza-pets/dante'
@@ -38,7 +37,6 @@ function indexServiceWorker(): void {
   )
 
   // Notify when the cache has been updated
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   self.addEventListener('activate', async () => {
     for (const client of await self.clients.matchAll({ type: 'window' })) {
       client.postMessage({ type: 'new-version-available', payload: { version: globalThis.version } })
@@ -87,7 +85,6 @@ function talkServiceWorker(): void {
   )
 
   // Notify when the cache has been updated
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   self.addEventListener('activate', async () => {
     for (const client of await self.clients.matchAll({ type: 'window' })) {
       client.postMessage({ type: 'new-version-available', payload: { version: globalThis.version } })

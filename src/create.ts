@@ -18,7 +18,7 @@ const templates = {
   'src/themes/main/classes.css': 'classes.css',
   'src/themes/main/style.css': 'style.css',
   'src/themes/main/layouts/default.tsx': 'layout.tsx',
-  '.eslintrc.json': 'eslintrc.json',
+  'eslint.config.js': 'eslint.config.js',
   '.stylelintrc.json': 'stylelintrc.json',
   '.swcrc': 'swcrc',
   'package.json': 'package.json',

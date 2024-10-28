@@ -3,6 +3,7 @@ import { useClient, useSlide } from './contexts.js'
 import { cleanCssClasses } from './styling.js'
 
 interface ProgressProps {
+  // eslint-disable-next-line react/no-unused-prop-types
   current: number
   className?: string
 }

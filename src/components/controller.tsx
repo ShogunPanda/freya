@@ -29,7 +29,7 @@ export function Controller({ className }: ControllerProps): VNode {
     return () => {
       window.removeEventListener('freya:fullScreen:toggled', updateFullScreen, false)
     }
-  }, [])
+  }, [updateFullScreen])
 
   return (
     <nav className={cleanCssClasses('freya@controller', className)}>

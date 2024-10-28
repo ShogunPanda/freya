@@ -36,7 +36,6 @@ export function pusherAuthHandler(request: FastifyRequest, reply: FastifyReply):
   const stringToSign = `${socket}:${channel}`
   const signature = createHmac('sha256', secret).update(stringToSign).digest().toString('hex')
 
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
   reply.send({
     auth: `${key}:${signature}`,
     user_data: user
@@ -91,7 +90,6 @@ export async function assetsHandler(
 
 export function setupServer(server: FastifyInstance, isProduction: boolean): ServerResult {
   if (pusherConfig) {
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     server.register(fastifyFormBody)
 
     server.route({
@@ -105,7 +103,6 @@ export function setupServer(server: FastifyInstance, isProduction: boolean): Ser
     method: 'GET',
     url: '/',
     handler(this: FastifyInstance, _: FastifyRequest, reply: FastifyReply): void {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       reply.sendFile('index.html')
     }
   })
@@ -114,7 +111,6 @@ export function setupServer(server: FastifyInstance, isProduction: boolean): Ser
     method: 'GET',
     url: '/sw.js',
     handler(this: FastifyInstance, _: FastifyRequest, reply: FastifyReply): void {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       reply.sendFile('sw.js')
     }
   })
