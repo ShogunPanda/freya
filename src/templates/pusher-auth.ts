@@ -1,4 +1,5 @@
 // @ts-expect-error - This is used within Netlify functions, which use Deno
+// eslint-disable-next-line import/extensions, import/no-unresolved
 import { hmac } from 'https://deno.land/x/hmac@v2.0.1/mod.ts'
 
 const key = '@KEY@'

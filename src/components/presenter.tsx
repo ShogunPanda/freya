@@ -91,7 +91,7 @@ export function Presenter({
       window.removeEventListener('resize', boundUpdatePresenterAppearance, false)
       document.removeEventListener('fullscreenchange', boundUpdatePresenterAppearance, false)
     }
-  }, [index, previousElement, currentElement, nextElement])
+  }, [index, previousElement, currentElement, nextElement, dimensions])
 
   return (
     <section

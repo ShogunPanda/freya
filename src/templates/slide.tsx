@@ -12,6 +12,7 @@ import { type ClientContext as ClientContextModel, type Slide, type SlideProps }
 
 interface SlideComponentProps {
   context: ClientContextModel
+  // eslint-disable-next-line react/no-unused-prop-types
   layout: ComponentType<SlideProps>
   slide: Slide
   index: number

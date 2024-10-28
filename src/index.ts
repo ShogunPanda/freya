@@ -1,6 +1,5 @@
 export * from './build.js'
 export * from './cli.js'
-export * from './client.js'
 export * from './components/index.js'
 export * from './configuration.js'
 export * from './css.js'

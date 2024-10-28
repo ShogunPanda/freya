@@ -309,7 +309,6 @@ export async function build(context: BuildContext): Promise<BuildResult> {
 
   // Generate the slidesets
   const slides = await generateAllSlidesets(context)
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
   fileOperations = Object.entries(slides).map(([name, content]) => {
     return writeFile(resolve(baseDir, name), content, 'utf-8')
   })

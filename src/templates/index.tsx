@@ -64,7 +64,7 @@ export async function page(context: BuildContext, talks: Record<string, Talk>, b
 
               <section className={cleanCssClasses('freya@resources__slidesets')}>
                 {currentTalks.map(([id, talk]) => (
-                  <a href={`/${id}`} className={cleanCssClasses('freya@resources__slideset')}>
+                  <a key={id} href={`/${id}`} className={cleanCssClasses('freya@resources__slideset')}>
                     <h4 className={cleanCssClasses('freya@resources__slideset__author')}>
                       {talk.document.authors
                         ? niceJoin(talk.document.authors.map(({ name }: { name: string }) => name) as string[])
@@ -92,7 +92,7 @@ export async function page(context: BuildContext, talks: Record<string, Talk>, b
 
               <section className={cleanCssClasses('freya@resources__slidesets')}>
                 {archivedTalks.map(([id, talk]) => (
-                  <a href={`/${id}`} className={cleanCssClasses('freya@resources__slideset')}>
+                  <a key={id} href={`/${id}`} className={cleanCssClasses('freya@resources__slideset')}>
                     <h4 className={cleanCssClasses('freya@resources__slideset__author')}>
                       {talk.document.author.name}
                     </h4>
