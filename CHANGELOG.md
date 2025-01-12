@@ -1,3 +1,7 @@
+### 2025-01-12 / 0.74.2
+
+- chore: Removed useless dependency.
+
 ### 2024-12-28 / 0.74.1
 
 - chore: Updated dependencies.
