@@ -1,5 +1,4 @@
 import {
-  baseTemporaryDirectory,
   cleanCssClasses,
   elapsed,
   renderCode,
@@ -7,10 +6,6 @@ import {
   sanitizeTabularOutputSnippet,
   type BuildContext
 } from '@perseveranza-pets/dante'
-import rollupCommonJs from '@rollup/plugin-commonjs'
-import rollupNodeResolve from '@rollup/plugin-node-resolve'
-import rollupReplace from '@rollup/plugin-replace'
-import { minify, transform } from '@swc/core'
 import { glob, type IgnoreLike } from 'glob'
 import markdownIt from 'markdown-it'
 import { existsSync } from 'node:fs'
@@ -18,16 +13,17 @@ import { hostname } from 'node:os'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { render } from 'preact-render-to-string'
-import { rollup } from 'rollup'
-import { generateSVGId } from '../components/svg.js'
-import { pusherConfig } from '../configuration.js'
-import { resolveSVG } from '../rendering/svg.js'
-import { page as page404 } from '../templates/404.js'
-import { page as assetsPage } from '../templates/assets.js'
-import { page as index } from '../templates/index.js'
-import { page } from '../templates/page.js'
-import { SlideComponent, Widgets } from '../templates/slide.js'
-import { getTalk, getTheme, resolveImageUrl, resolvePusher } from './loaders.js'
+import { rolldown } from 'rolldown'
+import { replacePlugin } from 'rolldown/plugins'
+import { generateSVGId } from '../components/svg.tsx'
+import { pusherConfig } from '../configuration.ts'
+import { resolveSVG } from '../rendering/svg.tsx'
+import { page as page404 } from '../templates/404.tsx'
+import { page as assetsPage } from '../templates/assets.tsx'
+import { page as index } from '../templates/index.tsx'
+import { page } from '../templates/page.tsx'
+import { SlideComponent, Widgets } from '../templates/slide.tsx'
+import { getTalk, getTheme, resolveImageUrl, resolvePusher } from './loaders.ts'
 import {
   type ClientContext,
   type CodeDefinition,
@@ -36,7 +32,7 @@ import {
   type SlideRenderer,
   type Talk,
   type Theme
-} from './models.js'
+} from './models.ts'
 
 interface Path {
   name: string
@@ -125,11 +121,6 @@ export async function listThemeAndTalkImages(theme: string, talk: string): Promi
     themeImagesPaths.sort(assetsSorter).map(a => `@theme/${a}`),
     talkImagesPaths.sort(assetsSorter).map(a => `@talk/${a}`)
   ]
-}
-
-export async function finalizeJs(code: string): Promise<string> {
-  const { code: minified } = await minify(code, { compress: true, mangle: false })
-  return minified
 }
 
 export function renderNotes(slide: Slide): string {
@@ -231,8 +222,8 @@ export async function prepareClientContext(context: BuildContext, theme: Theme, 
   const data: Record<string, any> = {}
   const serverData: Record<string, any> = {}
 
-  const themeSetupFile = resolve(baseTemporaryDirectory, 'themes', theme.id, 'setup.js')
-  const talkSetupFile = resolve(baseTemporaryDirectory, 'talk', talk.id, 'setup.js')
+  const themeSetupFile = resolve(rootDir, 'src/themes', theme.id, 'setup.ts')
+  const talkSetupFile = resolve(rootDir, 'src/talk', talk.id, 'setup.ts')
 
   await loadData(context, theme, talk, themeSetupFile, data, serverData, 'theme')
   await loadData(context, theme, talk, talkSetupFile, data, serverData, 'talk')
@@ -260,56 +251,41 @@ export async function prepareClientContext(context: BuildContext, theme: Theme, 
 }
 
 export async function generateApplicationScript(
-  context: BuildContext,
+  _u1: BuildContext,
   clientContext: ClientContext,
   layoutsMap: Record<string, string>
 ): Promise<string> {
-  const application = fileURLToPath(new URL('../components/application.js', import.meta.url))
-
   const layouts: string[] = []
   const imports = Object.entries(layoutsMap).map(([id, path]) => {
     layouts.push(`"${id}": ${id}Layout`)
     return `import { default as ${id}Layout } from "${path}"`
   })
 
-  // Bundle with rollup
-  const bundled = await rollup({
-    input: application,
+  const bundled = await rolldown({
+    input: fileURLToPath(new URL('../components/application.js', import.meta.url)),
+    treeshake: true,
+    platform: 'browser',
+    transform: {
+      jsx: {
+        importSource: 'preact'
+      }
+    },
     plugins: [
-      // @ts-expect-error Invalid handling of moduleResolution
-      rollupReplace({
-        preventAssignment: true,
-        values: {
+      replacePlugin(
+        {
           __replace_placeholder_context__: JSON.stringify(clientContext, null, 2),
           __replace_placeholder_layouts__: `{${layouts.join(', ')}}`,
           __replace_placeholder_imports__: imports.join('\n')
+        },
+        {
+          preventAssignment: false
         }
-      }),
-      // @ts-expect-error Invalid handling of moduleResolution
-      rollupNodeResolve({
-        browser: true,
-        modulePaths: [fileURLToPath(new URL('../../../node_modules', import.meta.url))],
-        preferBuiltins: true
-      }),
-      // @ts-expect-error Invalid handling of moduleResolution
-      rollupCommonJs()
-    ],
-    output: {
-      format: 'esm'
-    },
-    treeshake: true
+      )
+    ]
   })
 
-  const generated = await bundled.generate({ format: 'esm' })
-  let code = generated.output[0].code
-
-  // Eventually minify with swc
-  if (context.isProduction) {
-    const minified = await transform(code, { jsc: { target: 'es2022' }, minify: true })
-    code = minified.code
-  }
-
-  return code
+  const generated = await bundled.generate({ format: 'esm', minify: true, legalComments: 'none' })
+  return generated.output[0].code
 }
 
 export function generatePage404(context: BuildContext): string {
@@ -362,18 +338,17 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
       slide.options = {}
     }
 
-    if (!slide.classes) {
-      slide.classes = {}
+    if (!slide.className) {
+      slide.className = {}
     }
 
     // Render the slide on the server to add the required classes
     const layoutPath = resolve(
       rootDir,
-      baseTemporaryDirectory,
-      'themes',
+      'src/themes',
       talk.config.theme,
       'layouts',
-      (slide.layout ?? 'default') + '.js'
+      (slide.layout ?? 'default') + '.tsx'
     )
 
     const { default: layout }: { default: SlideRenderer } = await import(layoutPath)
@@ -422,7 +397,6 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
   clientContext.serverData = undefined
 
   // Render the page
-
   const [commonImages, themeImages, talkImages] = await listThemeAndTalkImages(theme.id, talk.id)
 
   const html = render(
@@ -432,7 +406,7 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
       commonImages,
       themeImages,
       talkImages,
-      js: await finalizeJs([await generateApplicationScript(context, clientContext, layouts), pusher].join('\n;\n')),
+      js: [await generateApplicationScript(context, clientContext, layouts), pusher].join('\n;\n'),
       title: talk.document.title,
       body: undefined,
       bodyClassName: cleanCssClasses('freya@root', 'freya@loading'),

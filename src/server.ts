@@ -5,8 +5,8 @@ import { NOT_FOUND } from 'http-errors-enhanced'
 import { createHmac } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { basename, dirname, resolve } from 'node:path'
-import { pusherConfig } from './configuration.js'
-import { getTalk, resolveImagePath } from './index.js'
+import { pusherConfig } from './configuration.ts'
+import { getTalk, resolveImagePath } from './index.ts'
 
 interface TalkHandlerParams {
   Params: {
@@ -49,7 +49,7 @@ export async function talkHandler(
 ): Promise<void> {
   const { talk, slide } = request.params
 
-  if (talk === '404.html' || talk === '__status.html' || !pageExists(this, talk)) {
+  if (talk === '404.html' || !pageExists(this, talk)) {
     return reply.code(NOT_FOUND).sendFile('404.html')
   }
 

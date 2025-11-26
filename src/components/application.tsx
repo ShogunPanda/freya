@@ -3,14 +3,14 @@ import { route, Router, type RoutableProps, type RouterOnChangeArgs } from 'prea
 // eslint-disable-next-line import/order
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
 import Pusher, { type Channel } from 'pusher-js'
-import { type ClientContext as ClientContextModel, type ParsedSVG } from '../slidesets/models.js'
-import { handleFullScreen, handleShortcut, slideUrl, updateSlidesAppearance, type DOMContext } from './client.js'
-import { ClientContextInstance, createClientContextValue, SlideContextInstance } from './contexts.js'
-import { Controller } from './controller.js'
-import { Navigator, Overlay } from './navigator.js'
-import { Presenter } from './presenter.js'
-import { LayoutContext, SlideComponent } from './slide.js'
-import { SvgDefinitions } from './svg.js'
+import { type ClientContext as ClientContextModel, type ParsedSVG } from '../slidesets/models.ts'
+import { handleFullScreen, handleShortcut, slideUrl, updateSlidesAppearance, type DOMContext } from './client.ts'
+import { ClientContextInstance, createClientContextValue, SlideContextInstance } from './contexts.tsx'
+import { Controller } from './controller.tsx'
+import { Navigator, Overlay } from './navigator.tsx'
+import { Presenter } from './presenter.tsx'
+import { LayoutContext, SlideComponent } from './slide.tsx'
+import { SvgDefinitions } from './svg.tsx'
 
 // @ts-expect-error Replaced at compile time
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions, camelcase

@@ -1,7 +1,7 @@
 import { type VNode } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
-import { cleanCssClasses } from './styling.js'
-import { SvgIcon } from './svg.js'
+import { cleanCssClasses } from './styling.ts'
+import { SvgIcon } from './svg.tsx'
 
 interface ControllerProps {
   className?: string

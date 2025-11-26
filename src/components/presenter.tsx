@@ -1,10 +1,10 @@
 import { type Context, type VNode } from 'preact'
 import { useLayoutEffect, useMemo, useRef } from 'preact/hooks'
-import { type Slide } from '../slidesets/models.js'
-import { SlideContextInstance, useClient, useSlide, type SlideContextProps } from './contexts.js'
-import { SlideComponent } from './slide.js'
-import { cleanCssClasses } from './styling.js'
-import { SvgIcon } from './svg.js'
+import { type Slide } from '../slidesets/models.ts'
+import { SlideContextInstance, useClient, useSlide, type SlideContextProps } from './contexts.tsx'
+import { SlideComponent } from './slide.tsx'
+import { cleanCssClasses } from './styling.ts'
+import { SvgIcon } from './svg.tsx'
 
 interface PresenterProps {
   close: () => void

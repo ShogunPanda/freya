@@ -1,7 +1,7 @@
 import { cleanCssClasses, type BuildContext } from '@perseveranza-pets/dante'
 import { Fragment, type VNode } from 'preact'
-import { renderNotes } from '../slidesets/generators.js'
-import { type Talk } from '../slidesets/models.js'
+import { renderNotes } from '../slidesets/generators.tsx'
+import { type Talk } from '../slidesets/models.ts'
 
 interface BodyProps {
   talk: Talk

@@ -1,10 +1,26 @@
 import { rootDir, type BuildContext } from '@perseveranza-pets/dante'
+import { type TokenOrValue } from 'lightningcss'
 import { basename, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { Comment, Declaration, Rule, type AtRule, type Plugin } from 'postcss'
-import { readFile } from './fs.js'
-import { getTalk, getTheme } from './slidesets/loaders.js'
-import { type Talk, type Theme } from './slidesets/models.js'
+import { readFile } from './fs.ts'
+import { getTalk, getTheme } from './slidesets/loaders.ts'
+import { type Talk, type Theme } from './slidesets/models.ts'
+
+interface Dimension {
+  type: 'dimension'
+  value: number
+  unit: string
+}
+
+interface ColorAtRule {
+  name: 'color'
+  prelude: {
+    value: {
+      components: { value: string }[]
+    }
+  }
+  loc: unknown
+}
 
 export type CustomUnits = Record<string, [number, string]>
 
@@ -109,60 +125,91 @@ export async function css(context: BuildContext): Promise<string> {
   return css.replaceAll(/((?:freya|theme|talk)(?:-(?:[a-z0-9-]+))?)@/g, '$1\\@')
 }
 
-export function declareColorPlugin(): Plugin {
-  const colorMatcher = /color\(([a-z0-9-_.$@]+)\s*,\s*([a-z0-9-_.$@]+)\)/i
+export const cssVisitor = {
+  Token: {
+    // Custom dimension visitor
+    dimension(token: Dimension) {
+      const declaration = customUnits[token.unit.replace('--', '')]
 
-  return {
-    postcssPlugin: 'freya.declare-colors',
-    AtRule(node: AtRule) {
-      if (node.name !== 'apply') {
+      if (!declaration) {
         return
       }
 
-      const mo = node.params.match(colorMatcher)
+      const [ratio, unit] = declaration
 
-      if (!mo) {
-        return
+      return {
+        type: 'token',
+        value: {
+          type: 'dimension',
+          value: token.value * ratio,
+          unit
+        }
+      } as TokenOrValue
+    }
+  },
+  Rule: {
+    custom: {
+      // Custom color rule
+      color(rule: ColorAtRule) {
+        const [name, color] = rule.prelude.value.components.map(c => c.value)
+
+        return [
+          {
+            type: 'style',
+            value: {
+              selectors: [[{ type: 'class', name: `theme@fg-${name}` }]],
+              loc: rule.loc,
+              declarations: {
+                declarations: [
+                  {
+                    property: 'custom',
+                    value: {
+                      name: 'color',
+                      value: [
+                        {
+                          type: 'var',
+                          value: {
+                            name: {
+                              ident: `--${color}`
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            type: 'style',
+            value: {
+              selectors: [[{ type: 'class', name: `theme@bg-${name}` }]],
+              loc: rule.loc,
+              declarations: {
+                declarations: [
+                  {
+                    property: 'custom',
+                    value: {
+                      name: 'background-color',
+                      value: [
+                        {
+                          type: 'var',
+                          value: {
+                            name: {
+                              ident: `--${color}`
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
       }
-
-      const bg = new Rule({ selector: `&bg-${mo[1]}` })
-      bg.append(new Declaration({ prop: 'background-color', value: `var(--${mo[2]})` }))
-      const fg = new Rule({ selector: `&fg-${mo[1]}` })
-      fg.append(new Declaration({ prop: 'color', value: `var(--${mo[2]})` }))
-
-      node.after(bg)
-      node.after(fg)
-      node.remove()
     }
   }
 }
-
-export function customUnitsPlugin({ units }: CustomUnitPluginOptions = {}): Plugin {
-  if (!units) {
-    units = customUnits
-  }
-
-  const matcher = new RegExp(`(?<value>\\d+(?:\\.\\d+)?)--(?<unit>${Object.keys(units).join('|')})`, 'g')
-
-  return {
-    postcssPlugin: 'freya.custom-units',
-    Declaration(node: Declaration) {
-      if (!node.value.match(matcher)) {
-        return
-      }
-
-      const originalValue = node.value
-
-      node.value = node.value.replaceAll(matcher, (_, value: string, custom: string) => {
-        const [ratio, unit] = units[custom]
-        const parsed = parseFloat(value)
-
-        const converted = `${(parsed * ratio).toFixed(3)}${unit}`
-        node.before(new Comment({ text: `${originalValue} = ${converted}` }))
-        return converted
-      })
-    }
-  }
-}
-
-export const postcssPlugins: Plugin[] = [declareColorPlugin(), customUnitsPlugin()]

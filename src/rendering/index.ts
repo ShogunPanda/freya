@@ -1,2 +1,2 @@
-export * from './qr.js'
-export * from './svg.js'
+export * from './qr.ts'
+export * from './svg.tsx'

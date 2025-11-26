@@ -1,5 +1,5 @@
 import { type VNode } from 'preact'
-import { cleanCssClasses } from './styling.js'
+import { cleanCssClasses } from './styling.ts'
 
 interface ImageProps {
   src: string

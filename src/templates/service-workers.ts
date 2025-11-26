@@ -5,15 +5,10 @@ import { type BuildContext } from '@perseveranza-pets/dante'
 declare let self: ServiceWorkerGlobalScope
 
 declare global {
-  // eslint-disable-next-line no-var
   var workbox: any
-  // eslint-disable-next-line no-var
   var debug: boolean
-  // eslint-disable-next-line no-var
   var version: string
-  // eslint-disable-next-line no-var
   var talk: string
-  // eslint-disable-next-line no-var
   var images: string[]
 }
 

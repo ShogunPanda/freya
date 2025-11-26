@@ -1,6 +1,6 @@
 import { type VNode } from 'preact'
-import { useClient, useSlide } from './contexts.js'
-import { cleanCssClasses } from './styling.js'
+import { useClient, useSlide } from './contexts.tsx'
+import { cleanCssClasses } from './styling.ts'
 
 interface ProgressProps {
   // eslint-disable-next-line react/no-unused-prop-types

@@ -1,7 +1,7 @@
 import { cleanCssClasses, type BuildContext } from '@perseveranza-pets/dante'
 import { type VNode } from 'preact'
-import { resolveImageUrl } from '../index.js'
-import { type Talk, type Theme } from '../slidesets/models.js'
+import { resolveImageUrl } from '../index.ts'
+import { type Talk, type Theme } from '../slidesets/models.ts'
 
 interface AssetsProps {
   context: BuildContext

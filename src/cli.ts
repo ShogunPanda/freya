@@ -1,19 +1,11 @@
-import {
-  baseTemporaryDirectory,
-  builder,
-  compileSourceCode,
-  createBuildContext,
-  initializeSyntaxHighlighting,
-  loadFontsFile,
-  rootDir
-} from '@perseveranza-pets/dante'
+import { builder, createBuildContext, loadFontsFile, rootDir } from '@perseveranza-pets/dante'
 import { type Command } from 'commander'
 import { cp, mkdtemp, rm } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type pino from 'pino'
-import { pusherConfig, setWhitelistedTalks } from './configuration.js'
-import { createAllPDFs, ensureMagick, exportAllAsPNGs } from './export.js'
+import { pusherConfig, setWhitelistedTalks } from './configuration.ts'
+import { createAllPDFs, ensureMagick, exportAllAsPNGs } from './export.ts'
 
 function applyOnlyOption(command: Command): void {
   command.hook('preAction', () => {
@@ -32,8 +24,6 @@ async function performBuild(command: Command, logger: pino.Logger): Promise<void
     const context = createBuildContext(logger, true, absoluteStaticDir)
     context.extensions.freya = { netlify: true }
 
-    await compileSourceCode(logger)
-    await initializeSyntaxHighlighting(logger)
     await builder(context)
   } catch (error) {
     logger.error(error)
@@ -63,15 +53,9 @@ async function performExport(command: Command, logger: pino.Logger, skipCompilat
       context.logger = newLogger
     }
 
-    // Prepare building
-    if (!skipCompilation) {
-      await compileSourceCode(context.logger)
-      await initializeSyntaxHighlighting(context.logger)
-    }
-
     // Setup the environment
     process.env.DANTE_BUILD_FILE_PATH = fileURLToPath(new URL('./export.js', import.meta.url))
-    context.root = await mkdtemp(resolve(baseTemporaryDirectory, 'export-'))
+    context.root = await mkdtemp(resolve(rootDir, 'export-'))
 
     // Build the files first
     await builder(context)

@@ -2,12 +2,11 @@ import { cleanCssClasses, danteDir, type BuildContext } from '@perseveranza-pets
 import markdownIt from 'markdown-it'
 import { resolve } from 'node:path'
 import { type VNode } from 'preact'
-import { isServiceWorkerEnabled } from '../configuration.js'
-import { readFile } from '../fs.js'
-import { finalizeJs } from '../slidesets/generators.js'
-import { getCommon } from '../slidesets/loaders.js'
-import { type Talk } from '../slidesets/models.js'
-import { serviceWorkerRegistration } from './service-workers.js'
+import { isServiceWorkerEnabled } from '../configuration.ts'
+import { readFile } from '../fs.ts'
+import { getCommon } from '../slidesets/loaders.ts'
+import { type Talk } from '../slidesets/models.ts'
+import { serviceWorkerRegistration } from './service-workers.ts'
 
 const paragraphMarkdownRenderer = markdownIt({
   html: true,
@@ -35,13 +34,13 @@ export async function page(context: BuildContext, talks: Record<string, Talk>, b
   const common = await getCommon()
   const authorName = (common.author as Record<string, string>)?.name ?? 'Author'
   const allTalks = Object.entries(talks)
-  const currentTalks = allTalks.filter(([, talk]: [string, Talk]) => !talk.document.archived)
-  const archivedTalks = allTalks.filter(([, talk]: [string, Talk]) => talk.document.archived)
+  const currentTalks = allTalks.filter(([, talk]: [string, Talk]) => !talk.document.hidden && !talk.document.archived)
+  const archivedTalks = allTalks.filter(([, talk]: [string, Talk]) => !talk.document.hidden && talk.document.archived)
 
   const siteVersion = `globalThis.__freyaSiteVersion = "${context.version}"`
   const hotReload = !context.isProduction ? await readFile(resolve(danteDir, 'dist/assets/hot-reload.js')) : ''
   const serviceWorker = isServiceWorkerEnabled(context) ? serviceWorkerRegistration('/sw.js') : ''
-  const js = await finalizeJs([siteVersion, hotReload, serviceWorker].join('\n;\n'))
+  const js = [siteVersion, hotReload, serviceWorker].join('\n;\n')
 
   return (
     <html lang="en">

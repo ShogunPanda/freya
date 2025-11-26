@@ -4,17 +4,17 @@ import { existsSync } from 'node:fs'
 import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { filterWhitelistedTalks, isServiceWorkerEnabled, pusherConfig } from './configuration.js'
-import { css, postcssPlugins } from './css.js'
-import { readFile } from './fs.js'
+import { filterWhitelistedTalks, isServiceWorkerEnabled, pusherConfig } from './configuration.ts'
+import { css, cssVisitor } from './css.ts'
+import { readFile } from './fs.ts'
 import {
   generateAllSlidesets,
   generateAssetsListing,
   generatePage404,
   listThemeAndTalkImages
-} from './slidesets/generators.js'
-import { getAllTalks, getTalk, resolveImageUrl } from './slidesets/loaders.js'
-import { indexServiceWorkerDeclaration, talkServiceWorkerDeclaration } from './templates/service-workers.js'
+} from './slidesets/generators.tsx'
+import { getAllTalks, getTalk, resolveImageUrl } from './slidesets/loaders.ts'
+import { indexServiceWorkerDeclaration, talkServiceWorkerDeclaration } from './templates/service-workers.ts'
 
 declare module 'fastify' {
   interface FastifyReply {
@@ -193,5 +193,5 @@ export async function build(context: BuildContext): Promise<BuildResult> {
 
   await Promise.all(fileOperations)
 
-  return { css, postcssPlugins }
+  return { css, cssVisitor }
 }

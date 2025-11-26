@@ -1,6 +1,11 @@
-import { type Fonts } from '@perseveranza-pets/dante'
-import { type VNode } from 'preact'
-import { type Pusher } from '../configuration.js'
+import type { Fonts } from '@perseveranza-pets/dante'
+import type { VNode } from 'preact'
+
+export interface Pusher {
+  key: string
+  secret: string
+  cluster: string
+}
 
 export type ParsedSVG = [string, string | undefined]
 

@@ -1,6 +1,6 @@
 import { type JSX, type VNode } from 'preact'
-import { useClient } from './contexts.js'
-import { cleanCssClasses } from './styling.js'
+import { useClient } from './contexts.tsx'
+import { cleanCssClasses } from './styling.ts'
 
 interface SvgProps extends JSX.SVGAttributes<SVGSVGElement> {
   src: string

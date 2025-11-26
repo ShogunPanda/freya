@@ -1,7 +1,7 @@
 import { type VNode } from 'preact'
 import { render } from 'preact-render-to-string'
-import { resolveImageUrl } from '../slidesets/loaders.js'
-import { type Talk, type Theme } from '../slidesets/models.js'
+import { resolveImageUrl } from '../slidesets/loaders.ts'
+import { type Talk, type Theme } from '../slidesets/models.ts'
 
 interface PageProps {
   theme: Theme

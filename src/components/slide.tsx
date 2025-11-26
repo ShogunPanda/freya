@@ -1,8 +1,8 @@
 import { createContext, type FunctionComponent, type VNode } from 'preact'
 import { useContext } from 'preact/hooks'
-import { type Slide as SlideModel, type SlideProps } from '../slidesets/models.js'
-import { useClient, useSlide } from './contexts.js'
-import { cleanCssClasses } from './styling.js'
+import { type Slide as SlideModel, type SlideProps } from '../slidesets/models.ts'
+import { useClient, useSlide } from './contexts.tsx'
+import { cleanCssClasses } from './styling.ts'
 
 export const LayoutContext = createContext<Record<string, FunctionComponent<SlideProps>>>({})
 

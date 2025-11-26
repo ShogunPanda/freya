@@ -2,12 +2,12 @@ import { type Context, type VNode } from 'preact'
 import { route } from 'preact-router'
 // eslint-disable-next-line import/order
 import { useCallback, useLayoutEffect, useRef } from 'preact/hooks'
-import { type Slide } from '../slidesets/models.js'
-import { shouldAbortSlideChange, slideUrl } from './client.js'
-import { SlideContextInstance, useClient, useSlide, type SlideContextProps } from './contexts.js'
-import { SlideComponent } from './slide.js'
-import { cleanCssClasses } from './styling.js'
-import { SvgIcon } from './svg.js'
+import { type Slide } from '../slidesets/models.ts'
+import { shouldAbortSlideChange, slideUrl } from './client.ts'
+import { SlideContextInstance, useClient, useSlide, type SlideContextProps } from './contexts.tsx'
+import { SlideComponent } from './slide.tsx'
+import { cleanCssClasses } from './styling.ts'
+import { SvgIcon } from './svg.tsx'
 
 interface OverlayProps {
   className?: string

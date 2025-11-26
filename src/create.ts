@@ -6,8 +6,8 @@ import { readFileSync } from 'node:fs'
 import { mkdir, readdir, writeFile } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { pino } from 'pino'
-import { readFile } from './fs.js'
+import { pino, type Logger } from 'pino'
+import { readFile } from './fs.ts'
 
 const packageInfo = JSON.parse(readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8'))
 
@@ -20,7 +20,6 @@ const templates = {
   'src/themes/main/layouts/default.tsx': 'layout.tsx',
   'eslint.config.js': 'eslint.config.js',
   '.stylelintrc.json': 'stylelintrc.json',
-  '.swcrc': 'swcrc',
   'package.json': 'package.json',
   'prettier.config.js': 'prettier.config.js',
   'tsconfig.json': 'tsconfig.json'
@@ -80,7 +79,7 @@ export async function initializeSlideset(name: string, directory: string): Promi
   }
 }
 
-export function createSetupCLI(program: Command, logger: pino.Logger): void {
+export function createSetupCLI(program: Command, logger: Logger): void {
   program
     .name('create-freya-slideset')
     .description('Initializes a freya slideset.')

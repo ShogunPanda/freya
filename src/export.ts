@@ -1,11 +1,4 @@
-import {
-  baseTemporaryDirectory,
-  cleanCssClasses,
-  elapsed,
-  rootDir,
-  type BuildContext,
-  type BuildResult
-} from '@perseveranza-pets/dante'
+import { cleanCssClasses, elapsed, rootDir, type BuildContext, type BuildResult } from '@perseveranza-pets/dante'
 import { glob } from 'glob'
 import { exec as execCB } from 'node:child_process'
 import { existsSync } from 'node:fs'
@@ -15,16 +8,16 @@ import { pathToFileURL } from 'node:url'
 import { promisify } from 'node:util'
 import { chromium } from 'playwright'
 import { render } from 'preact-render-to-string'
-import { SvgDefinitions } from './client.js'
-import { filterWhitelistedTalks } from './configuration.js'
-import { css, postcssPlugins } from './css.js'
-import { resolveSVG } from './rendering/svg.js'
-import { listThemeAndTalkImages, parseContent, prepareClientContext } from './slidesets/generators.js'
-import { getAllTalks, getTalk, getTheme } from './slidesets/loaders.js'
-import { type SlideRenderer, type Talk } from './slidesets/models.js'
-import { page } from './templates/page.js'
-import { SlideComponent } from './templates/slide.js'
-import { body as speakerNotesBody, page as speakerNotesPage } from './templates/speaker-notes.js'
+import { SvgDefinitions } from './client.ts'
+import { filterWhitelistedTalks } from './configuration.ts'
+import { css, cssVisitor } from './css.ts'
+import { resolveSVG } from './rendering/svg.tsx'
+import { listThemeAndTalkImages, parseContent, prepareClientContext } from './slidesets/generators.tsx'
+import { getAllTalks, getTalk, getTheme } from './slidesets/loaders.ts'
+import { type SlideRenderer, type Talk } from './slidesets/models.ts'
+import { page } from './templates/page.tsx'
+import { SlideComponent } from './templates/slide.tsx'
+import { body as speakerNotesBody, page as speakerNotesPage } from './templates/speaker-notes.tsx'
 
 interface Progress {
   current: number
@@ -231,11 +224,10 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
       // Render the slide on the server to add the required classes
       const layoutPath = resolve(
         rootDir,
-        baseTemporaryDirectory,
-        'themes',
+        'src/themes',
         talk.config.theme,
         'layouts',
-        (slide.layout ?? 'default') + '.js'
+        (slide.layout ?? 'default') + '.tsx'
       )
 
       const { default: layout }: { default: SlideRenderer } = await import(layoutPath)
@@ -360,5 +352,5 @@ export async function build(context: BuildContext): Promise<BuildResult> {
 
   await Promise.all(fileOperations)
 
-  return { css, postcssPlugins }
+  return { css, cssVisitor }
 }

@@ -58,7 +58,6 @@ The function will received a [commander](https://npm.im/commander) program and a
 - `DANTE_SERVER_FILE_PATH`: The server file path. Default is `src/build/server.ts`.
 - `DANTE_CLI_PATH`: The CLI customization file path. Default is `src/build/cli.ts`.
 - `DANTE_CREATE_PATH`: The CLI customization file path. Default is `src/build/create.ts`.
-- `DANTE_BASE_TEMPORARY_DIRECTORY`: The local directory in which transpile TypeScript files before building. Default is `.dante`.
 - `DANTE_WATCH_MODULES`: If to restart the process when the Dante files in the `node_modules` folder are changed.
 - `DANTE_WATCH_ADDITIONAL_PATHS`: Which additional paths to watch.
 - `DANTE_NODE_ADDITIONAL_OPTIONS`: Additional options to pass to the node executable.

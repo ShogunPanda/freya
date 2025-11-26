@@ -1,3 +1,3 @@
-export * from './generators.js'
-export * from './loaders.js'
-export * from './models.js'
+export * from './generators.tsx'
+export * from './loaders.ts'
+export * from './models.ts'
