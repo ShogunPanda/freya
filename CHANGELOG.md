@@ -1,3 +1,7 @@
+### 2025-11-27 / 0.75.1
+
+- fix: Correctly sort type only imports.
+
 ### 2025-11-26 / 0.75.0
 
 - feat!: Drop compatibility with Node.js 20.
