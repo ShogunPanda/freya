@@ -1,5 +1,5 @@
+import type { BuildContext } from '@perseveranza-pets/dante'
 import type { Pusher } from './slidesets/models.ts'
-import { type BuildContext } from '@perseveranza-pets/dante'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 

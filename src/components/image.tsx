@@ -1,4 +1,4 @@
-import { type VNode } from 'preact'
+import type { VNode } from 'preact'
 import { cleanCssClasses } from './styling.ts'
 
 interface ImageProps {

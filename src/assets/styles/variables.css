@@ -1,11 +1,14 @@
 :root {
-  --freya-font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
-    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+  --freya-font-system:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol';
   --freya-font-monospace: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
-  --freya-font-emoji: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Android Emoji', 'EmojiOne Mozilla',
-    'Twemoji Mozilla', 'Noto Emoji', 'Segoe UI Symbol', EmojiSymbols, emoji;
-  --freya-font-varela-round: 'Varela Round', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
-    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+  --freya-font-emoji:
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Android Emoji', 'EmojiOne Mozilla', 'Twemoji Mozilla',
+    'Noto Emoji', 'Segoe UI Symbol', EmojiSymbols, emoji;
+  --freya-font-varela-round:
+    'Varela Round', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
   --freya-font-noto-sans: 'Noto Sans', ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
   --freya-slide-transform: 1;
   --freya-slide-transform-origin: initial;

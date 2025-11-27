@@ -1,4 +1,4 @@
-import { type VNode } from 'preact'
+import type { VNode } from 'preact'
 import { useClient, useSlide } from './contexts.tsx'
 import { cleanCssClasses } from './styling.ts'
 

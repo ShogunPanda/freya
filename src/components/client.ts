@@ -1,5 +1,5 @@
+import type { Talk, Theme } from '../slidesets/models.ts'
 import { route } from 'preact-router'
-import { type Talk, type Theme } from '../slidesets/models.ts'
 
 type Shortcuts = Record<string, (...args: any[]) => void>
 

@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-import { type BuildContext } from '@perseveranza-pets/dante'
+import type { BuildContext } from '@perseveranza-pets/dante'
 
 declare let self: ServiceWorkerGlobalScope
 

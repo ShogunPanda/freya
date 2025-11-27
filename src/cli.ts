@@ -1,9 +1,9 @@
-import { builder, createBuildContext, loadFontsFile, rootDir } from '@perseveranza-pets/dante'
-import { type Command } from 'commander'
+import type { Command } from 'commander'
+import type pino from 'pino'
 import { cp, mkdtemp, rm } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type pino from 'pino'
+import { builder, createBuildContext, loadFontsFile, rootDir } from '@perseveranza-pets/dante'
 import { pusherConfig, setWhitelistedTalks } from './configuration.ts'
 import { createAllPDFs, ensureMagick, exportAllAsPNGs } from './export.ts'
 

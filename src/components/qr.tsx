@@ -1,4 +1,4 @@
-import { type ComponentChildren, type VNode } from 'preact'
+import type { ComponentChildren, VNode } from 'preact'
 import QRCodeGenerator from 'qrcode-generator'
 import { getAlignments, getCover, isAlignment, isCovered, isFinder } from '../rendering/qr.ts'
 import { Image } from './image.tsx'

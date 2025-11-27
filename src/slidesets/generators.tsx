@@ -1,17 +1,13 @@
-import {
-  cleanCssClasses,
-  elapsed,
-  renderCode,
-  rootDir,
-  sanitizeTabularOutputSnippet,
-  type BuildContext
-} from '@perseveranza-pets/dante'
-import { glob, type IgnoreLike } from 'glob'
-import markdownIt from 'markdown-it'
+import type { BuildContext } from '@perseveranza-pets/dante'
+import type { IgnoreLike } from 'glob'
+import type { ClientContext, CodeDefinition, ParsedSVG, Slide, SlideRenderer, Talk, Theme } from './models.ts'
 import { existsSync } from 'node:fs'
 import { hostname } from 'node:os'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { cleanCssClasses, elapsed, renderCode, rootDir, sanitizeTabularOutputSnippet } from '@perseveranza-pets/dante'
+import { glob } from 'glob'
+import markdownIt from 'markdown-it'
 import { render } from 'preact-render-to-string'
 import { rolldown } from 'rolldown'
 import { replacePlugin } from 'rolldown/plugins'
@@ -24,15 +20,6 @@ import { page as index } from '../templates/index.tsx'
 import { page } from '../templates/page.tsx'
 import { SlideComponent, Widgets } from '../templates/slide.tsx'
 import { getTalk, getTheme, resolveImageUrl, resolvePusher } from './loaders.ts'
-import {
-  type ClientContext,
-  type CodeDefinition,
-  type ParsedSVG,
-  type Slide,
-  type SlideRenderer,
-  type Talk,
-  type Theme
-} from './models.ts'
 
 interface Path {
   name: string

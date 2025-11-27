@@ -1,12 +1,12 @@
-import { rootDir } from '@perseveranza-pets/dante'
-import { glob } from 'glob'
-import { load, loadAll } from 'js-yaml'
+import type { Config, ParsedSVG, Slide, Talk, Theme } from './models.ts'
 import { existsSync } from 'node:fs'
 import { readdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { rootDir } from '@perseveranza-pets/dante'
+import { glob } from 'glob'
+import { load, loadAll } from 'js-yaml'
 import { pusherConfig } from '../configuration.ts'
 import { readFile } from '../fs.ts'
-import { type Config, type ParsedSVG, type Slide, type Talk, type Theme } from './models.ts'
 
 let commonCache: Record<string, object> | undefined
 let allTalksCache: Set<string> | undefined

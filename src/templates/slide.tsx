@@ -1,14 +1,10 @@
-import { type ComponentType, type VNode } from 'preact'
+import type { ComponentType, VNode } from 'preact'
+import type { ClientContextMethods } from '../components/contexts.tsx'
+import type { ClientContext as ClientContextModel, Slide, SlideProps } from '../slidesets/models.ts'
 import { Presenter, SvgDefinitions } from '../client.ts'
-import {
-  ClientContextInstance,
-  SlideContextInstance,
-  createClientContextValue,
-  type ClientContextMethods
-} from '../components/contexts.tsx'
+import { ClientContextInstance, SlideContextInstance, createClientContextValue } from '../components/contexts.tsx'
 import { Controller } from '../components/controller.tsx'
 import { Navigator, Overlay } from '../components/navigator.tsx'
-import { type ClientContext as ClientContextModel, type Slide, type SlideProps } from '../slidesets/models.ts'
 
 interface SlideComponentProps {
   context: ClientContextModel

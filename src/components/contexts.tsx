@@ -1,6 +1,7 @@
-import { createContext, type Context } from 'preact'
+import type { Context } from 'preact'
+import type { ClientContext as ClientContextModel, ParsedSVG } from '../slidesets/models.ts'
+import { createContext } from 'preact'
 import { useContext } from 'preact/hooks'
-import { type ClientContext as ClientContextModel, type ParsedSVG } from '../slidesets/models.ts'
 
 export type ImagesResolver = (theme: string, talk: string, url?: string) => string
 export type SVGResolver = (theme: string, talk: string, url?: string) => ParsedSVG

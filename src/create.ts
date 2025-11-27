@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
-import { rootDir } from '@perseveranza-pets/dante'
-import { type Command } from 'commander'
+import type { Command } from 'commander'
+import type { Logger } from 'pino'
 import { readFileSync } from 'node:fs'
 import { mkdir, readdir, writeFile } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { pino, type Logger } from 'pino'
+import { rootDir } from '@perseveranza-pets/dante'
+import { pino } from 'pino'
 import { readFile } from './fs.ts'
 
 const packageInfo = JSON.parse(readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8'))

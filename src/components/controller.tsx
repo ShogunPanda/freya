@@ -1,4 +1,4 @@
-import { type VNode } from 'preact'
+import type { VNode } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
 import { cleanCssClasses } from './styling.ts'
 import { SvgIcon } from './svg.tsx'

@@ -1,11 +1,12 @@
-import { cleanCssClasses, danteDir, type BuildContext } from '@perseveranza-pets/dante'
-import markdownIt from 'markdown-it'
+import type { BuildContext } from '@perseveranza-pets/dante'
+import type { VNode } from 'preact'
+import type { Talk } from '../slidesets/models.ts'
 import { resolve } from 'node:path'
-import { type VNode } from 'preact'
+import { cleanCssClasses, danteDir } from '@perseveranza-pets/dante'
+import markdownIt from 'markdown-it'
 import { isServiceWorkerEnabled } from '../configuration.ts'
 import { readFile } from '../fs.ts'
 import { getCommon } from '../slidesets/loaders.ts'
-import { type Talk } from '../slidesets/models.ts'
 import { serviceWorkerRegistration } from './service-workers.ts'
 
 const paragraphMarkdownRenderer = markdownIt({

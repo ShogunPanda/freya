@@ -1,9 +1,9 @@
+import type { ParsedSVG } from '../slidesets/models.ts'
 import { readFileSync } from 'node:fs'
 import { render } from 'preact-render-to-string'
 import { js2xml, xml2js } from 'xml-js'
 import { generateSVGId, normalizeSVGProps } from '../components/svg.tsx'
 import { resolveImagePath } from '../slidesets/loaders.ts'
-import { type ParsedSVG } from '../slidesets/models.ts'
 
 export function parseSVG(raw: string): [Record<string, string | undefined>, string] {
   // Open the the file and parse as XML

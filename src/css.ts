@@ -1,10 +1,11 @@
-import { rootDir, type BuildContext } from '@perseveranza-pets/dante'
-import { type TokenOrValue } from 'lightningcss'
+import type { BuildContext } from '@perseveranza-pets/dante'
+import type { TokenOrValue } from 'lightningcss'
+import type { Talk, Theme } from './slidesets/models.ts'
 import { basename, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { rootDir } from '@perseveranza-pets/dante'
 import { readFile } from './fs.ts'
 import { getTalk, getTheme } from './slidesets/loaders.ts'
-import { type Talk, type Theme } from './slidesets/models.ts'
 
 interface Dimension {
   type: 'dimension'

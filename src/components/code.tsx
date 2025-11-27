@@ -1,5 +1,5 @@
-import { type VNode } from 'preact'
-import { type CodeDefinition } from '../slidesets/models.ts'
+import type { VNode } from 'preact'
+import type { CodeDefinition } from '../slidesets/models.ts'
 import { cleanCssClasses } from './styling.ts'
 
 export function Code({ rendered, className }: CodeDefinition): VNode | null {

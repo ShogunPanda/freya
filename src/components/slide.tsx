@@ -1,6 +1,7 @@
-import { createContext, type FunctionComponent, type VNode } from 'preact'
+import type { FunctionComponent, VNode } from 'preact'
+import type { Slide as SlideModel, SlideProps } from '../slidesets/models.ts'
+import { createContext } from 'preact'
 import { useContext } from 'preact/hooks'
-import { type Slide as SlideModel, type SlideProps } from '../slidesets/models.ts'
 import { useClient, useSlide } from './contexts.tsx'
 import { cleanCssClasses } from './styling.ts'
 
