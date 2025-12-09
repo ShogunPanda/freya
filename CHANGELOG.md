@@ -1,3 +1,7 @@
+### 2025-12-09 / 0.76.0
+
+- feat: Convert from BEM to pure Nested CSS.
+
 ### 2025-11-27 / 0.75.1
 
 - fix: Correctly sort type only imports.
