@@ -27,7 +27,6 @@ export function generateSVGId(start: number): string {
 
     if (start > 0 && index - 1 === -1) {
       index = 26
-      i--
     }
 
     // a = 97 => a + index - 1

@@ -12,7 +12,7 @@ interface BodyProps {
 export function body({ talk }: BodyProps): VNode {
   return (
     <main className={cleanCssClasses('freya@speaker-notes')}>
-      <h2 className={cleanCssClasses('freya@speaker-notes__subtitle')}>Speaker Notes</h2>
+      <h2 className={cleanCssClasses('freya@speaker-subtitle')}>Speaker Notes</h2>
       <h1>{talk.document.title}</h1>
 
       {talk.slides.map((s, index) => {
@@ -22,7 +22,7 @@ export function body({ talk }: BodyProps): VNode {
 
         return (
           <Fragment key={index}>
-            <h3 className={cleanCssClasses('freya@speaker-notes__slide')}>
+            <h3 className={cleanCssClasses('freya@speaker-slide')}>
               Slide {(index + 1).toString().padStart(talk.slidesPadding, '0')}/{talk.slidesCount}: &nbsp;
               <span
                 dangerouslySetInnerHTML={{

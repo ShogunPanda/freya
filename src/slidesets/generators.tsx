@@ -149,10 +149,10 @@ export async function ensureRenderedCode(code: CodeDefinition): Promise<void> {
   const classes: Record<string, string> = {}
 
   classes.root = cleanCssClasses('freya@code', userClasses.root)
-  classes.line = cleanCssClasses('freya@code__line', userClasses.line)
-  classes.lineHighlighted = cleanCssClasses('freya@code__line--highlighted', userClasses.lineHighlighted)
-  classes.lineNotHighlighted = cleanCssClasses('freya@code__line--not-highlighted', userClasses.lineNotHighlighted)
-  classes.lineNumber = cleanCssClasses('freya@code__line-number', userClasses.lineNumber)
+  classes.line = cleanCssClasses('line', userClasses.line)
+  classes.lineHighlighted = cleanCssClasses('highlighted', userClasses.lineHighlighted)
+  classes.lineNotHighlighted = cleanCssClasses('not-highlighted', userClasses.lineNotHighlighted)
+  classes.lineNumber = cleanCssClasses('line-number', userClasses.lineNumber)
 
   const { language, numbers, highlight } = code
   let content = code.content
@@ -276,11 +276,11 @@ export async function generateApplicationScript(
 }
 
 export function generatePage404(context: BuildContext): string {
-  return render(page404(context, cleanCssClasses('freya@root', 'freya@page404__body')))
+  return render(page404(context, cleanCssClasses('freya@root', 'freya@page404', 'body')))
 }
 
 export async function generateAssetsListing(context: BuildContext): Promise<Record<string, string>> {
-  const bodyClassName = cleanCssClasses('freya@root', 'freya@resources__body')
+  const bodyClassName = cleanCssClasses('freya@root', 'freya@resources', 'body')
 
   const pages: Record<string, string> = {}
 
@@ -397,7 +397,7 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
       title: talk.document.title,
       body: undefined,
       bodyClassName: cleanCssClasses('freya@root', 'freya@loading'),
-      messageClassName: cleanCssClasses('freya@loading__text')
+      messageClassName: cleanCssClasses('text')
     })
   )
 
@@ -428,7 +428,9 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
   }
 
   // Generate the index file
-  slidesets.index = render(await index(context, resolvedTalks, cleanCssClasses('freya@root', 'freya@resources__body')))
+  slidesets.index = render(
+    await index(context, resolvedTalks, cleanCssClasses('freya@root', 'freya@resources', 'body'))
+  )
 
   return slidesets
 }

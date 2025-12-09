@@ -48,27 +48,20 @@ export function page({
       </head>
       <body className={bodyClassName}>
         <main className={cleanCssClasses('freya@resources')}>
-          <h1 className={cleanCssClasses('freya@resources__title')}>{talk.document.title}</h1>
+          <h1 className={cleanCssClasses('title')}>{talk.document.title}</h1>
 
           {talkImages.length > 0 && (
             <>
-              <h2 className={cleanCssClasses('freya@resources__header')}>Talk Assets</h2>
+              <h2 className={cleanCssClasses('header')}>Talk Assets</h2>
 
-              <section className={cleanCssClasses('freya@resources__section')}>
+              <section className={cleanCssClasses('section')}>
                 {talkImages.map(path => {
                   return (
-                    <figure
-                      key={path}
-                      className={cleanCssClasses('freya@resources__figure')}
-                      data-freya-asset-id={path}
-                    >
-                      <div className={cleanCssClasses('freya@resources__figure__image-wrapper')}>
-                        <img
-                          src={resolveImageUrl({}, theme.id, talk.id, path)}
-                          className={cleanCssClasses('freya@resources__figure__image')}
-                        />
+                    <figure key={path} className={cleanCssClasses('figure')} data-freya-asset-id={path}>
+                      <div className={cleanCssClasses('image-wrapper')}>
+                        <img src={resolveImageUrl({}, theme.id, talk.id, path)} className={cleanCssClasses('image')} />
                       </div>
-                      <figcaption className={cleanCssClasses('freya@resources__figure__caption')}>{path}</figcaption>
+                      <figcaption className={cleanCssClasses('caption')}>{path}</figcaption>
                     </figure>
                   )
                 })}
@@ -78,30 +71,16 @@ export function page({
 
           {themeImages.length > 0 && (
             <>
-              <h2
-                className={cleanCssClasses(
-                  'freya@resources__header',
-                  talkImages.length > 0 && 'freya@resources__header--next'
-                )}
-              >
-                Theme Assets
-              </h2>
+              <h2 className={cleanCssClasses('header', talkImages.length > 0 && 'next')}>Theme Assets</h2>
 
-              <section className={cleanCssClasses('freya@resources__section')}>
+              <section className={cleanCssClasses('section')}>
                 {themeImages.map(path => {
                   return (
-                    <figure
-                      key={path}
-                      className={cleanCssClasses('freya@resources__figure')}
-                      data-freya-asset-id={path}
-                    >
-                      <div className={cleanCssClasses('freya@resources__figure__image-wrapper')}>
-                        <img
-                          src={resolveImageUrl({}, theme.id, talk.id, path)}
-                          className={cleanCssClasses('freya@resources__figure__image')}
-                        />
+                    <figure key={path} className={cleanCssClasses('figure')} data-freya-asset-id={path}>
+                      <div className={cleanCssClasses('image-wrapper')}>
+                        <img src={resolveImageUrl({}, theme.id, talk.id, path)} className={cleanCssClasses('image')} />
                       </div>
-                      <figcaption className={cleanCssClasses('freya@resources__figure__caption')}>{path}</figcaption>
+                      <figcaption className={cleanCssClasses('caption')}>{path}</figcaption>
                     </figure>
                   )
                 })}
@@ -111,30 +90,18 @@ export function page({
 
           {commonImages.length > 0 && (
             <>
-              <h2
-                className={cleanCssClasses(
-                  'freya@resources__header',
-                  (talkImages.length > 0 || themeImages.length > 0) && 'freya@resources__header--next'
-                )}
-              >
+              <h2 className={cleanCssClasses('header', (talkImages.length > 0 || themeImages.length > 0) && 'next')}>
                 Common Assets
               </h2>
 
-              <section className={cleanCssClasses('freya@resources__section')}>
+              <section className={cleanCssClasses('section')}>
                 {commonImages.map(path => {
                   return (
-                    <figure
-                      key={path}
-                      className={cleanCssClasses('freya@resources__figure')}
-                      data-freya-asset-id={path}
-                    >
-                      <div className={cleanCssClasses('freya@resources__figure__image-wrapper')}>
-                        <img
-                          src={resolveImageUrl({}, theme.id, talk.id, path)}
-                          className={cleanCssClasses('freya@resources__figure__image')}
-                        />
+                    <figure key={path} className={cleanCssClasses('figure')} data-freya-asset-id={path}>
+                      <div className={cleanCssClasses('image-wrapper')}>
+                        <img src={resolveImageUrl({}, theme.id, talk.id, path)} className={cleanCssClasses('image')} />
                       </div>
-                      <figcaption className={cleanCssClasses('freya@resources__figure__caption')}>{path}</figcaption>
+                      <figcaption className={cleanCssClasses('caption')}>{path}</figcaption>
                     </figure>
                   )
                 })}

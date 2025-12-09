@@ -178,22 +178,22 @@ export function QRCode({ data, image, imageRatio, label, className }: QRCodeProp
   }
 
   if (image && typeof image === 'string') {
-    image = <Image src={image} className={cleanCssClasses('freya@qr__image', imageClassName)} />
+    image = <Image src={image} className={cleanCssClasses('image', imageClassName)} />
   }
 
   return (
     <div className={cleanCssClasses('freya@qr', rootClassName)}>
-      <div className={cleanCssClasses('freya@qr__wrapper')}>
+      <div className={cleanCssClasses('wrapper')}>
         <svg
           data-url={data}
-          className={cleanCssClasses('freya@qr__code', codeClassName)}
+          className={cleanCssClasses('code', codeClassName)}
           dangerouslySetInnerHTML={{ __html: svgPath }}
           width={dimension}
           height={dimension}
           viewBox={`0 0 ${dimension} ${dimension}`}
         />
 
-        {image && <div className={cleanCssClasses('freya@qr__image-wrapper')}>{image}</div>}
+        {image && <div className={cleanCssClasses('image-wrapper')}>{image}</div>}
       </div>
       {label && (
         <a href={data} target="_blank" rel="noopener noreferrer" className={cleanCssClasses(labelClassName)}>

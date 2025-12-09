@@ -1,9 +1,8 @@
 import type { Context, VNode } from 'preact'
 import type { Slide } from '../slidesets/models.ts'
 import type { SlideContextProps } from './contexts.tsx'
-import { route } from 'preact-router'
-// eslint-disable-next-line import/order
 import { useCallback, useLayoutEffect, useRef } from 'preact/hooks'
+import { route } from 'preact-router'
 import { shouldAbortSlideChange, slideUrl } from './client.ts'
 import { SlideContextInstance, useClient, useSlide } from './contexts.tsx'
 import { SlideComponent } from './slide.tsx'
@@ -87,25 +86,22 @@ export function Navigator({ className, close }: NavigatorProps): VNode {
 
   return (
     <nav ref={root} className={cleanCssClasses('freya@navigator', className)}>
-      <a href="#" className={cleanCssClasses('freya@navigator__close')} onClick={close}>
-        <SvgIcon name="close" className={cleanCssClasses('freya@svg-icon', 'freya@navigator__close__image')} />
+      <a href="#" className={cleanCssClasses('close')} onClick={close}>
+        <SvgIcon name="close" className={cleanCssClasses('freya@svg-icon', 'image')} />
       </a>
 
       {slides.map((slide, index) => (
         <div
           key={index}
-          className={cleanCssClasses(
-            'freya@navigator__slide',
-            index + 1 === current && 'freya@navigator__slide--active'
-          )}
+          className={cleanCssClasses('slide', index + 1 === current && 'active')}
           // eslint-disable-next-line react/jsx-no-bind
           onClick={goto.bind(null, index)}
         >
           <SlideContextWithModel.Provider value={{ slide, index, previousIndex: index, navigator: true }}>
-            <SlideComponent className={cleanCssClasses('freya@navigator__slide__contents')} overrideProgress={true} />
+            <SlideComponent className={cleanCssClasses('contents')} overrideProgress={true} />
           </SlideContextWithModel.Provider>
 
-          <span className={cleanCssClasses('freya@navigator__slide__number')}>{index + 1}</span>
+          <span className={cleanCssClasses('number')}>{index + 1}</span>
         </div>
       ))}
     </nav>

@@ -33,36 +33,23 @@ export function Controller({ className }: ControllerProps): VNode {
 
   return (
     <nav className={cleanCssClasses('freya@controller', className)}>
-      <a
-        href="#"
-        className={cleanCssClasses('freya@controller__action')}
-        data-freya-key="ArrowLeft"
-        onClick={triggerAction}
-      >
-        <SvgIcon name="arrow-left" className={cleanCssClasses('freya@svg-icon', 'freya@controller__action__icon')} />
+      <a href="#" className={cleanCssClasses('action')} data-freya-key="ArrowLeft" onClick={triggerAction}>
+        <SvgIcon name="arrow-left" className={cleanCssClasses('freya@svg-icon', 'icon')} />
       </a>
-      <a
-        href="#"
-        className={cleanCssClasses('freya@controller__action')}
-        data-freya-key="ArrowRight"
-        onClick={triggerAction}
-      >
-        <SvgIcon name="arrow-right" className={cleanCssClasses('freya@svg-icon', 'freya@controller__action__icon')} />
+      <a href="#" className={cleanCssClasses('action')} data-freya-key="ArrowRight" onClick={triggerAction}>
+        <SvgIcon name="arrow-right" className={cleanCssClasses('freya@svg-icon', 'icon')} />
       </a>
-      <a href="#" className={cleanCssClasses('freya@controller__action')} data-freya-key="f" onClick={triggerAction}>
-        <SvgIcon
-          name={isFullScreen ? 'minimize' : 'maximize'}
-          className={cleanCssClasses('freya@svg-icon', 'freya@controller__action__icon')}
-        />
+      <a href="#" className={cleanCssClasses('action')} data-freya-key="f" onClick={triggerAction}>
+        <SvgIcon name={isFullScreen ? 'minimize' : 'maximize'} className={cleanCssClasses('freya@svg-icon', 'icon')} />
       </a>
-      <a href="#" className={cleanCssClasses('freya@controller__action')} data-freya-key="g" onClick={triggerAction}>
-        <SvgIcon name="navigator" className={cleanCssClasses('freya@svg-icon', 'freya@controller__action__icon')} />
+      <a href="#" className={cleanCssClasses('action')} data-freya-key="g" onClick={triggerAction}>
+        <SvgIcon name="navigator" className={cleanCssClasses('freya@svg-icon', 'icon')} />
       </a>
-      <a href="#" className={cleanCssClasses('freya@controller__action')} data-freya-key="p" onClick={triggerAction}>
-        <SvgIcon name="play" className={cleanCssClasses('freya@svg-icon', 'freya@controller__action__icon')} />
+      <a href="#" className={cleanCssClasses('action')} data-freya-key="p" onClick={triggerAction}>
+        <SvgIcon name="play" className={cleanCssClasses('freya@svg-icon', 'icon')} />
       </a>
-      <a href="#" className={cleanCssClasses('freya@controller__action')} data-freya-key="c" onClick={triggerAction}>
-        <SvgIcon name="close" className={cleanCssClasses('freya@svg-icon', 'freya@controller__action__icon')} />
+      <a href="#" className={cleanCssClasses('action')} data-freya-key="c" onClick={triggerAction}>
+        <SvgIcon name="close" className={cleanCssClasses('freya@svg-icon', 'icon')} />
       </a>
     </nav>
   )

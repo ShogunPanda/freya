@@ -56,25 +56,25 @@ export async function page(context: BuildContext, talks: Record<string, Talk>, b
       </head>
       <body className={bodyClassName}>
         <main className={cleanCssClasses('freya@resources')}>
-          <h1 className={cleanCssClasses('freya@resources__title')}>{authorName}'s Slidesets</h1>
+          <h1 className={cleanCssClasses('title')}>{authorName}'s Slidesets</h1>
 
           {currentTalks.length > 0 && (
             <>
-              <h2 className={cleanCssClasses('freya@resources__header')}>Current Slidesets</h2>
+              <h2 className={cleanCssClasses('header')}>Current Slidesets</h2>
 
-              <section className={cleanCssClasses('freya@resources__slidesets')}>
+              <section className={cleanCssClasses('slidesets')}>
                 {currentTalks.map(([id, talk]) => (
-                  <a key={id} href={`/${id}`} className={cleanCssClasses('freya@resources__slideset')}>
-                    <h4 className={cleanCssClasses('freya@resources__slideset__author')}>
+                  <a key={id} href={`/${id}`} className={cleanCssClasses('slideset')}>
+                    <h4 className={cleanCssClasses('author')}>
                       {talk.document.authors
                         ? niceJoin(talk.document.authors.map(({ name }: { name: string }) => name) as string[])
                         : talk.document.author.name}
                     </h4>
-                    <h3 className={cleanCssClasses('freya@resources__slideset__title')}>{talk.document.title}</h3>
+                    <h3 className={cleanCssClasses('title')}>{talk.document.title}</h3>
 
                     {talk.document.abstract && (
                       <div
-                        className={cleanCssClasses('freya@resources__slideset__abstract')}
+                        className={cleanCssClasses('abstract')}
                         dangerouslySetInnerHTML={{
                           __html: parseAbstracts(talk.document.abstract as string)
                         }}
@@ -88,19 +88,17 @@ export async function page(context: BuildContext, talks: Record<string, Talk>, b
 
           {archivedTalks.length > 0 && (
             <>
-              <h2 className={cleanCssClasses('freya@resources__header')}>Archived Slidesets</h2>
+              <h2 className={cleanCssClasses('header')}>Archived Slidesets</h2>
 
-              <section className={cleanCssClasses('freya@resources__slidesets')}>
+              <section className={cleanCssClasses('slidesets')}>
                 {archivedTalks.map(([id, talk]) => (
-                  <a key={id} href={`/${id}`} className={cleanCssClasses('freya@resources__slideset')}>
-                    <h4 className={cleanCssClasses('freya@resources__slideset__author')}>
-                      {talk.document.author.name}
-                    </h4>
-                    <h3 className={cleanCssClasses('freya@resources__slideset__title')}>{talk.document.title}</h3>
+                  <a key={id} href={`/${id}`} className={cleanCssClasses('slideset')}>
+                    <h4 className={cleanCssClasses('author')}>{talk.document.author.name}</h4>
+                    <h3 className={cleanCssClasses('title')}>{talk.document.title}</h3>
 
                     {talk.document.abstract && (
                       <div
-                        className={cleanCssClasses('freya@resources__slideset__abstract')}
+                        className={cleanCssClasses('abstract')}
                         dangerouslySetInnerHTML={{
                           __html: parseAbstracts(talk.document.abstract as string)
                         }}

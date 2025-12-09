@@ -1,4 +1,3 @@
-/* stylelint-disable-next-line selector-class-pattern */
 .freya\@root {
   display: flex;
   overflow: hidden;
@@ -15,10 +14,10 @@
 
 .freya\@loading {
   color: rgb(224, 224, 224);
-}
 
-.freya\@loading__text {
-  margin: 0;
+  & .text {
+    margin: 0;
+  }
 }
 
 .freya\@image {
@@ -27,15 +26,15 @@
 
 .freya\@svg {
   display: block;
-}
 
-.freya\@svg-icon {
-  display: inline-block;
-  line-height: 1em;
-  vertical-align: middle;
-  stroke: currentColor;
-  stroke-width: 0;
-  fill: currentColor;
+  &-icon {
+    display: inline-block;
+    line-height: 1em;
+    vertical-align: middle;
+    stroke: currentColor;
+    stroke-width: 0;
+    fill: currentColor;
+  }
 }
 
 .freya\@svg-definitions {
@@ -71,30 +70,30 @@
 
 .freya\@qr {
   display: inline-block;
-}
 
-.freya\@qr__wrapper {
-  position: relative;
-}
+  & .wrapper {
+    position: relative;
+  }
 
-.freya\@qr__code {
-  width: 100%;
-  height: auto;
-}
+  & .code {
+    width: 100%;
+    height: auto;
+  }
 
-.freya\@qr__image-wrapper {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
+  & .image-wrapper {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
 
-.freya\@qr__image {
-  background-color: white;
+  & .image {
+    background-color: white;
+  }
 }
 
 .freya\@overlay {
@@ -137,36 +136,36 @@
 
   border-bottom-left-radius: 1.5rem;
   border-top-left-radius: 1.5rem;
-}
 
-.freya\@controller__action {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--freya-controller-action-size);
-  font-family: var(--freya-font-emoji);
-}
+  & .action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--freya-controller-action-size);
+    font-family: var(--freya-font-emoji);
 
-.freya\@controller__action,
-.freya\@controller__action:active,
-.freya\@controller__action:visited {
-  color: white;
-}
+    &,
+    &:active,
+    &:visited {
+      color: white;
+    }
 
-.freya\@controller__action:hover,
-.freya\@controller__action:focus {
-  color: #5ac3ea;
-}
+    &:hover,
+    &:focus {
+      color: #5ac3ea;
+    }
 
-.freya\@controller__action__icon {
-  display: inline-block;
-  width: calc(var(--freya-controller-action-size) * 0.75);
-  height: calc(var(--freya-controller-action-size) * 0.75);
-  line-height: 1em;
-  vertical-align: middle;
-  stroke: currentColor;
-  stroke-width: 0;
-  fill: currentColor;
+    & .icon {
+      display: inline-block;
+      width: calc(var(--freya-controller-action-size) * 0.75);
+      height: calc(var(--freya-controller-action-size) * 0.75);
+      line-height: 1em;
+      vertical-align: middle;
+      stroke: currentColor;
+      stroke-width: 0;
+      fill: currentColor;
+    }
+  }
 }
 
 .freya\@navigator {
@@ -186,74 +185,74 @@
   max-height: 100%;
   padding: 0.2--sp;
   padding-right: 0.9--sp;
-}
 
-.freya\@navigator__close {
-  position: fixed;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  top: 0.2--sp;
-  right: 0.2--sp;
-}
+  & .close {
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 0.2--sp;
+    right: 0.2--sp;
 
-.freya\@navigator__close,
-.freya\@navigator__close:active,
-.freya\@navigator__close:visited {
-  color: white;
-}
+    &,
+    &:active,
+    &:visited {
+      color: white;
+    }
 
-.freya\@navigator__close:hover {
-  color: #5ac3ea;
-}
+    &:hover {
+      color: #5ac3ea;
+    }
 
-.freya\@navigator__close__image {
-  height: 0.3--sp;
-}
+    & .image {
+      height: 0.3--sp;
+    }
+  }
 
-.freya\@navigator__slide {
-  --freya-slide-transform-origin: 0 0;
-  position: relative;
-  display: block;
-  overflow: hidden;
-  height: var(--freya-navigator-slide-height);
-  border-style: solid;
-  border-color: transparent;
-  border-width: 8px;
-  cursor: pointer;
-}
+  & .slide {
+    --freya-slide-transform-origin: 0 0;
+    position: relative;
+    display: block;
+    overflow: hidden;
+    height: var(--freya-navigator-slide-height);
+    border-style: solid;
+    border-color: transparent;
+    border-width: 8px;
+    cursor: pointer;
 
-.freya\@navigator__slide:hover {
-  border-color: #5ac3ea;
-}
+    &:hover {
+      border-color: #5ac3ea;
+    }
 
-.freya\@navigator__slide--active {
-  border-color: #5ac3ea;
-}
+    &.active {
+      border-color: #5ac3ea;
+    }
 
-.freya\@navigator__slide__contents {
-  pointer-events: none;
-  user-select: none;
-}
+    & .contents {
+      pointer-events: none;
+      user-select: none;
+    }
 
-.freya\@navigator__slide__number {
-  position: absolute;
-  display: flex;
-  z-index: 2;
-  opacity: 0.75;
-  align-items: center;
-  justify-content: center;
-  top: 0;
-  right: 0;
-  width: calc(3ch + 3rem);
-  height: calc(1ch + 3rem);
-  background-color: rgb(0, 0, 0);
-  color: white;
-  font-family: var(--freya-font-noto-sans);
-  font-size: 10--pt;
-  font-weight: 600;
-  pointer-events: none;
-  user-select: none;
+    & .number {
+      position: absolute;
+      display: flex;
+      z-index: 2;
+      opacity: 0.75;
+      align-items: center;
+      justify-content: center;
+      top: 0;
+      right: 0;
+      width: calc(3ch + 3rem);
+      height: calc(1ch + 3rem);
+      background-color: rgb(0, 0, 0);
+      color: white;
+      font-family: var(--freya-font-noto-sans);
+      font-size: 10--pt;
+      font-weight: 600;
+      pointer-events: none;
+      user-select: none;
+    }
+  }
 }
 
 .freya\@presenter {
@@ -268,137 +267,137 @@
   min-height: 100%;
   padding: 0.2--sp;
   padding-right: 0.9--sp;
-}
 
-.freya\@presenter--with-previous {
-  grid-template-areas: 'header header header' 'previous current next' 'u1 notes u2';
-  grid-template-columns: 1fr 2fr 1fr;
-  /* stylelint-disable-next-line declaration-block-no-redundant-longhand-properties */
-  grid-template-rows: min-content min-content 1fr;
-}
+  &.with-previous {
+    grid-template-areas: 'header header header' 'previous current next' 'u1 notes u2';
+    grid-template-columns: 1fr 2fr 1fr;
+    /* stylelint-disable-next-line declaration-block-no-redundant-longhand-properties */
+    grid-template-rows: min-content min-content 1fr;
+  }
 
-.freya\@presenter--no-previous {
-  grid-template-areas: 'header header' 'current next' 'notes unused';
-  grid-template-columns: 2fr 1fr;
-  /* stylelint-disable-next-line declaration-block-no-redundant-longhand-properties */
-  grid-template-rows: min-content min-content 1fr;
-}
+  &.no-previous {
+    grid-template-areas: 'header header' 'current next' 'notes unused';
+    grid-template-columns: 2fr 1fr;
+    /* stylelint-disable-next-line declaration-block-no-redundant-longhand-properties */
+    grid-template-rows: min-content min-content 1fr;
+  }
 
-.freya\@presenter__header {
-  display: flex;
-  grid-area: header;
-  column-gap: 1ch;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 20--pt;
-}
+  & .header {
+    display: flex;
+    grid-area: header;
+    column-gap: 1ch;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20--pt;
 
-.freya\@presenter__header__label {
-  font-family: var(--freya-font-noto-sans);
-  font-weight: 600;
-  line-height: 0.3--sp;
-}
+    & .label {
+      font-family: var(--freya-font-noto-sans);
+      font-weight: 600;
+      line-height: 0.3--sp;
 
-.freya\@presenter__header__label--paused {
-  opacity: 0.4;
-}
+      &.paused {
+        opacity: 0.4;
+      }
+    }
 
-.freya\@presenter__header__action {
-  font-family: var(--freya-font-emoji);
-}
+    & .action {
+      font-family: var(--freya-font-emoji);
 
-.freya\@presenter__header__action,
-.freya\@presenter__header__action:active,
-.freya\@presenter__header__action:visited {
-  color: white;
-}
+      &,
+      &:active,
+      &:visited {
+        color: white;
+      }
 
-.freya\@presenter__header__action:hover {
-  color: #5ac3ea;
-}
+      &:hover {
+        color: #5ac3ea;
+      }
 
-.freya\@presenter__header__action__icon {
-  height: 0.25--sp;
-}
+      & .icon {
+        height: 0.25--sp;
 
-.freya\@presenter__header__action__icon--active {
-  color: #5ac3ea;
-}
+        &.active {
+          color: #5ac3ea;
+        }
+      }
+    }
+  }
 
-.freya\@presenter__close {
-  position: fixed;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  top: 0.2--sp;
-  right: 0.2--sp;
-}
+  & .close {
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 0.2--sp;
+    right: 0.2--sp;
+    color: white;
 
-.freya\@presenter__close,
-.freya\@presenter__close:active,
-.freya\@presenter__close:visited {
-  color: white;
-}
+    &:active,
+    &:visited {
+      color: white;
+    }
 
-.freya\@presenter__close:hover {
-  color: #5ac3ea;
-}
+    &:hover {
+      color: #5ac3ea;
+    }
 
-.freya\@presenter__close__image {
-  height: 0.3--sp;
-}
+    & .image {
+      height: 0.3--sp;
+    }
+  }
 
-.freya\@presenter__slide {
-  --freya-slide-transform-origin: 0 0;
-  position: relative;
-  display: block;
-  overflow: hidden;
-  height: var(--freya-presenter-slide-height);
-  border-style: solid;
-  border-color: transparent;
-  border-width: 8px;
-}
+  & .slide {
+    --freya-slide-transform-origin: 0 0;
+    position: relative;
+    display: block;
+    overflow: hidden;
+    height: var(--freya-presenter-slide-height);
+    border-style: solid;
+    border-color: transparent;
+    border-width: 8px;
 
-.freya\@presenter__slide--previous {
-  grid-area: previous;
-}
+    &.previous {
+      grid-area: previous;
+    }
 
-.freya\@presenter__slide--current {
-  grid-area: current;
-  border-color: #5ac3ea;
-}
+    &.current {
+      grid-area: current;
+      border-color: #5ac3ea;
+    }
 
-.freya\@presenter__slide--next {
-  grid-area: next;
-}
+    &.next {
+      grid-area: next;
+    }
 
-.freya\@presenter__slide__contents {
-  pointer-events: none;
-  user-select: none;
-}
+    & .contents {
+      pointer-events: none;
+      user-select: none;
+    }
 
-.freya\@presenter__slide__number {
-  position: absolute;
-  display: flex;
-  z-index: 2;
-  opacity: 0.75;
-  align-items: center;
-  justify-content: center;
-  top: 0;
-  right: 0;
-  width: calc(3ch + 3rem);
-  height: calc(1ch + 3rem);
-  background-color: rgb(0, 0, 0);
-  color: white;
-  font-family: var(--freya-font-noto-sans);
-  font-size: 10--pt;
-  font-weight: 600;
-  pointer-events: none;
-  user-select: none;
-}
+    & .number {
+      position: absolute;
+      display: flex;
+      z-index: 2;
+      opacity: 0.75;
+      align-items: center;
+      justify-content: center;
+      top: 0;
+      right: 0;
+      width: calc(3ch + 3rem);
+      height: calc(1ch + 3rem);
+      background-color: rgb(0, 0, 0);
+      color: white;
+      font-family: var(--freya-font-noto-sans);
+      font-size: 10--pt;
+      font-weight: 600;
+      pointer-events: none;
+      user-select: none;
+    }
+  }
 
-.freya\@presenter__notes {
-  grid-area: notes;
-  color: white;
+  & .notes {
+    grid-area: notes;
+    color: white;
+  }
 }
