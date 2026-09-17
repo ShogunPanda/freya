@@ -1,3 +1,7 @@
+### 2026-09-17 / 0.77.0
+
+- feat: Always allow colors to override CSS.
+
 ### 2025-12-09 / 0.76.0
 
 - feat: Convert from BEM to pure Nested CSS.
