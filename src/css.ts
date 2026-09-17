@@ -82,7 +82,7 @@ export async function css(context: BuildContext): Promise<string> {
   }
 
   const layers = await Promise.all([
-    '@layer normalize, variables, reset, fonts, responsiveness, slideset, theme, talk, page, colors',
+    '@layer normalize, variables, reset, fonts, responsiveness, slideset, theme, talk, page, colors;',
     loadLayeredCss('normalize', fileURLToPath(new URL('./assets/styles/normalize.css', import.meta.url))),
     loadLayeredCss('variables', fileURLToPath(new URL('./assets/styles/variables.css', import.meta.url))),
     loadLayeredCss('reset', fileURLToPath(new URL('./assets/styles/reset.css', import.meta.url))),
