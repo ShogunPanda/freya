@@ -74,13 +74,15 @@ export async function css(context: BuildContext): Promise<string> {
     cssFiles = [
       loadLayeredCss('slideset', fileURLToPath(new URL('./assets/styles/slideset.css', import.meta.url))),
       loadLayeredCss('reset', resolve(rootDir, 'src/themes', theme.id, 'reset.css'), true),
+      loadLayeredCss('variables', resolve(rootDir, 'src/themes', theme.id, 'variables.css'), true),
+      loadLayeredCss('colors', resolve(rootDir, 'src/themes', theme.id, 'colors.css'), true),
       loadLayeredCss('theme', resolve(rootDir, 'src/themes', theme.id, 'theme.css')),
       loadLayeredCss('talk', resolve(rootDir, 'src/talks', talk.id, 'talk.css'), true)
     ]
   }
 
   const layers = await Promise.all([
-    '@layer normalize, variables, colors, reset, fonts, responsiveness, slideset, theme, talk, page;',
+    '@layer normalize, variables, reset, fonts, responsiveness, slideset, theme, talk, page, colors',
     loadLayeredCss('normalize', fileURLToPath(new URL('./assets/styles/normalize.css', import.meta.url))),
     loadLayeredCss('variables', fileURLToPath(new URL('./assets/styles/variables.css', import.meta.url))),
     loadLayeredCss('reset', fileURLToPath(new URL('./assets/styles/reset.css', import.meta.url))),
