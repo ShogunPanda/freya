@@ -54,6 +54,7 @@
     "http-errors-enhanced": "^4.0.2",
     "js-yaml": "^4.1.1",
     "markdown-it": "^14.1.0",
+    "pino": "^10.3.1",
     "playwright": "^1.57.0",
     "playwright-chromium": "^1.57.0",
     "preact": "^10.27.2",
