@@ -1,3 +1,7 @@
+### 2026-09-25 / 0.78.0
+
+- feat: Dynamic image extension resolving.
+
 ### 2026-09-17 / 0.77.1
 
 - fix: Added missing semicolon.
