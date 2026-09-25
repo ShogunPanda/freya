@@ -14,8 +14,8 @@ import { SvgDefinitions } from './client.ts'
 import { filterWhitelistedTalks } from './configuration.ts'
 import { css, cssVisitor } from './css.ts'
 import { resolveSVG } from './rendering/svg.tsx'
-import { listThemeAndTalkImages, parseContent, prepareClientContext } from './slidesets/generators.tsx'
-import { getAllTalks, getTalk, getTheme } from './slidesets/loaders.ts'
+import { parseContent, prepareClientContext } from './slidesets/generators.tsx'
+import { collectTalkImages, getAllTalks, getTalk, getTheme } from './slidesets/loaders.ts'
 import { page } from './templates/page.tsx'
 import { SlideComponent } from './templates/slide.tsx'
 import { body as speakerNotesBody, page as speakerNotesPage } from './templates/speaker-notes.tsx'
@@ -34,23 +34,6 @@ function slideTemporaryFileName(talk: Talk, index: number): string {
 
 function slideTemporaryNotesName(talk: Talk): string {
   return `${talk.id}--notes.html`
-}
-
-function resolveImageUrl(cache: Record<string, string>, theme: string, talk: string, url?: string): string {
-  url = url?.toString()
-  const key = `${theme}:${talk}:${url}`
-
-  if (!url) {
-    return ''
-  } else if (cache[key]) {
-    return cache[key]
-  }
-
-  cache[key] = url
-    .replace('@common', './assets/themes/common')
-    .replace('@theme', `./assets/themes/${theme}`)
-    .replace('@talk', `./assets/talks/${talk}`)
-  return cache[key]
 }
 
 export async function ensureMagick(): Promise<void> {
@@ -213,10 +196,10 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
     const startTime = process.hrtime.bigint()
     const talk = await getTalk(id)
     const theme = await getTheme(talk.config.theme)
-    const [commonImages, themeImages, talkImages] = await listThemeAndTalkImages(theme.id, talk.id)
-
     const clientContext = await prepareClientContext(context, theme, talk)
+    const { commonImages, themeImages, talkImages, resolveImage } = collectTalkImages(clientContext)
     const layouts: Record<string, string> = {}
+    const bodies: string[] = []
 
     // Render the slides
     for (let i = 0; i < talk.slides.length; i++) {
@@ -241,12 +224,17 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
             layout,
             slide,
             index: i + 1,
-            resolveImage: resolveImageUrl.bind(null, clientContext.assets.images),
+            resolveImage,
             resolveSVG: resolveSVG.bind(null, clientContext.assets.svgsDefinitions, clientContext.assets.svgs),
             parseContent: parseContent.bind(null, clientContext.assets.content)
           })
         ) + render(SvgDefinitions({ definitions: clientContext.assets.svgsDefinitions }))
 
+      bodies.push(body)
+    }
+
+    // The first exported slide preloads the assets needed by every subsequent slide.
+    for (const [index, body] of bodies.entries()) {
       const html = render(
         page({
           talk,
@@ -262,7 +250,7 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
         })
       )
 
-      generated[slideTemporaryFileName(talk, i)] = html
+      generated[slideTemporaryFileName(talk, index)] = html
     }
 
     // Generate speaker notes if appropriate

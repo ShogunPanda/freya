@@ -11,6 +11,7 @@ export type ParsedSVG = [string, string | undefined]
 
 export interface Config {
   theme: string
+  preloadImages?: string[]
   urls: Record<string, string>
   dimensions: {
     width: number
@@ -58,6 +59,7 @@ export interface Talk extends RawTalk {
 
 export interface Theme {
   id: string
+  preloadImages?: string[]
   style: string
   urls: Record<string, string>
   fonts: Fonts

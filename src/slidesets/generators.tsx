@@ -19,7 +19,7 @@ import { page as assetsPage } from '../templates/assets.tsx'
 import { page as index } from '../templates/index.tsx'
 import { page } from '../templates/page.tsx'
 import { SlideComponent, Widgets } from '../templates/slide.tsx'
-import { getTalk, getTheme, resolveImageUrl, resolvePusher } from './loaders.ts'
+import { collectTalkImages, getTalk, getTheme, imageExtensions, resolvePusher } from './loaders.ts'
 
 interface Path {
   name: string
@@ -88,17 +88,19 @@ export const markdownRenderer = markdownIt({
 })
 
 export async function listThemeAndTalkImages(theme: string, talk: string): Promise<[string[], string[], string[]]> {
-  const commonImagesPaths = await glob('**/*.{bmp,gif,jpg,jpeg,png,webp,svg}', {
+  // Keep preload and offline manifests in sync with the configurable resolution formats.
+  const pattern = `**/*.{${[...imageExtensions].join(',')}}`
+  const commonImagesPaths = await glob(pattern, {
     cwd: resolve(rootDir, 'src/themes/common/assets'),
     ignore
   })
 
-  const themeImagesPaths = await glob('**/*.{bmp,gif,jpg,jpeg,png,webp,svg}', {
+  const themeImagesPaths = await glob(pattern, {
     cwd: resolve(rootDir, 'src/themes', theme, 'assets'),
     ignore
   })
 
-  const talkImagesPaths = await glob('**/*.{bmp,gif,jpg,jpeg,png,webp,svg}', {
+  const talkImagesPaths = await glob(pattern, {
     cwd: resolve(rootDir, 'src/talks', talk, 'assets'),
     ignore
   })
@@ -311,6 +313,7 @@ export async function generateAssetsListing(context: BuildContext): Promise<Reco
 export async function generateSlideset(context: BuildContext, theme: Theme, talk: Talk): Promise<string> {
   const [, pusher] = await resolvePusher()
   const clientContext = await prepareClientContext(context, theme, talk)
+  const { images, commonImages, themeImages, talkImages, resolveImage } = collectTalkImages(clientContext)
   const layouts: Record<string, string> = {}
 
   // Render the slides
@@ -347,7 +350,7 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
         layout,
         slide,
         index: i + 1,
-        resolveImage: resolveImageUrl.bind(null, clientContext.assets.images),
+        resolveImage,
         resolveSVG: resolveSVG.bind(null, clientContext.assets.svgsDefinitions, clientContext.assets.svgs),
         parseContent: parseContent.bind(null, clientContext.assets.content)
       })
@@ -364,7 +367,7 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
           layout,
           slide,
           index: i + 1,
-          resolveImage: resolveImageUrl.bind(null, clientContext.assets.images),
+          resolveImage,
           resolveSVG: resolveSVG.bind(null, clientContext.assets.svgsDefinitions, clientContext.assets.svgs),
           parseContent: parseContent.bind(null, clientContext.assets.content)
         })
@@ -376,7 +379,10 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
     }
   }
 
-  for (const image of Object.values(clientContext.assets.images)) {
+  context.extensions.freya.talkImages ??= new Map<string, Set<string>>()
+  context.extensions.freya.talkImages.set(talk.id, images)
+
+  for (const image of images) {
     context.extensions.freya.images.add(image)
   }
 
@@ -384,8 +390,6 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
   clientContext.serverData = undefined
 
   // Render the page
-  const [commonImages, themeImages, talkImages] = await listThemeAndTalkImages(theme.id, talk.id)
-
   const html = render(
     page({
       talk,

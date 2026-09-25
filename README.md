@@ -18,6 +18,41 @@ dante dev
 
 ## Usage
 
+### Extension-less slide images
+
+Local image references can omit the extension, for example `@talk/architecture`,
+`@theme/logo`, or `@common/background`. Freya selects the first existing file in
+this order: `webp`, `png`, `jpg`, `bmp`. Edit the top-level `imageExtensions` array
+in `src/slidesets/loaders.ts` to change that order.
+
+The selected filename is used for slide rendering, preloading, offline caching,
+and PNG/PDF exports. Missing extension-less images produce an error listing the
+searched paths. Explicit extensions are used as provided, without checking file
+existence or trying other formats. Remote URLs are left unchanged.
+
+### Preloading images used by a talk
+
+Freya collects resolved image URLs while rendering every slide and theme component.
+Only these images are preloaded and included in the talk's offline precache, with
+duplicates removed after extension resolution. Asset listings and output file
+copying still include the complete asset library.
+
+Use the image resolver for images from custom YAML fields, items, layout components,
+and CSS backgrounds. Literal URLs in HTML, Markdown, or stylesheets bypass the
+resolver and must be declared explicitly if they need preloading or precaching.
+
+For runtime-only image choices, declare `preloadImages` in the talk's `config` or at
+the top level of `theme.yml`. These references also populate the client resolver cache:
+
+```yaml
+preloadImages:
+  - '@theme/logo-light'
+  - '@theme/logo-dark'
+```
+
+Declarations are resolved separately for each talk and support explicit extensions
+as well as extension-less references. PNG/PDF exports use the same selection.
+
 ### Creating pages and files
 
 Simply create all file needed in the `build` function in `src/build/index.ts`. You can use any framework you want, the predefined one is React.

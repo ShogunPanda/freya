@@ -8,13 +8,8 @@ import { glob } from 'glob'
 import { filterWhitelistedTalks, isServiceWorkerEnabled, pusherConfig } from './configuration.ts'
 import { css, cssVisitor } from './css.ts'
 import { readFile } from './fs.ts'
-import {
-  generateAllSlidesets,
-  generateAssetsListing,
-  generatePage404,
-  listThemeAndTalkImages
-} from './slidesets/generators.tsx'
-import { getAllTalks, getTalk, resolveImageUrl } from './slidesets/loaders.ts'
+import { generateAllSlidesets, generateAssetsListing, generatePage404 } from './slidesets/generators.tsx'
+import { getAllTalks, getTalk } from './slidesets/loaders.ts'
 import { indexServiceWorkerDeclaration, talkServiceWorkerDeclaration } from './templates/service-workers.ts'
 
 declare module 'fastify' {
@@ -77,6 +72,7 @@ export async function build(context: BuildContext): Promise<BuildResult> {
     fileURLToPath(new URL('./assets/styles/fonts.yml', import.meta.url))
   )
   context.extensions.freya.images = new Set()
+  context.extensions.freya.talkImages = new Map<string, Set<string>>()
   context.extensions.freya.talks = filterWhitelistedTalks(context, await getAllTalks())
 
   context.logger.info(`Building slideset(s): ${Array.from(context.extensions.freya.talks as Set<string>).join(', ')}`)
@@ -150,12 +146,6 @@ export async function build(context: BuildContext): Promise<BuildResult> {
     await writeFile(resolve(baseDir, 'sw.js'), indexServiceWorkerDeclaration(context), 'utf8')
 
     for (const talk of context.extensions.freya.talks as string[]) {
-      const {
-        config: { theme }
-      } = await getTalk(talk)
-
-      const [commonImages, themeImages, talkImages] = await listThemeAndTalkImages(theme, talk)
-
       const swDir = resolve(baseDir, 'assets/talks', talk)
 
       if (!existsSync(swDir)) {
@@ -165,15 +155,10 @@ export async function build(context: BuildContext): Promise<BuildResult> {
       fileOperations.push(
         writeFile(
           resolve(baseDir, 'assets/talks', talk, 'sw.js'),
-          talkServiceWorkerDeclaration(
-            context,
-            talk,
-            [...commonImages, ...themeImages, ...talkImages].map(i => resolveImageUrl({}, theme, talk, i))
-          ),
+          talkServiceWorkerDeclaration(context, talk, [...context.extensions.freya.talkImages.get(talk)]),
           'utf8'
         )
       )
-      themes.add(theme)
     }
   }
 

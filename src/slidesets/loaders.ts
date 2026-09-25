@@ -1,7 +1,8 @@
-import type { Config, ParsedSVG, Slide, Talk, Theme } from './models.ts'
-import { existsSync } from 'node:fs'
+import type { ImagesResolver } from '../components/contexts.tsx'
+import type { ClientContext, Config, ParsedSVG, Slide, Talk, Theme } from './models.ts'
+import { existsSync, statSync } from 'node:fs'
 import { readdir } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { extname, resolve } from 'node:path'
 import { rootDir } from '@perseveranza-pets/dante'
 import { glob } from 'glob'
 import { load, loadAll } from 'js-yaml'
@@ -12,6 +13,9 @@ let commonCache: Record<string, object> | undefined
 let allTalksCache: Set<string> | undefined
 const themesCache = new Map<string, Theme>()
 const talksCache = new Map<string, Talk>()
+
+// The first existing format wins for extension-less local image references.
+export const imageExtensions = ['webp', 'svg', 'gif', 'png', 'jpg', 'bmp']
 
 export async function resolvePusher(): Promise<ParsedSVG> {
   let pusherFile = ''
@@ -55,9 +59,15 @@ export function resolveImagePath(cache: Record<string, string>, theme: string, t
   return cache[key]
 }
 
-export function resolveImageUrl(cache: Record<string, string>, theme: string, talk: string, url?: string): string {
+export function resolveImageUrl(
+  cache: Record<string, string>,
+  theme: string,
+  talk: string,
+  url?: string,
+  exporting: boolean = false
+): string {
   url = url?.toString()
-  const key = `${theme}:${talk}:${url}`
+  const key = `${exporting ? 'export:' : ''}${theme}:${talk}:${url}`
 
   if (!url) {
     return ''
@@ -65,11 +75,66 @@ export function resolveImageUrl(cache: Record<string, string>, theme: string, ta
     return cache[key]
   }
 
+  const suffixIndex = url.search(/[?#]/)
+  const path = suffixIndex === -1 ? url : url.slice(0, suffixIndex)
+  const suffix = suffixIndex === -1 ? '' : url.slice(suffixIndex)
+
+  // Explicit extensions and remote URLs never require filesystem checks.
+  if (/^@(common|theme|talk)\//.test(path) && !extname(path)) {
+    const basePath = resolveImagePath({}, theme, talk, path)
+    const candidates = imageExtensions.map(extension => `${basePath}.${extension}`)
+    const index = candidates.findIndex(candidate => statSync(candidate, { throwIfNoEntry: false })?.isFile())
+
+    if (index === -1) {
+      throw new Error(`Cannot resolve image "${url}". Searched: ${candidates.join(', ')}.`)
+    }
+
+    url = `${path}.${imageExtensions[index]}${suffix}`
+  }
+
   cache[key] = url
-    .replace('@common', `/${talk}/assets/common`)
-    .replace('@theme', `/${talk}/assets/theme`)
-    .replace('@talk', `/${talk}/assets/talk`)
+    .replace('@common', exporting ? './assets/themes/common' : `/${talk}/assets/common`)
+    .replace('@theme', exporting ? `./assets/themes/${theme}` : `/${talk}/assets/theme`)
+    .replace('@talk', exporting ? `./assets/talks/${talk}` : `/${talk}/assets/talk`)
   return cache[key]
+}
+
+export function collectTalkImages(clientContext: ClientContext): {
+  images: Set<string>
+  commonImages: string[]
+  themeImages: string[]
+  talkImages: string[]
+  resolveImage: ImagesResolver
+} {
+  const { theme, talk, assets, isExporting } = clientContext
+  const images = new Set<string>()
+  const commonImages: string[] = []
+  const themeImages: string[] = []
+  const talkImages: string[] = []
+  const resolveImage: ImagesResolver = (themeId, talkId, reference) => {
+    const url = resolveImageUrl(assets.images, themeId, talkId, reference, isExporting)
+
+    if (url && !images.has(url)) {
+      images.add(url)
+
+      if (reference?.startsWith('@common/')) {
+        commonImages.push(url)
+      } else if (reference?.startsWith('@theme/')) {
+        themeImages.push(url)
+      } else {
+        talkImages.push(url)
+      }
+    }
+
+    return url
+  }
+
+  // Runtime-only choices must also populate the client resolver cache.
+  for (const reference of [...(theme.preloadImages ?? []), ...(talk.config.preloadImages ?? [])]) {
+    resolveImage(theme.id, talk.id, reference)
+  }
+
+  return { images, commonImages, themeImages, talkImages, resolveImage }
 }
 
 export async function getCommon(): Promise<Record<string, object>> {

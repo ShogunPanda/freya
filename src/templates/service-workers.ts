@@ -49,7 +49,10 @@ function talkServiceWorker(): void {
     .join('')
     .slice(0, 8)
   const cacheId = `freya-${rootUrlHash}`
-  const manifest = globalThis.images.map(s => ({ url: `${rootUrl}${s}`, revision: globalThis.version }))
+  const manifest = globalThis.images
+    .map(s => new URL(s, `${rootUrl}/${talk}/`))
+    .filter(url => url.protocol === 'http:' || url.protocol === 'https:')
+    .map(url => ({ url: url.href, revision: globalThis.version }))
 
   // General
   self.skipWaiting().catch(console.error)

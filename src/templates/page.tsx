@@ -31,6 +31,9 @@ export function page({
   const { fonts, id } = theme
 
   const faviconImageUrl = resolveImageUrl({}, id, talk.id, '@theme/favicon.webp')
+  const images = new Set(
+    [...commonImages, ...themeImages, ...talkImages].map(url => resolveImageUrl({}, id, talk.id, url))
+  )
 
   if (!body) {
     body = render(<h1 className={messageClassName}>Loading ...</h1>)
@@ -49,8 +52,8 @@ export function page({
         {fonts.urls.map((url: string, index: number) => (
           <link key={index} rel="preload" as="font" href={url} crossOrigin="anonymous" />
         ))}
-        {[...commonImages, ...themeImages, ...talkImages].map(url => (
-          <link key={url} rel="preload" as="image" href={resolveImageUrl({}, id, talk.id, url)} />
+        {[...images].map(url => (
+          <link key={url} rel="preload" as="image" href={url} />
         ))}
         <script defer={true} type="module" dangerouslySetInnerHTML={{ __html: js }} />
       </head>
