@@ -14,12 +14,13 @@ interface PageProps {
   messageClassName?: string
   body?: string
   fontUrls?: string[]
+  exporting?: boolean
 }
 
-export function page({ theme, talk, js, title, body = '', bodyClassName, fontUrls = [] }: PageProps): VNode {
+export function page({ theme, talk, js, title, body = '', bodyClassName, fontUrls = [], exporting = false }: PageProps): VNode {
   const { id } = theme
 
-  const faviconImageUrl = resolveImageUrl({}, id, talk.id, '@theme/favicon.webp')
+  const faviconImageUrl = resolveImageUrl({}, id, talk.id, '@theme/favicon.webp', exporting)
 
   const fonts = new Set([...fontUrls, ...theme.fonts.urls])
 

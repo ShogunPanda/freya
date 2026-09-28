@@ -7,7 +7,14 @@ import { Fragment, render } from 'preact'
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
 import { route, Router } from 'preact-router'
 import Pusher from 'pusher-js'
-import { handleFullScreen, handleShortcut, setupServiceWorker, slideUrl, updateSlidesAppearance } from './client.ts'
+import {
+  handleFullScreen,
+  handleShortcut,
+  prepareFonts,
+  setupServiceWorker,
+  slideUrl,
+  updateSlidesAppearance
+} from './client.ts'
 import { ClientContextInstance, createClientContextValue, SlideContextInstance } from './contexts.tsx'
 import { Controller } from './controller.tsx'
 import { Navigator, Overlay } from './navigator.tsx'
@@ -426,9 +433,9 @@ if (globalThis.document) {
   // eslint-disable-next-line camelcase
   const layouts = __replace_placeholder_layouts__
 
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
+    await prepareFonts()
     document.body.classList.remove('freya@loading')
-    document.body.querySelector('h1')?.remove()
 
     render(
       <LayoutContext.Provider value={layouts}>

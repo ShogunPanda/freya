@@ -151,6 +151,33 @@ export function handleShortcut(context: DOMContext, ev: KeyboardEvent): void {
   }
 }
 
+/** Load declared font faces before mounting, including faces not yet used by any DOM element. */
+export async function prepareFonts(): Promise<void> {
+  if (!document.fonts) {
+    return
+  }
+
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  try {
+    const fonts: Promise<FontFace>[] = []
+    document.fonts.forEach(font => {
+      fonts.push(font.load())
+    })
+
+    await Promise.race([
+      Promise.allSettled(fonts),
+      new Promise<void>(resolve => {
+        // A slow or unavailable font must not prevent the presentation from opening.
+        timeout = setTimeout(resolve, 10000)
+      })
+    ])
+  } catch (error) {
+    console.error('Preparing presentation fonts failed.', error)
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 export function setupServiceWorker(
   context: ClientContext,
   onChange: (state: Pick<ClientContext, 'loaded' | 'loadingProgress'>) => void

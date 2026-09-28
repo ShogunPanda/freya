@@ -38,7 +38,7 @@ async function generateNetlifyConfiguration(context: BuildContext): Promise<stri
     generated += '[[edge_functions]]\npath = "/pusher/auth"\nfunction = "pusher-auth"\n\n'
   }
 
-  context.logger.info(`Generated TOML file netlify.toml in ${elapsed(startTime)} ms`)
+  context.logger.info(`Generated TOML file netlify.toml in ${elapsed(startTime)} ms.`)
 
   return generated.trim()
 }
@@ -48,7 +48,7 @@ async function generatePusherAuthFunction(context: BuildContext): Promise<string
   let functionFile = await readFile(new URL('./templates/pusher-auth.js', import.meta.url))
   functionFile = functionFile.replace('@KEY@', pusherConfig!.key).replace('@SECRET@', pusherConfig!.secret)
 
-  context.logger.info(`Generated function pusher-auth.js in ${elapsed(startTime)} ms`)
+  context.logger.info(`Generated function pusher-auth.js in ${elapsed(startTime)} ms.`)
 
   return functionFile
 }
@@ -57,7 +57,7 @@ export async function build(context: BuildContext): Promise<BuildResult> {
   context.logger.info(`Building site (version ${context.version}) ...`)
 
   // Clean up the directory
-  const baseDir = resolve(rootDir, 'dist/html')
+  const baseDir = context.extensions.freya?.netlify ? resolve(context.root, 'html') : resolve(rootDir, 'dist/html')
   await rm(baseDir, { force: true, recursive: true })
   await mkdir(baseDir)
   await mkdir(resolve(baseDir, 'assets/talks'), { recursive: true })

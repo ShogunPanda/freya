@@ -3,6 +3,7 @@ import type { ClientContext, Config, ParsedSVG, Slide, Talk, Theme } from './mod
 import { existsSync, statSync } from 'node:fs'
 import { readdir } from 'node:fs/promises'
 import { extname, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { rootDir } from '@perseveranza-pets/dante'
 import { glob } from 'glob'
 import { load, loadAll } from 'js-yaml'
@@ -92,10 +93,16 @@ export function resolveImageUrl(
     url = `${path}.${imageExtensions[index]}${suffix}`
   }
 
-  cache[key] = url
-    .replace('@common', exporting ? './assets/themes/common' : `/${talk}/assets/common`)
-    .replace('@theme', exporting ? `./assets/themes/${theme}` : `/${talk}/assets/theme`)
-    .replace('@talk', exporting ? `./assets/talks/${talk}` : `/${talk}/assets/talk`)
+  if (exporting && /^@(common|theme|talk)\//.test(path)) {
+    // Exported HTML is local and temporary, so reference source assets directly.
+    const resourcePath = suffix ? url.slice(0, -suffix.length) : url
+    cache[key] = pathToFileURL(resolveImagePath({}, theme, talk, resourcePath)).href + suffix
+  } else {
+    cache[key] = url
+      .replace('@common', `/${talk}/assets/common`)
+      .replace('@theme', `/${talk}/assets/theme`)
+      .replace('@talk', `/${talk}/assets/talk`)
+  }
   return cache[key]
 }
 
@@ -197,6 +204,21 @@ export async function getTalk(id: string): Promise<Talk> {
   for (const [key, value] of Object.entries(talk.document)) {
     if (typeof value === 'string' && value.startsWith('common.')) {
       talk.document[key] = common[value.replace('common.', '') as keyof Config]
+    }
+  }
+
+  // Normalize layout inputs for both the interactive presentation and standalone exports.
+  for (const slide of talk.slides) {
+    if (typeof slide.content === 'string') {
+      slide.content = [slide.content]
+    }
+
+    if (!slide.options) {
+      slide.options = {}
+    }
+
+    if (!slide.className) {
+      slide.className = {}
     }
   }
 

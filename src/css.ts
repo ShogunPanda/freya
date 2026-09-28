@@ -1,7 +1,7 @@
 import type { BuildContext } from '@perseveranza-pets/dante'
 import type { TokenOrValue } from 'lightningcss'
 import type { Talk, Theme } from './slidesets/models.ts'
-import { basename, resolve } from 'node:path'
+import { basename, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { rootDir } from '@perseveranza-pets/dante'
 import { readFile } from './fs.ts'
@@ -58,7 +58,7 @@ export async function css(context: BuildContext): Promise<string> {
   let id = basename(context.currentPage ?? '', '.html')
 
   if (id && context.extensions.freya.export) {
-    id = id.endsWith('--notes') ? 'speaker-notes' : id.split('--').shift()!
+    id = id === 'speaker-notes' ? id : basename(dirname(context.currentPage!))
   }
 
   let cssFiles: Promise<string>[]

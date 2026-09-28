@@ -322,18 +322,6 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
   for (let i = 0; i < talk.slides.length; i++) {
     const slide = talk.slides[i]
 
-    if (typeof slide.content === 'string') {
-      slide.content = [slide.content]
-    }
-
-    if (!slide.options) {
-      slide.options = {}
-    }
-
-    if (!slide.className) {
-      slide.className = {}
-    }
-
     // Render the slide on the server to add the required classes
     const layoutPath = resolve(
       rootDir,
