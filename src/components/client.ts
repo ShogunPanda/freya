@@ -1,9 +1,10 @@
-import type { Talk, Theme } from '../slidesets/models.ts'
+import type { ClientContext, Talk, Theme } from '../slidesets/models.ts'
 import { route } from 'preact-router'
 
 type Shortcuts = Record<string, (...args: any[]) => void>
 
 export interface DOMContext {
+  loaded: boolean
   id: string
   talk: Talk
   theme: Theme
@@ -58,6 +59,10 @@ export function updateSlidesAppearance(width: number, height: number): void {
 }
 
 export function updateSlide(context: DOMContext, modifier: number): void {
+  if (!context.loaded) {
+    return
+  }
+
   const {
     id,
     talk: { slidesPadding, slidesCount }
@@ -102,6 +107,15 @@ export function handleFullScreen(ev?: Event): void {
 }
 
 export function handleShortcut(context: DOMContext, ev: KeyboardEvent): void {
+  if (!context.loaded) {
+    if (!ev.metaKey && !ev.ctrlKey && !ev.shiftKey && ['Enter', 'f'].includes(ev.key)) {
+      handleFullScreen(ev)
+    } else {
+      ev.preventDefault()
+    }
+    return
+  }
+
   const handlePrevious = updateSlide.bind(null, context, -1)
   const handleNext = updateSlide.bind(null, context, +1)
 
@@ -134,5 +148,118 @@ export function handleShortcut(context: DOMContext, ev: KeyboardEvent): void {
   const handler = (ev.shiftKey ? shiftShortcuts : shortcuts)[ev.key]
   if (!ev.metaKey && !ev.ctrlKey && handler) {
     handler(ev)
+  }
+}
+
+export function setupServiceWorker(
+  context: ClientContext,
+  onChange: (state: Pick<ClientContext, 'loaded' | 'loadingProgress'>) => void
+): () => void {
+  if (context.isExporting || !context.serviceWorkerEnabled || !navigator.serviceWorker) {
+    onChange({ loaded: true, loadingProgress: undefined })
+    return () => {}
+  }
+
+  const workers = navigator.serviceWorker
+  const scriptURL = new URL(`/${context.id}/sw.js`, location.href).href
+
+  let finished = false
+  let watchdog: ReturnType<typeof setTimeout>
+
+  function finish(): void {
+    if (finished) {
+      return
+    }
+
+    finished = true
+    onChange({ loaded: true, loadingProgress: undefined })
+
+    clearTimeout(watchdog)
+    workers.removeEventListener('controllerchange', subscribe)
+    // Keep receiving version updates until the application unmounts.
+  }
+
+  function keepAlive(): void {
+    clearTimeout(watchdog)
+    // Progress heartbeats extend the wait, even on very slow connections.
+    watchdog = setTimeout(finish, 30000)
+  }
+
+  function subscribe(): void {
+    if (!finished && workers.controller?.scriptURL === scriptURL) {
+      workers.controller.postMessage({ type: 'subscribe', talk: context.id })
+    }
+  }
+
+  function receive(event: MessageEvent): void {
+    const { type, payload } = event.data ?? {}
+
+    if (!context.isProduction) {
+      console.debug('Received message from service worker:', event.data)
+    }
+
+    if (event.source !== workers.controller || workers.controller?.scriptURL !== scriptURL) {
+      return
+    }
+
+    if (type === 'new-version-available' && payload?.version && payload.version !== context.version) {
+      console.log(`New version available: ${payload.version} (current is ${context.version}). Reloading the page.`)
+      location.reload()
+      return
+    }
+
+    if (
+      finished ||
+      !['progress', 'completed'].includes(type) ||
+      payload?.talk !== context.id ||
+      // An older controller may answer while the current build's worker is installing.
+      payload.version !== context.version
+    ) {
+      return
+    }
+
+    if (type === 'progress') {
+      const progress = payload.total > 0 ? (payload.processed / payload.total) * 100 : 100
+      onChange({
+        loaded: false,
+        loadingProgress: Number.isFinite(progress) ? Math.max(0, Math.min(100, progress)) : 0
+      })
+    }
+
+    // Keep the protocol available to a future loading UI without coupling it to rendering.
+    window.dispatchEvent(new CustomEvent('freya:preload', { detail: event.data }))
+
+    keepAlive()
+
+    if (type === 'completed') {
+      finish()
+    }
+  }
+
+  workers.addEventListener('controllerchange', subscribe)
+  workers.addEventListener('message', receive)
+  keepAlive()
+
+  workers
+    .register(scriptURL)
+    .then(registration => {
+      // A hard reload can bypass an already active worker without triggering activation again.
+      if (!workers.controller && registration.active?.state === 'activated') {
+        finish()
+        return
+      }
+
+      subscribe()
+    })
+    .catch(error => {
+      console.error('Registering talk service worker failed.', error)
+      finish()
+    })
+
+  return () => {
+    finished = true
+    clearTimeout(watchdog)
+    workers.removeEventListener('controllerchange', subscribe)
+    workers.removeEventListener('message', receive)
   }
 }

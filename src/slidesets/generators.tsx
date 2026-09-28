@@ -12,7 +12,7 @@ import { render } from 'preact-render-to-string'
 import { rolldown } from 'rolldown'
 import { replacePlugin } from 'rolldown/plugins'
 import { generateSVGId } from '../components/svg.tsx'
-import { pusherConfig } from '../configuration.ts'
+import { isServiceWorkerEnabled, pusherConfig } from '../configuration.ts'
 import { resolveSVG } from '../rendering/svg.tsx'
 import { page as page404 } from '../templates/404.tsx'
 import { page as assetsPage } from '../templates/assets.tsx'
@@ -220,6 +220,8 @@ export async function prepareClientContext(context: BuildContext, theme: Theme, 
   // Prepare the client
   return {
     version: context.version,
+    loaded: true,
+    serviceWorkerEnabled: isServiceWorkerEnabled(context),
     id: talk.id,
     talk,
     theme,
@@ -379,6 +381,26 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
     }
   }
 
+  if (talk.slides.length) {
+    const loadingLayout = theme.layouts?.loading ?? talk.slides[0].layout ?? 'default'
+    const layoutPath = resolve(rootDir, 'src/themes', theme.id, 'layouts', loadingLayout + '.tsx')
+    const { default: layout }: { default: SlideRenderer } = await import(layoutPath)
+    layouts[loadingLayout] = layoutPath
+
+    // Collect the loading layout's styles and assets even when no slide uses it directly.
+    render(
+      SlideComponent({
+        context: { ...clientContext, loaded: false, loadingProgress: 0 },
+        layout,
+        slide: talk.slides[0],
+        index: 1,
+        resolveImage,
+        resolveSVG: resolveSVG.bind(null, clientContext.assets.svgsDefinitions, clientContext.assets.svgs),
+        parseContent: parseContent.bind(null, clientContext.assets.content)
+      })
+    )
+  }
+
   context.extensions.freya.talkImages ??= new Map<string, Set<string>>()
   context.extensions.freya.talkImages.set(talk.id, images)
 
@@ -398,6 +420,7 @@ export async function generateSlideset(context: BuildContext, theme: Theme, talk
       themeImages,
       talkImages,
       js: [await generateApplicationScript(context, clientContext, layouts), pusher].join('\n;\n'),
+      fontUrls: context.extensions.freya.fonts.urls,
       title: talk.document.title,
       body: undefined,
       bodyClassName: cleanCssClasses('freya@root', 'freya@loading'),

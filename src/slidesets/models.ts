@@ -63,6 +63,7 @@ export interface Theme {
   style: string
   urls: Record<string, string>
   fonts: Fonts
+  layouts?: { loading?: string }
 }
 
 export interface ClientContext {
@@ -85,6 +86,9 @@ export interface ClientContext {
   pusher?: Omit<Pusher, 'secret'> & { hostname?: string }
   data?: Record<string, any>
   serverData?: Record<string, any>
+  serviceWorkerEnabled?: boolean
+  loaded: boolean
+  loadingProgress?: number
 }
 
 export interface SlideProps {

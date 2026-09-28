@@ -4,11 +4,10 @@ import type { Channel } from 'pusher-js'
 import type { ClientContext as ClientContextModel, ParsedSVG } from '../slidesets/models.ts'
 import type { DOMContext } from './client.ts'
 import { Fragment, render } from 'preact'
-import { route, Router } from 'preact-router'
-// eslint-disable-next-line import/order
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks'
+import { route, Router } from 'preact-router'
 import Pusher from 'pusher-js'
-import { handleFullScreen, handleShortcut, slideUrl, updateSlidesAppearance } from './client.ts'
+import { handleFullScreen, handleShortcut, setupServiceWorker, slideUrl, updateSlidesAppearance } from './client.ts'
 import { ClientContextInstance, createClientContextValue, SlideContextInstance } from './contexts.tsx'
 import { Controller } from './controller.tsx'
 import { Navigator, Overlay } from './navigator.tsx'
@@ -60,6 +59,14 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     isExporting
   } = context
 
+  const [loading, setLoading] = useState<Pick<ClientContextModel, 'loaded' | 'loadingProgress'>>(() => ({
+    loaded: isExporting || !context.serviceWorkerEnabled || !navigator.serviceWorker,
+    loadingProgress: undefined
+  }))
+  const { loaded } = loading
+
+  useEffect(() => setupServiceWorker(context, setLoading), [context])
+
   const [index, setIndex] = useState<number>()
   const [previousIndex, setPreviousIndex] = useState(0)
   const [isNavigating, setIsNavigating] = useState(false)
@@ -80,67 +87,103 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     parseContent: markdownParser.bind(null, context.assets.content)
   }
 
-  const toggleController = useCallback((ev?: Event) => {
-    ev?.preventDefault()
-    setIsControlling(current => !current)
-    window.dispatchEvent(new Event('freya:controller:toggled'))
-  }, [])
+  const toggleController = useCallback(
+    (ev?: Event) => {
+      if (!loaded) {
+        return
+      }
+
+      ev?.preventDefault()
+      setIsControlling(current => !current)
+      window.dispatchEvent(new Event('freya:controller:toggled'))
+    },
+    [loaded]
+  )
 
   const toggleNavigator = useCallback(
     (ev?: Event) => {
+      if (!loaded) {
+        return
+      }
+
       ev?.preventDefault()
       setIsNavigating(current => !current)
       window.dispatchEvent(new Event('freya:navigator:toggled'))
     },
-    [setIsNavigating]
+    [loaded, setIsNavigating]
   )
 
   const closeNavigator = useCallback(
     (ev?: Event) => {
+      if (!loaded) {
+        return
+      }
+
       ev?.preventDefault()
       setIsNavigating(false)
       window.dispatchEvent(new Event('freya:navigator:toggled'))
     },
-    [setIsNavigating]
+    [loaded, setIsNavigating]
   )
 
-  const closePresenter = useCallback((ev?: Event) => {
-    ev?.preventDefault()
-    setIsPresenting(false)
-    window.dispatchEvent(new Event('freya:presenter:toggled'))
-  }, [])
+  const closePresenter = useCallback(
+    (ev?: Event) => {
+      if (!loaded) {
+        return
+      }
+
+      ev?.preventDefault()
+      setIsPresenting(false)
+      window.dispatchEvent(new Event('freya:presenter:toggled'))
+    },
+    [loaded]
+  )
 
   const togglePresenter = useCallback(
     (ev?: Event) => {
+      if (!loaded) {
+        return
+      }
+
       ev?.preventDefault()
       setIsPresenting(current => !current)
       window.dispatchEvent(new Event('freya:presenter:toggled'))
     },
-    [setIsPresenting]
+    [loaded, setIsPresenting]
   )
 
   const startPresentation = useCallback(
     (ev?: Event) => {
+      if (!loaded) {
+        return
+      }
+
       ev?.preventDefault()
 
       setPresentationDuration(0)
       setPresentationPaused(false)
       window.dispatchEvent(new Event('freya:presenter:timer:started'))
     },
-    [setPresentationDuration, setPresentationPaused]
+    [loaded, setPresentationDuration, setPresentationPaused]
   )
 
   const togglePresentation = useCallback(
     (ev?: Event) => {
+      if (!loaded) {
+        return
+      }
       ev?.preventDefault()
       setPresentationPaused(current => !current)
       window.dispatchEvent(new Event('freya:presenter:timer:toggled'))
     },
-    [setPresentationPaused]
+    [loaded, setPresentationPaused]
   )
 
   const handleEscape = useCallback(
     (ev?: Event) => {
+      if (!loaded) {
+        return
+      }
       ev?.preventDefault()
 
       if (isNavigating) {
@@ -151,7 +194,7 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
         window.dispatchEvent(new Event('freya:presenter:toggled'))
       }
     },
-    [isNavigating, isPresenting, setIsNavigating, setIsPresenting]
+    [loaded, isNavigating, isPresenting, setIsNavigating, setIsPresenting]
   )
 
   // Setup route handling
@@ -171,16 +214,25 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
       setPreviousIndex(index ?? current)
       setIndex(current)
 
+      // Track the requested URL while loading, without broadcasting navigation.
+      if (!loaded) {
+        return
+      }
+
       if (existingIndex && isPresenting) {
         localChannel.current?.postMessage({ id, current })
         remoteChannel.current?.trigger('client-update', { id, current })
       }
     },
-    [id, index, isPresenting, localChannel, setIndex, setPreviousIndex]
+    [loaded, id, index, isPresenting, localChannel, setIndex, setPreviousIndex]
   )
 
   const handleSynchronizationUpdate = useCallback(
     (ev: MessageEvent) => {
+      if (!loaded) {
+        return
+      }
+
       const { id: remoteId, current: rawCurrent } = ev.data
       const current = parseInt(rawCurrent as string, 10)
 
@@ -189,7 +241,7 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
         window.dispatchEvent(new MessageEvent('freya:slide:changed', { data: { id, index: current } }))
       }
     },
-    [id, index, isPresenting, slidesPadding]
+    [loaded, id, index, isPresenting, slidesPadding]
   )
 
   // Setup all DOM Events
@@ -199,6 +251,7 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     }
 
     const domContext: DOMContext = {
+      loaded,
       id: context.id,
       talk: context.talk,
       theme: context.theme,
@@ -225,8 +278,11 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     document.addEventListener('keydown', boundHandleShortcut, false)
 
     boundUpdateSlidesAppearance()
-    window.dispatchEvent(new Event('freya:ready'))
-    window.dispatchEvent(new Event('freya:controller:toggled'))
+
+    if (loaded) {
+      window.dispatchEvent(new Event('freya:ready'))
+      window.dispatchEvent(new Event('freya:controller:toggled'))
+    }
     document.body.style.setProperty('--freya-progress', `${((index / slidesCount) * 100).toFixed(2)}`)
 
     return () => {
@@ -236,6 +292,7 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
       document.removeEventListener('keydown', boundHandleShortcut, false)
     }
   }, [
+    loaded,
     toggleNavigator,
     index,
     slidesCount,
@@ -249,7 +306,7 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
 
   // Validate the initial slide
   useEffect(() => {
-    if (typeof index === 'undefined') {
+    if (!loaded || typeof index === 'undefined') {
       return
     }
 
@@ -260,12 +317,12 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     }
 
     document.title = `${index.toString().padStart(slidesPadding, '0')} - ${title}`
-  }, [id, title, index, slidesCount, slidesPadding])
+  }, [loaded, id, title, index, slidesCount, slidesPadding])
 
   // Track presentation duration if the timer is active
   useEffect(() => {
     const timer = setInterval(() => {
-      if (!presentationPaused) {
+      if (loaded && !presentationPaused) {
         setPresentationDuration(current => current + 1)
       }
     }, 1000)
@@ -273,11 +330,11 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     return () => {
       clearInterval(timer)
     }
-  }, [presentationPaused, setPresentationDuration])
+  }, [loaded, presentationPaused, setPresentationDuration])
 
   // Setup local synchronization if Pusher is not being used
   useEffect(() => {
-    if (context.pusher) {
+    if (!loaded || context.pusher) {
       return
     }
 
@@ -287,11 +344,11 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     return () => {
       localChannel.current?.removeEventListener('message', handleSynchronizationUpdate)
     }
-  }, [localChannel, handleSynchronizationUpdate, isPresenting, context])
+  }, [loaded, localChannel, handleSynchronizationUpdate, isPresenting, context])
 
   // Setup pusher synchronization, if available
   useEffect(() => {
-    if (!context.pusher) {
+    if (!loaded || !context.pusher) {
       return
     }
 
@@ -328,10 +385,10 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
     return () => {
       remoteChannel.current!.unbind_all()
     }
-  }, [pusher, remoteChannel, handleSynchronizationUpdate, context])
+  }, [loaded, pusher, remoteChannel, handleSynchronizationUpdate, context])
 
   return (
-    <ClientContextInstance.Provider value={createClientContextValue(context, hookMethods)}>
+    <ClientContextInstance.Provider value={createClientContextValue({ ...context, ...loading }, hookMethods)}>
       <Router onChange={handleRoute}>
         <Fragment path={`/${context.id}/:id?`} />
       </Router>
@@ -380,17 +437,4 @@ if (globalThis.document) {
       document.body
     )
   })
-
-  if (navigator.serviceWorker) {
-    navigator.serviceWorker.addEventListener('message', event => {
-      const { type, payload } = event.data
-
-      if (type === 'new-version-available' && payload.version !== context.version) {
-        console.log(`New version available: ${payload.version} (current is ${context.version}). Reloading the page.`)
-        location.reload()
-      }
-    })
-
-    navigator.serviceWorker.register(`/${context.id}/sw.js`).catch(console.error)
-  }
 }

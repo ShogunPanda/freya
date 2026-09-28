@@ -53,6 +53,51 @@ preloadImages:
 Declarations are resolved separately for each talk and support explicit extensions
 as well as extension-less references. PNG/PDF exports use the same selection.
 
+### Preparing a talk with the service worker
+
+When service workers are enabled, the client mounts immediately and displays the
+theme's `layouts.loading` layout using the first slide's data, or the first slide's
+normal layout when no loading layout is configured. The requested URL is preserved
+and its slide is displayed once the worker finishes preparing the resource cache.
+Navigation, synchronization and client actions are disabled during loading, except
+for fullscreen toggling.
+
+Configure a loading layout in `theme.yml`, referencing a file in the theme's `layouts` directory:
+
+```yaml
+layouts:
+  loading: loading
+```
+
+Layouts can read `loaded: boolean` and `loadingProgress?: number` through `useClient()`.
+Progress is computed from processed resources, including failed attempts, as a
+percentage between 0 and 100 without rounding. An omitted progress value means
+completion (`loadingProgress ?? 100`). `loaded` becomes true on completion or when
+waiting is skipped; server rendering and exports also use `loaded: true`.
+
+The manifest includes resolved talk
+images and the font URLs declared by Freya and the theme. External font stylesheets
+also contribute their referenced files and imports. Global image and font preload
+tags are no longer emitted in talk HTML.
+
+The worker downloads resources sequentially, reuses its versioned cache, and allows
+up to 30 seconds per download. Failed resources do not prevent the talk from opening:
+normal rendering requests retry them through the network and cache successful responses.
+Completion therefore does not guarantee that every resource is available offline.
+
+The page sends a single `subscribe` message after obtaining its talk controller.
+The worker replies immediately with its current state, sends `progress` every second
+while preparing, and sends `completed` when all resources have been attempted.
+Both messages carry a `payload` containing `talk`, `version`, `total`, `processed`,
+`downloaded`, `cached`, and `failed` (an array of URLs). Discovering dependencies in
+external CSS may increase `total` during preparation. The client forwards matching
+messages as `freya:preload` window events, with the full message in `event.detail`.
+
+Unsupported or disabled service workers and registration failures skip the wait.
+If no matching worker status arrives for 30 seconds, the page also proceeds normally;
+progress messages renew that deadline. Reopened pages subscribe again, and restarted
+workers reconstruct preparation from the existing cache.
+
 ### Creating pages and files
 
 Simply create all file needed in the `build` function in `src/build/index.ts`. You can use any framework you want, the predefined one is React.

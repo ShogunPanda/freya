@@ -1,6 +1,5 @@
 import type { VNode } from 'preact'
 import type { Talk, Theme } from '../slidesets/models.ts'
-import { render } from 'preact-render-to-string'
 import { resolveImageUrl } from '../slidesets/loaders.ts'
 
 interface PageProps {
@@ -14,30 +13,15 @@ interface PageProps {
   bodyClassName?: string
   messageClassName?: string
   body?: string
+  fontUrls?: string[]
 }
 
-export function page({
-  theme,
-  talk,
-  commonImages,
-  themeImages,
-  talkImages,
-  js,
-  title,
-  body,
-  bodyClassName,
-  messageClassName
-}: PageProps): VNode {
-  const { fonts, id } = theme
+export function page({ theme, talk, js, title, body = '', bodyClassName, fontUrls = [] }: PageProps): VNode {
+  const { id } = theme
 
   const faviconImageUrl = resolveImageUrl({}, id, talk.id, '@theme/favicon.webp')
-  const images = new Set(
-    [...commonImages, ...themeImages, ...talkImages].map(url => resolveImageUrl({}, id, talk.id, url))
-  )
 
-  if (!body) {
-    body = render(<h1 className={messageClassName}>Loading ...</h1>)
-  }
+  const fonts = new Set([...fontUrls, ...theme.fonts.urls])
 
   return (
     <html lang="en">
@@ -49,11 +33,8 @@ export function page({
         <meta name="description" content={talk.document.title} />
         <link rel="icon" href={faviconImageUrl} type="image/webp" sizes="192x192" />
         <link rel="apple-touch-icon" type="image/webp" href={faviconImageUrl} />
-        {fonts.urls.map((url: string, index: number) => (
-          <link key={index} rel="preload" as="font" href={url} crossOrigin="anonymous" />
-        ))}
-        {[...images].map(url => (
-          <link key={url} rel="preload" as="image" href={url} />
+        {[...fonts].map(url => (
+          <link key={url} rel="preload" as="font" href={url} crossOrigin="anonymous" />
         ))}
         <script defer={true} type="module" dangerouslySetInnerHTML={{ __html: js }} />
       </head>

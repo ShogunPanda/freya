@@ -34,6 +34,7 @@
   },
   "types": "./dist/index.d.ts",
   "scripts": {
+    "dev": "rm -rf dist && tsc -p tsconfig.json && cp -a src/assets dist",
     "build": "rm -rf dist && tsc -p tsconfig.json && cp -a src/assets dist && npm run lint && npm run lint:css",
     "format": "prettier -w src",
     "lint": "eslint --cache",

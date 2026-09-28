@@ -9,7 +9,7 @@ import { filterWhitelistedTalks, isServiceWorkerEnabled, pusherConfig } from './
 import { css, cssVisitor } from './css.ts'
 import { readFile } from './fs.ts'
 import { generateAllSlidesets, generateAssetsListing, generatePage404 } from './slidesets/generators.tsx'
-import { getAllTalks, getTalk } from './slidesets/loaders.ts'
+import { getAllTalks, getTalk, getTheme } from './slidesets/loaders.ts'
 import { indexServiceWorkerDeclaration, talkServiceWorkerDeclaration } from './templates/service-workers.ts'
 
 declare module 'fastify' {
@@ -146,6 +146,13 @@ export async function build(context: BuildContext): Promise<BuildResult> {
     await writeFile(resolve(baseDir, 'sw.js'), indexServiceWorkerDeclaration(context), 'utf8')
 
     for (const talk of context.extensions.freya.talks as string[]) {
+      const talkConfig = await getTalk(talk)
+      const theme = await getTheme(talkConfig.config.theme)
+      const resources = [
+        ...context.extensions.freya.talkImages.get(talk),
+        ...context.extensions.freya.fonts.urls,
+        ...theme.fonts.urls
+      ]
       const swDir = resolve(baseDir, 'assets/talks', talk)
 
       if (!existsSync(swDir)) {
@@ -155,7 +162,7 @@ export async function build(context: BuildContext): Promise<BuildResult> {
       fileOperations.push(
         writeFile(
           resolve(baseDir, 'assets/talks', talk, 'sw.js'),
-          talkServiceWorkerDeclaration(context, talk, [...context.extensions.freya.talkImages.get(talk)]),
+          talkServiceWorkerDeclaration(context, talk, resources),
           'utf8'
         )
       )
