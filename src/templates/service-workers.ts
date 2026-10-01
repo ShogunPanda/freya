@@ -81,8 +81,11 @@ function talkServiceWorker(): void {
     try {
       const cache = await caches.open(cacheName)
 
-      // Set iteration also visits font files and imports discovered in external stylesheets.
-      for (const url of urls) {
+      const queue = [...urls]
+      const active = new Set<Promise<void>>()
+      let next = 0
+
+      async function prepareResource(url: string): Promise<void> {
         try {
           let response = await cache.match(url)
 
@@ -93,7 +96,7 @@ function talkServiceWorker(): void {
 
             if (!response.ok) {
               payload.failed.push(url)
-              continue
+              return
             }
 
             await cache.put(url, response.clone())
@@ -106,8 +109,9 @@ function talkServiceWorker(): void {
 
             for (const match of references) {
               const dependency = new URL(match[1] ?? match[2], response.url || url)
-              if (['http:', 'https:'].includes(dependency.protocol)) {
+              if (['http:', 'https:'].includes(dependency.protocol) && !urls.has(dependency.href)) {
                 urls.add(dependency.href)
+                queue.push(dependency.href)
               }
             }
 
@@ -119,6 +123,19 @@ function talkServiceWorker(): void {
         } finally {
           payload.processed++
         }
+      }
+
+      // Keep four slots busy, including dependencies discovered by in-flight stylesheets.
+      // Only finish when both the queue and all active resources have been drained.
+      while (next < queue.length || active.size > 0) {
+        while (next < queue.length && active.size < 4) {
+          const task = prepareResource(queue[next++]).finally(() => {
+            active.delete(task)
+          })
+          active.add(task)
+        }
+
+        await Promise.race(active)
       }
     } catch (error) {
       // Storage failures must not keep the presentation behind the loading screen.

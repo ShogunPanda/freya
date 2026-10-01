@@ -26,6 +26,7 @@ interface Path {
 }
 
 const codeCache = new Map<string, string>()
+const renderedCodeFormats = new WeakMap<CodeDefinition, ClientContext['exportingFormat']>()
 
 const ignore: IgnoreLike = {
   ignored(p: Path): boolean {
@@ -134,16 +135,21 @@ export function parseContent(cache: Record<string, string>, raw?: string): strin
   return cache[raw]
 }
 
-export async function ensureRenderedCode(code: CodeDefinition): Promise<void> {
-  if (!code || code?.rendered) {
+export async function ensureRenderedCode(
+  code: CodeDefinition,
+  exportingFormat: ClientContext['exportingFormat'] = 'html'
+): Promise<void> {
+  if (!code || (code.rendered && (!renderedCodeFormats.has(code) || renderedCodeFormats.get(code) === exportingFormat))) {
     return
   }
 
-  const cacheKey = JSON.stringify(code)
+  // Rendered output is format-specific and must not become part of its own cache key.
+  const cacheKey = JSON.stringify({ ...code, rendered: undefined, exportingFormat })
   const renderedCode = codeCache.get(cacheKey)
 
   if (renderedCode) {
     code.rendered = renderedCode
+    renderedCodeFormats.set(code, exportingFormat)
     return
   }
 
@@ -161,10 +167,15 @@ export async function ensureRenderedCode(code: CodeDefinition): Promise<void> {
 
   if (language === 'none') {
     content = sanitizeTabularOutputSnippet(content)
+    if (exportingFormat === 'pptx') {
+      // Dante inserts ZWNJ characters after table borders; they are unnecessary in PowerPoint.
+      content = content.replaceAll('\u200C', '')
+    }
   }
 
   code.rendered = await renderCode(content, language ?? '', numbers ?? false, highlight ?? '', classes)
   codeCache.set(cacheKey, code.rendered)
+  renderedCodeFormats.set(code, exportingFormat)
 }
 
 async function loadData(
@@ -229,6 +240,7 @@ export async function prepareClientContext(context: BuildContext, theme: Theme, 
     dimensions: talk.config.dimensions,
     isProduction: context.isProduction,
     isExporting: context.extensions.freya.export ?? false,
+    exportingFormat: context.extensions.freya.exportingFormat ?? 'html',
     pusher: pusherConfig
       ? {
           key: pusherConfig.key,

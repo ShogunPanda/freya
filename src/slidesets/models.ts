@@ -36,6 +36,8 @@ export interface CodeDefinition {
 }
 
 export interface BaseSlide {
+  /** Only boolean true excludes the slide from presentation, asset preparation and exports. */
+  disabled?: boolean
   layout?: string
   title: string
   notes: string
@@ -83,6 +85,7 @@ export interface ClientContext {
   }
   isProduction: boolean
   isExporting: boolean
+  exportingFormat: 'html' | 'pdf' | 'pptx'
   pusher?: Omit<Pusher, 'secret'> & { hostname?: string }
   data?: Record<string, any>
   serverData?: Record<string, any>

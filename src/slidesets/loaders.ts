@@ -195,6 +195,9 @@ export async function getTalk(id: string): Promise<Talk> {
     talk = load(talkFile) as Talk
   }
 
+  // Filter both YAML formats before normalization, counts, caching and asset preparation.
+  talk.slides = talk.slides.filter(slide => slide.disabled !== true)
+
   const common = await getCommon()
 
   if (typeof talk.config === 'string' && talk.config === 'common.config') {

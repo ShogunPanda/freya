@@ -1,48 +1,105 @@
 # @perseveranza-pets/freya
 
-[![Version](https://img.shields.io/npm/v/@perseveranza-pets/dante.svg)](https://npm.im/@perseveranza-pets/dante)
-[![Dependencies](https://img.shields.io/librariesio/release/npm/@perseveranza-pets/dante)](https://libraries.io/npm/@perseveranza-pets/dante)
+[![Version](https://img.shields.io/npm/v/@perseveranza-pets/freya.svg)](https://npm.im/@perseveranza-pets/freya)
+[![Dependencies](https://img.shields.io/librariesio/release/npm/@perseveranza-pets/freya)](https://libraries.io/npm/@perseveranza-pets/freya)
 
-Opinionated static site generator.
+Opinionated JSX based slides generator.
 
-http://sw.cowtech.it/dante
+https://sw.cowtech.it/freya
 
 ## Installation
 
+Create a presentation project:
+
 ```bash
-npx --package=@perseveranza-pets/dante -- create-dante-site my-site
-cd my-site
+npx --package=@perseveranza-pets/freya -- create-freya-slideset my-talk
+cd my-talk
 npm install
-dante dev
+npm run dev
+```
+
+To add Freya to an existing project:
+
+```bash
+npm install @perseveranza-pets/freya
 ```
 
 ## Usage
 
-### Extension-less slide images
+Freya combines YAML slide content with Preact layouts and CSS themes. A project can
+contain multiple talks sharing the same themes and assets.
 
-Local image references can omit the extension, for example `@talk/architecture`,
-`@theme/logo`, or `@common/background`. Freya selects the first existing file in
-this order: `webp`, `png`, `jpg`, `bmp`. Edit the top-level `imageExtensions` array
-in `src/slidesets/loaders.ts` to change that order.
+```text
+src/
+  talks/
+    my-talk/
+      info.yml
+      slides.yml
+      assets/
+  themes/
+    main/
+      theme.yml
+      style.css
+      layouts/
+      assets/
+```
 
-The selected filename is used for slide rendering, preloading, offline caching,
-and static HTML exports. Missing extension-less images produce an error listing the
-searched paths. Explicit extensions are used as provided, without checking file
-existence or trying other formats. Remote URLs are left unchanged.
+Run commands from the presentation project's root:
 
-### Preloading images used by a talk
+```bash
+npx freya development
+npx freya build
+npx freya server
+```
 
-Freya collects resolved image URLs while rendering every slide and theme component.
-Only these images are preloaded and included in the talk's offline precache, with
-duplicates removed after extension resolution. Asset listings and output file
-copying still include the complete asset library.
+Use `--only` to select talks, or omit it to include all talks:
 
-Use the image resolver for images from custom YAML fields, items, layout components,
-and CSS backgrounds. Literal URLs in HTML, Markdown, or stylesheets bypass the
-resolver and must be declared explicitly if they need preloading or precaching.
+```bash
+npx freya --only my-talk,another-talk build
+```
 
-For runtime-only image choices, declare `preloadImages` in the talk's `config` or at
-the top level of `theme.yml`. These references also populate the client resolver cache:
+### Slides
+
+Configure the theme, slide dimensions and document metadata in `info.yml`:
+
+```yaml
+config:
+  theme: main
+  dimensions:
+    width: 2000
+    height: 1120
+document:
+  title: My presentation
+  author:
+    name: Your name
+```
+
+Define slides in `slides.yml`, using the layouts and fields supported by your theme.
+The legacy single-file `talk.yml` format is also supported.
+
+Set `disabled: true` on a slide to exclude it from the presentation and all exports:
+
+```yaml
+---
+layout: default
+disabled: true
+```
+
+Only the YAML boolean `true` disables a slide. Remaining slides keep their order
+and are numbered consecutively after rebuilding. Keep at least one active slide
+per talk. To hide a whole talk from the index instead, use `document.hidden`.
+
+### Images
+
+Local image references can use `@talk/`, `@theme/` and `@common/` prefixes. You can
+omit the extension, for example `@talk/architecture` or `@theme/logo`. Freya chooses
+the first existing file in this order: `webp`, `svg`, `gif`, `png`, `jpg`, `bmp`.
+Use an explicit extension to select a particular format. Remote URLs are unchanged.
+
+Images resolved by the theme are automatically included in the talk's preload and
+offline cache. For runtime-only images or literal URLs that bypass the image
+resolver, declare `preloadImages` under the talk's `config` or at the top level of
+`theme.yml`:
 
 ```yaml
 preloadImages:
@@ -50,67 +107,73 @@ preloadImages:
   - '@theme/logo-dark'
 ```
 
-Declarations are resolved separately for each talk and support explicit extensions
-as well as extension-less references. Static HTML exports use the same selection.
+### Loading layout
 
-### Exporting PDFs
+Published presentations prepare their offline resources before enabling navigation.
+If some resources fail, the presentation can still open, but those resources may
+not be available offline.
 
-Run `freya pdf` to generate `dist/pdf/<talk-id>.pdf`, one screenshot-based PDF per talk.
-Use `freya --only <talk-id> pdf` to select a talk, or `-d, --directory <path>` to
-choose another base output directory (default: `dist`); PDFs go in its `pdf/`
-subdirectory. Each PDF contains one slide per page, in slide
-order, without margins or speaker notes. Page dimensions match the configured slide
-dimensions in PDF points. JPEG screenshots are captured at quality 95 and embedded
-without recompression or downsampling. Increasing scale changes image resolution,
-not page dimensions.
+To customize the loading screen, add a layout in the theme's `layouts` directory
+and reference it in `theme.yml`:
 
-HTML generation and direct JPEG capture are internal stages. Temporary files live in an
-isolated `.freya-pdf-*` directory within the output directory, allowing each finished
-PDF to atomically replace its destination. Intermediates are removed after each talk;
-the run's temporary directory is removed on success and on errors. Existing PDFs
-are replaced only after their new version is complete. Other PDFs are preserved.
+```yaml
+layouts:
+  loading: loading
+```
 
-CSS is compiled once per talk, with a separate shared stylesheet for speaker notes,
-and incorporated before each HTML file is written once. Assets are not copied:
-local image references use absolute `file://` URLs to the checkout. Logs report progress.
+Without a loading layout, Freya uses the first slide's normal layout. Theme
+components can read `loaded: boolean` and `loadingProgress?: number` through
+`useClient()`. Progress is a percentage between 0 and 100 when available; it can be
+absent during the initial wait. Use `loaded` to determine whether loading is over.
 
-Use `-c, --concurrency <number>` (default: 3) to set both the maximum number of
-browsers and the maximum tabs per browser. For example, `-c 5` allows five browsers
-with five tabs each, up to 25 simultaneous slides. Counts are capped by available work.
-Each browser takes one talk from the queue, renders its slides concurrently, and
-takes another talk only after its previous PDF is assembled and intermediates removed. Different
-browsers process different talks concurrently. Tabs share a context within their
-browser and are reused. Logs report preparation and export times per talk, followed
-by total export time including browser shutdown and temporary-file cleanup.
-Each slide uses its configured dimensions and waits for fonts and decoded images,
-including CSS backgrounds and SVG images. Loading failures stop the export with talk
-and slide details, and Chromium is closed even after errors.
-`freya deploy` first builds the HTML site, then generates PDFs with concurrency 3
-and scale 2. It prepares `dist/deploy/site` from `dist/html` and copies only PDFs
-generated during that invocation into `dist/deploy/site/pdfs`. Both stages respect
-`--only` and `--directory`; PDFs left over from previous selections are not published.
-The Netlify configuration and optional functions are included in the deployment output.
+## Exporting
 
-Playwright manages Chromium and captures JPEGs through reusable per-tab CDP
-sessions using `Page.captureScreenshot` with `quality: 95` and `optimizeForSpeed: true`.
-Chromium controls chroma subsampling. Before capture,
-finite animations are finished, infinite animations are canceled and text carets
-are hidden.
+| Command        | Result                                        | Default output           |
+| -------------- | --------------------------------------------- | ------------------------ |
+| `freya build`  | Interactive HTML presentations                | `dist/html/`             |
+| `freya pdf`    | One image-based PDF per talk                  | `dist/pdf/<talk-id>.pdf` |
+| `freya pptx`   | One editable PowerPoint presentation per talk | `pptx/<talk-id>.pptx`    |
+| `freya deploy` | HTML, PDF and PPTX prepared for Netlify       | `dist/deploy/`           |
 
-Use `-s, --scale <NUM>` to set a positive integer pixel density (default: 2).
-The CSS viewport and slide layout stay unchanged: a 2000 × 1120 slide produces
-4000 × 2240 JPEGs at scale 2, or 6000 × 3360 at scale 3.
-Higher scales increase pixel count quadratically.
+PDF and PPTX exports automatically reuse unchanged presentations. Use `--force`
+to regenerate them, including after changing remote resources at the same URL or
+system fonts. Deleting an export's output directory also clears its cache.
+Cache hits are reported in the terminal. A failed export does not replace that
+talk's previous completed file.
 
-### Exporting editable PowerPoint presentations
+### PDF
 
-Run `freya --only <talk-id> pptx` to create `pptx/<talk-id>.pptx` and
-`pptx/<talk-id>.pptx-report.json`. Use `-d, --directory <path>` to change the output
-directory. Each talk retains its aspect ratio on a 13⅓-inch-wide canvas, slide order,
-document title/author and speaker notes. Selected presentations are replaced only
-after their new PPTX has been written successfully.
+```bash
+npx freya --only my-talk pdf
+npx freya pdf --directory output --concurrency 2 --scale 3
+```
 
-The theme opts in with `data-pptx` attributes on its existing Preact markup:
+Each PDF contains one slide per page, preserving the slide dimensions and order,
+without speaker notes. Pages are images rather than editable text.
+
+- `-d, --directory <path>`: base output directory; PDFs go in its `pdf/` subdirectory. Default: `dist`.
+- `-c, --concurrency <number>`: maximum browsers and maximum tabs per browser. Default: `3`; a value of `3` permits up to nine simultaneous slides across talks.
+- `-s, --scale <number>`: positive integer image-density multiplier. Default: `2`. Higher values improve resolution but use more memory and produce larger images; page dimensions stay unchanged.
+- `--force`: regenerate selected PDFs even when cached.
+
+### PowerPoint
+
+```bash
+npx freya --only my-talk pptx
+npx freya pptx --directory output/pptx --concurrency 2
+```
+
+Text remains editable, SVGs remain vector images, and speaker notes are included.
+Freya preserves the slide order and aspect ratio. Some text is split into separate
+boxes to match the browser layout; complex CSS effects may not reproduce exactly.
+
+- `-d, --directory <path>`: output directory. Default: `pptx`.
+- `-c, --concurrency <number>`: maximum concurrent slide pages. Default: `4`.
+- `--force`: regenerate selected PPTXs even when cached.
+
+#### Theme support
+
+PPTX export requires `data-pptx` annotations in the theme's existing layouts:
 
 ```tsx
 <article className="freya@slide" data-pptx="group">
@@ -119,166 +182,79 @@ The theme opts in with `data-pptx` attributes on its existing Preact markup:
 </article>
 ```
 
-`group` includes descendants, allowing Freya to extract their native text, images,
-SVGs, fills and borders from the browser's computed layout. `text`, `image`, `svg`,
-`shape` and `code` identify semantic blocks; nested annotations do not duplicate
-objects. `ignore` excludes a subtree. Themes without any annotations fail with a
-talk/slide-specific error. Annotations do not change the HTML layout or CSS.
+`group` includes descendants. Use `text`, `image`, `svg`, `shape` and `code` for
+specific blocks, or `ignore` to exclude a subtree. Annotations do not change the
+HTML appearance. A theme without annotations cannot be exported to PPTX.
+Exported groups are independent objects, not PowerPoint groups; SVG paths are not
+converted to native PowerPoint shapes.
 
-This initial exporter prioritizes browser-measured line positions: text remains
-editable in line/style fragments rather than a single reflowing paragraph. Code
-tokens and line numbers remain text. Inline backgrounds and borders become native
-shapes. Groups currently produce independent objects, not PowerPoint groups.
-Raster images and CSS image backgrounds are embedded as cropped PNGs; inline SVGs
-and QR codes remain independent vector images, with local `<use>` references expanded.
-Each vector image also contains a Chromium-rendered PNG preview for viewers that
-use the compatibility representation. References to leaf SVG elements, including
-embedded raster images, are preserved. Text hyperlinks are attached to their text
-boxes so viewer hyperlink themes do not override CSS colors or underlining.
-Their paths are not converted to native PowerPoint shapes. No whole-slide screenshots
-are used.
+#### Fonts and Unicode
 
-Fonts are downloaded from Google Fonts using the families declared in Freya and
-the theme's `fonts.sources`. Export requires network access. The exporter requests
-complete static TrueType faces for the weights and styles used, measures text with
-those same faces in Chromium, and embeds them as EOT font parts in the PPTX. Font
-names and regular/bold/italic associations come from the downloaded font metadata,
-preserving distinct Light and ExtraBold faces. Fonts are not subset to slide text,
-so their other glyphs remain available when editing in compatible PowerPoint versions.
-Generic system font stacks resolve to the theme's default declared family and are
-reported. Emoji use embedded monochrome Google Noto Emoji. Missing faces, unsupported
-glyphs, or fonts that prohibit editable embedding fail the export. The JSON report
-also lists embedded faces, download URLs and sizes.
+PPTX generation needs network access to download the Google Fonts declared in
+Freya and the theme's `fonts.sources`. Fonts are embedded for editing in compatible
+PowerPoint versions, without requiring a local installation. Generic system font
+stacks use the theme's default declared family. Emoji use the viewer's system fonts
+and may look different across platforms.
 
-**Apple Keynote:** PPTX font embedding alone does not supply fonts to Keynote.
-Each export also writes `<talk>.pptx-fonts.zip`, containing the exact TrueType
-faces used, a font manifest and installation instructions. Extract the archive,
-install its `.ttf` files using macOS Font Book, restart Keynote and import the
-original PPTX again. A Keynote copy saved after font substitution may retain the
-substitutions. Freya does not install fonts automatically. Without locally
-available matching faces, Keynote can report missing fonts such as Montserrat
-Black and substitute lighter-looking text despite the embedded PPTX fonts.
+**Apple Keynote:** embedded PPTX fonts may not be available to Keynote. Install
+matching fonts locally to avoid missing-font substitutions.
 
-The report identifies fidelity limitations by slide ID and element, including
-unsupported CSS effects, generated pseudo-content, internal text clipping and
-per-object approximations of group opacity. Unsupported effects do not silently
-rasterize text. Validate the result visually in PowerPoint before relying on exact
-layout fidelity, especially for overlapping translucent objects and complex SVGs.
-
-All PPTX-specific code lives in `src/pptx.ts`. It uses the existing static HTML
-renderer and a separate Chromium session. Temporary HTML lives in an isolated
-`.pptx-*` directory under the destination and is removed on success or failure.
-The exporter does not use the PDF export's temporary files or output directories.
-
-### Preparing a talk with the service worker
-
-The initial HTML contains no loading text. Font files are preloaded, and the client
-explicitly loads the declared font faces before mounting, even when service workers
-are disabled. Failed fonts do not block mounting, and the wait is limited to 10 seconds.
-
-When service workers are enabled, the client then mounts and displays the
-theme's `layouts.loading` layout using the first slide's data, or the first slide's
-normal layout when no loading layout is configured. The requested URL is preserved
-and its slide is displayed once the worker finishes preparing the resource cache.
-Navigation, synchronization and client actions are disabled during loading, except
-for fullscreen toggling.
-
-Configure a loading layout in `theme.yml`, referencing a file in the theme's `layouts` directory:
+Unexpected invisible Unicode characters and visible characters missing from the
+selected font normally stop the export. To allow a particular slide to export:
 
 ```yaml
-layouts:
-  loading: loading
+options:
+  allowAllUnicodes: true
 ```
 
-Layouts can read `loaded: boolean` and `loadingProgress?: number` through `useClient()`.
-Progress is computed from processed resources, including failed attempts, as a
-percentage between 0 and 100 without rounding. An omitted progress value means
-completion (`loadingProgress ?? 100`). `loaded` becomes true on completion or when
-waiting is skipped; server rendering and exports also use `loaded: true`.
+This removes unwanted invisible characters from the exported text and lets the
+viewer choose a fallback for missing visible characters. Valid emoji sequences
+are preserved; YAML source files are not changed. Missing font faces or fonts
+that prohibit editable embedding still cause an error.
 
-The manifest includes resolved talk
-images and the font URLs declared by Freya and the theme. External font stylesheets
-also contribute their referenced files and imports. Global image preload tags are
-not emitted in talk HTML; only font preloads are retained.
+## Deployment
 
-The worker downloads resources sequentially, reuses its versioned cache, and allows
-up to 30 seconds per download. Failed resources do not prevent the talk from opening:
-normal rendering requests retry them through the network and cache successful responses.
-Completion therefore does not guarantee that every resource is available offline.
+```bash
+npx freya deploy
+npx freya --only my-talk deploy --concurrency 2
+npx freya deploy --no-pptx
+```
 
-The page sends a single `subscribe` message after obtaining its talk controller.
-The worker replies immediately with its current state, sends `progress` every second
-while preparing, and sends `completed` when all resources have been attempted.
-Both messages carry a `payload` containing `talk`, `version`, `total`, `processed`,
-`downloaded`, `cached`, and `failed` (an array of URLs). Discovering dependencies in
-external CSS may increase `total` during preparation. The client forwards matching
-messages as `freya:preload` window events, with the full message in `event.detail`.
+The deploy command prepares files for Netlify; it does not upload them. HTML, PDF
+and PPTX are enabled by default.
 
-Unsupported or disabled service workers and registration failures skip the wait.
-If no matching worker status arrives for 30 seconds, the page also proceeds normally;
-progress messages renew that deadline. Reopened pages subscribe again, and restarted
-workers reconstruct preparation from the existing cache.
+- `-d, --directory <path>`: base output directory. Default: `dist`.
+- `-p, --no-pdf`: exclude PDF generation and publication.
+- `-x, --no-pptx`: exclude PPTX generation and publication. Use both exclusions for HTML only.
+- `-c, --concurrency <number>`: apply the same concurrency value to PDF and PPTX. When omitted, each keeps its own default: PDF `3`, PPTX `4`.
+- `--force`: regenerate selected PDF and PPTX files instead of reusing cached output.
 
-### Creating pages and files
+Upload `dist/deploy/site/` using the generated `dist/deploy/netlify.toml` configuration.
+PDFs are published under `/pdfs` and PPTXs under `/pptx`. Only selected talks are
+included, whether newly generated or reused from cache. Cache files are not published.
+Configured Netlify functions are included in the deployment output.
 
-Simply create all file needed in the `build` function in `src/build/index.ts`. You can use any framework you want, the predefined one is React.
+## Environment variables
 
-We strongly recommend to use the `createFile` function exported from `dante` to create file as it will take care of replacing `$hash` in the file name with the actual file hash.
-
-The function must return an object containing the following properties:
-
-- `css`: A css to be injected in each generated HTML page.
-
-All properties can be (async) function that will be called for each page at runtime.
-
-### Customizing the server
-
-If you want to customize the local server, you can create a `setupServer` function in `src/build/server.ts`. The function will receive a fastify server instance and build context.
-
-The function can optionally return an object containing the following properties:
-
-- `directory`: A subdirectory in the dist folder to server HTML files from.
-
-### Exporting
-
-Once you have done editing, you should execute `dante build`. The website will be exported in the `dist` folder.
-
-### Adding commands to Dante
-
-You can create a file `src/build/cli.ts` that should export a `setupCLI` function.
-The function will received a [commander](https://npm.im/commander) program and a [pino](https://getpino.io) logger in order to modify the Dante CLI.
-
-### Customize `create-dante-site`
-
-You can create a file `src/build/create.ts` that should export a `createSetupCLI` function.
-The function will received a [commander](https://npm.im/commander) program and a [pino](https://getpino.io) logger in order to modify the Dante CLI.
-
-### Environments variables
-
-- `DANTE_BUILD_FILE_PATH`: The build file path. Default is `src/build/index.ts`.
-- `DANTE_SERVER_FILE_PATH`: The server file path. Default is `src/build/server.ts`.
-- `DANTE_CLI_PATH`: The CLI customization file path. Default is `src/build/cli.ts`.
-- `DANTE_CREATE_PATH`: The CLI customization file path. Default is `src/build/create.ts`.
-- `DANTE_WATCH_MODULES`: If to restart the process when the Dante files in the `node_modules` folder are changed.
-- `DANTE_WATCH_ADDITIONAL_PATHS`: Which additional paths to watch.
-- `DANTE_NODE_ADDITIONAL_OPTIONS`: Additional options to pass to the node executable.
-- `DANTE_PROGRAM_NAME`: The name to show when doing `dante --help`. This is mostly for NPM modules extending Dante.
-- `DANTE_PROGRAM_DESCRIPTION`: The name to show when doing `dante --help`. This is mostly for NPM modules extending Dante.
+- `FREYA_BUILD_VERSION`: fix the site version for reproducible builds and exports. Normally the version is generated automatically; change or unset a fixed version when publishing updated content.
+- `FREYA_WHITELIST`: comma-separated talk IDs, overriding `--only`.
+- `FREYA_ENABLE_SERVICE_WORKER=true`: enable offline preparation during development; production builds enable it by default.
+- `PUSHER_ENABLED=true`: enable Pusher synchronization. Requires `PUSHER_KEY`, `PUSHER_SECRET` and `PUSHER_CLUSTER`.
 
 ## ESM Only
 
-This package only supports to be directly imported in a ESM context.
+This package only supports direct imports in an ESM context.
 
-For informations on how to use it in a CommonJS context, please check [this page](https://gist.github.com/ShogunPanda/fe98fd23d77cdfb918010dbc42f4504d).
+For information on using it in a CommonJS context, please check [this page](https://gist.github.com/ShogunPanda/fe98fd23d77cdfb918010dbc42f4504d).
 
-## Contributing to dante
+## Contributing to freya
 
 - Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet.
 - Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it.
 - Fork the project.
 - Start a feature/bugfix branch.
 - Commit and push until you are happy with your contribution.
-- Make sure to add tests for it. This is important so I don't break it in a future version unintentionally.
+- Make sure to add tests for it. This is important so existing functionality isn't broken unintentionally.
 
 ## Copyright
 

@@ -1,6 +1,7 @@
 {
   "extends": "@cowtech/typescript-config",
   "compilerOptions": {
+    "declaration": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "jsx": "react-jsx",

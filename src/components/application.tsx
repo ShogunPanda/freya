@@ -433,7 +433,21 @@ if (globalThis.document) {
   // eslint-disable-next-line camelcase
   const layouts = __replace_placeholder_layouts__
 
-  document.addEventListener('DOMContentLoaded', async () => {
+  async function mountApplication(): Promise<void> {
+    const url = new URL(window.location.href)
+    const talkPath = `/${context.id}`
+    if (
+      !context.isExporting &&
+      context.talk.slidesCount > 0 &&
+      (url.pathname === talkPath || url.pathname === `${talkPath}/`)
+    ) {
+      // The bare talk URL is outside /<talk>/sw.js's scope. Navigate before mounting
+      // so loading never waits for a worker that cannot control the current document.
+      url.pathname = `${talkPath}/${'1'.padStart(context.talk.slidesPadding, '0')}`
+      window.location.replace(url.href)
+      return
+    }
+
     await prepareFonts()
     document.body.classList.remove('freya@loading')
 
@@ -443,5 +457,11 @@ if (globalThis.document) {
       </LayoutContext.Provider>,
       document.body
     )
-  })
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', mountApplication, { once: true })
+  } else {
+    mountApplication()
+  }
 }

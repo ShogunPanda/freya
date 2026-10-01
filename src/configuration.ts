@@ -50,6 +50,9 @@ export function isServiceWorkerEnabled(context: BuildContext): boolean {
 }
 
 export const freyaDir = resolve(fileURLToPath(import.meta.url), '../..')
+if (process.env.FREYA_BUILD_VERSION !== undefined) {
+  process.env.DANTE_BUILD_VERSION = process.env.FREYA_BUILD_VERSION
+}
 export let whitelistedTalks: string[]
 export const pusherConfig = loadPusherSettings()
 setWhitelistedTalks('')
