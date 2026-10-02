@@ -1,6 +1,8 @@
 ---
-style: style.css
-images:
+style: theme.css
+urls: {}
 fonts:
-  ranges:
-  families:
+  sources: {}
+  urls: []
+  ranges: {}
+  families: {}

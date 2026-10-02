@@ -20,16 +20,18 @@
   "scripts": {
     "dev": "freya development",
     "build": "freya build",
-    "postbuild": "npm run lint && npm run npm:lint:css && tsc -p . --noEmit",
-    "serve": "freya server",
-    "png": "freya png",
+    "postbuild": "npm run lint && npm run lint:css && tsc -p . --noEmit",
+    "server": "freya server",
     "pdf": "freya pdf",
+    "pptx": "freya pptx",
+    "deploy": "freya deploy",
     "format": "prettier -w src",
     "lint": "eslint --cache",
     "lint:css": "stylelint --cache src/**/*.css"
   },
   "dependencies": {
-    "@perseveranza-pets/freya": "^@VERSION@"
+    "@perseveranza-pets/freya": "^@VERSION@",
+    "preact": "^11.0.0"
   },
   "devDependencies": {
     "@cowtech/eslint-config": "^11.0.0",

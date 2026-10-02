@@ -81,10 +81,10 @@ function Application({ context }: { context: ClientContextModel } & RoutableProp
   const [isControlling, setIsControlling] = useState(window?.matchMedia('(hover: none)')?.matches)
   const [presentationDuration, setPresentationDuration] = useState(0)
   const [presentationPaused, setPresentationPaused] = useState(true)
-  const localChannel = useRef<BroadcastChannel>()
-  const remoteChannel = useRef<Channel>()
+  const localChannel = useRef<BroadcastChannel | undefined>(undefined)
+  const remoteChannel = useRef<Channel | undefined>(undefined)
   // @ts-expect-error Invalid handling of moduleResolution
-  const pusher = useRef<Pusher>()
+  const pusher = useRef<Pusher | undefined>(undefined)
 
   const slide = typeof index === 'number' ? slides[index - 1] : undefined
 

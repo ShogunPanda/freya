@@ -28,6 +28,14 @@
 
 - Freya's CLI wrappers select its own build/server/CLI entry points. Do not describe
   a generic Dante site scaffold as the Freya installation workflow.
+- Keep the slideset scaffold aligned with the current renderer: `theme.css`, complete
+  empty font collections, common assets directory and a default-exported layout
+  importing browser APIs from `/client`. Its layout includes PPTX annotations.
+- Follow the real talks' structure with shared `talks/common.yml` metadata,
+  a theme `SlideWrapper` and a shared Markdown `Text` component. Hide progress
+  during exports through `isExporting`.
+- Verify scaffolding into both a new directory and an existing empty directory,
+  then install and build the generated project using the local Freya package.
 - Dante's extension points include `build` in `src/build/index.ts`, `setupServer`
   in `src/build/server.ts`, `setupCLI` in `src/build/cli.ts` and `createSetupCLI`
   in `src/build/create.ts` in the consuming project. Preserve compatibility when
@@ -186,6 +194,11 @@
 
 ## Verification
 
+- Keep TypeScript 7's compiler installed as `@typescript/native` and the TypeScript 6
+  compatibility API aliased as `typescript` for typescript-eslint. Builds use `tsc`;
+  lint tooling imports `typescript` because TypeScript 7 does not expose that API.
+- Wrap the Cowtech ESLint preset with `@eslint/compat` while its legacy plugins
+  depend on rule APIs removed in ESLint 10.
 - `npm test` is a placeholder, not evidence of verification. The cache regression
   suite is `node --test test/export-cache.test.ts`.
 - For exporter changes, fix `FREYA_BUILD_VERSION` and keep talk/theme/assets unchanged

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-import type { Command } from 'commander'
+import type { Command, Option } from 'commander'
 import type { Logger } from 'pino'
+import { EventEmitter } from 'node:events'
 import { readFileSync } from 'node:fs'
 import { mkdir, readdir, writeFile } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'
@@ -13,12 +14,14 @@ import { readFile } from './fs.ts'
 const packageInfo = JSON.parse(readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8'))
 
 const templates = {
+  'src/talks/common.yml': 'common.yml',
   'src/talks/@NAME@/info.yml': 'info.yml',
   'src/talks/@NAME@/slides.yml': 'slides.yml',
   'src/themes/main/theme.yml': 'theme.yml',
-  'src/themes/main/classes.css': 'classes.css',
-  'src/themes/main/style.css': 'style.css',
+  'src/themes/main/theme.css': 'theme.css',
   'src/themes/main/layouts/default.tsx': 'layout.tsx',
+  'src/themes/main/components/common.tsx': 'slide-wrapper.tsx',
+  'src/themes/common/components/common.tsx': 'text.tsx',
   'eslint.config.js': 'eslint.config.js',
   '.stylelintrc.json': 'stylelintrc.json',
   'package.json': 'package.json',
@@ -40,7 +43,7 @@ export async function initializeSlideset(name: string, directory: string): Promi
   try {
     const files = await readdir(fullOutput)
 
-    if (files.filter(f => !f.startsWith('.'))) {
+    if (files.some(f => !f.startsWith('.'))) {
       logger.error(`Directory ${relative(rootDir, directory)} is not empty. Aborting.`)
       process.exit(1)
     }
@@ -62,8 +65,11 @@ export async function initializeSlideset(name: string, directory: string): Promi
   await mkdir(resolve(fullOutput, `src/talks/${name}/assets`), { recursive: true })
 
   // Create the structure for the theme
+  await mkdir(resolve(fullOutput, 'src/themes/common/assets/'), { recursive: true })
+  await mkdir(resolve(fullOutput, 'src/themes/common/components/'), { recursive: true })
   await mkdir(resolve(fullOutput, 'src/themes/main/assets/'), { recursive: true })
   await mkdir(resolve(fullOutput, 'src/themes/main/layouts/'), { recursive: true })
+  await mkdir(resolve(fullOutput, 'src/themes/main/components/'), { recursive: true })
 
   const variables = {
     NAME: name,
@@ -76,11 +82,19 @@ export async function initializeSlideset(name: string, directory: string): Promi
 
     logger.info(`Creating file ${relative(fullOutput, destination)} ...`)
     const template = await readFile(new URL(`./assets/create/${templateFile}.tpl`, import.meta.url))
-    await writeFile(destination, compile(template.trim(), variables), 'utf8')
+    await writeFile(destination, compile(template.trim(), variables) + '\n', 'utf8')
   }
 }
 
 export function createSetupCLI(program: Command, logger: Logger): void {
+  // Commander exposes no removal API, but Dante has already registered its version.
+  const options = program.options as Option[]
+  const versionIndex = options.findIndex(option => option.long === '--version')
+  if (versionIndex !== -1) {
+    options.splice(versionIndex, 1)
+    EventEmitter.prototype.removeAllListeners.call(program, 'option:version')
+  }
+
   program
     .name('create-freya-slideset')
     .description('Initializes a freya slideset.')

@@ -1,17 +1,20 @@
-import { Progress, cleanCssClasses, useClient, useSlide, type Slide, type SlideProps } from '@perseveranza-pets/freya'
-import { type VNode } from 'preact'
+import type { Slide, SlideProps } from '@perseveranza-pets/freya/client'
+import type { VNode } from 'preact'
+import { cleanCssClasses, useSlide } from '@perseveranza-pets/freya/client'
+import { Text } from '../../common/components/common.tsx'
+import { SlideWrapper } from '../components/common.tsx'
 
-export function DefaultLayout({ className }: SlideProps<Slide>): VNode {
+export default function DefaultLayout({ className, style }: SlideProps): VNode {
   const {
-    slide: { title, content },
-    index
-  } = useSlide()
+    slide: { title, content }
+  } = useSlide<Slide>()
 
   return (
-    <article className={cleanCssClasses('freya@slide', className)}>
-      <h1>{title}</h1>
-      <p>{content}</p>
-      <Progress />
-    </article>
+    <SlideWrapper className={cleanCssClasses('theme@default', className)} style={style}>
+      <h1><Text text={title} /></h1>
+      {(content ?? []).map((paragraph: string, index: number) => (
+        <p key={index}><Text text={paragraph} /></p>
+      ))}
+    </SlideWrapper>
   )
 }

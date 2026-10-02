@@ -10,7 +10,6 @@ import { glob } from 'glob'
 import markdownIt from 'markdown-it'
 import { render } from 'preact-render-to-string'
 import { rolldown } from 'rolldown'
-import { replacePlugin } from 'rolldown/plugins'
 import { generateSVGId } from '../components/svg.tsx'
 import { isServiceWorkerEnabled, pusherConfig } from '../configuration.ts'
 import { resolveSVG } from '../rendering/svg.tsx'
@@ -87,6 +86,9 @@ export const markdownRenderer = markdownIt({
   breaks: true,
   linkify: true
 })
+
+// Preserve automatic links for bare domains, disabled by default in markdown-it 15.
+markdownRenderer.linkify.set({ fuzzyLink: true })
 
 export async function listThemeAndTalkImages(theme: string, talk: string): Promise<[string[], string[], string[]]> {
   // Keep preload and offline manifests in sync with the configurable resolution formats.
@@ -264,8 +266,15 @@ export async function generateApplicationScript(
     return `import { default as ${id}Layout } from "${path}"`
   })
 
+  const applicationPath = fileURLToPath(new URL('../components/application.js', import.meta.url))
+  const replacements: Record<string, string> = {
+    __replace_placeholder_context__: JSON.stringify(clientContext, null, 2),
+    __replace_placeholder_layouts__: `{${layouts.join(', ')}}`,
+    __replace_placeholder_imports__: imports.join('\n')
+  }
+
   const bundled = await rolldown({
-    input: fileURLToPath(new URL('../components/application.js', import.meta.url)),
+    input: applicationPath,
     treeshake: true,
     platform: 'browser',
     transform: {
@@ -274,20 +283,21 @@ export async function generateApplicationScript(
       }
     },
     plugins: [
-      replacePlugin(
-        {
-          __replace_placeholder_context__: JSON.stringify(clientContext, null, 2),
-          __replace_placeholder_layouts__: `{${layouts.join(', ')}}`,
-          __replace_placeholder_imports__: imports.join('\n')
-        },
-        {
-          preventAssignment: false
+      {
+        name: 'freya-application-placeholders',
+        transform(code: string, id: string) {
+          // Shared imports can reach this generator; replace placeholders only in the application template.
+          if (id !== applicationPath) {
+            return
+          }
+
+          return code.replace(/__replace_placeholder_(?:context|layouts|imports)__/g, key => replacements[key])
         }
-      )
+      }
     ]
   })
 
-  const generated = await bundled.generate({ format: 'esm', minify: true, legalComments: 'none' })
+  const generated = await bundled.generate({ format: 'esm', minify: true, comments: { legal: false } })
   return generated.output[0].code
 }
 

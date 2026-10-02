@@ -1,8 +1,8 @@
-import type { JSX, VNode } from 'preact'
+import type { SVGAttributes, VNode } from 'preact'
 import { useClient } from './contexts.tsx'
 import { cleanCssClasses } from './styling.ts'
 
-interface SvgProps extends JSX.SVGAttributes<SVGSVGElement> {
+interface SvgProps extends SVGAttributes<SVGSVGElement> {
   src: string
   className?: string
 }
@@ -36,7 +36,7 @@ export function generateSVGId(start: number): string {
   return `svg:${name}`
 }
 
-export function normalizeSVGProps(props: Record<string, string | undefined>): JSX.SVGAttributes<SVGSVGElement> {
+export function normalizeSVGProps(props: Record<string, string | undefined>): SVGAttributes<SVGSVGElement> {
   const {
     viewBox,
     version,
@@ -55,8 +55,8 @@ export function normalizeSVGProps(props: Record<string, string | undefined>): JS
     version,
     stroke,
     strokeWidth,
-    strokeLinecap: strokeLinecap as JSX.SVGAttributes<SVGSVGElement>['strokeLinecap'],
-    strokeLinejoin: strokeLinejoin as JSX.SVGAttributes<SVGSVGElement>['strokeLinejoin'],
+    strokeLinecap: strokeLinecap as SVGAttributes<SVGSVGElement>['strokeLinecap'],
+    strokeLinejoin: strokeLinejoin as SVGAttributes<SVGSVGElement>['strokeLinejoin'],
     fill,
     style: Object.fromEntries(
       (rawStyle ?? '')
@@ -102,7 +102,7 @@ export function Svg({ src: path, className, ...props }: SvgProps): VNode {
   )
 }
 
-export function SvgCloseIcon(props: JSX.SVGAttributes<SVGSVGElement>): VNode {
+export function SvgCloseIcon(props: SVGAttributes<SVGSVGElement>): VNode {
   return (
     <svg
       {...props}

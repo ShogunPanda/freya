@@ -1,12 +1,5 @@
 ---
-config:
-  theme: main
-  dimensions:
-    width: 2000
-    height: 1120
+config: common.config
 document:
-  title:
-  author:
-    name:
-    description:
-    email:
+  title: '@NAME@'
+  author: common.author
