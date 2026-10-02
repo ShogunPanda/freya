@@ -48,7 +48,7 @@
     "@fastify/formbody": "^9.0.0",
     "@fortawesome/free-brands-svg-icons": "^7.3.1",
     "@fortawesome/free-solid-svg-icons": "^7.3.1",
-    "@perseveranza-pets/dante": "^2.1.0",
+    "@perseveranza-pets/dante": "^2.1.2",
     "commander": "^15.0.0",
     "fastify": "^5.12.5",
     "glob": "^13.0.6",
