@@ -1,3 +1,9 @@
+### 2026-10-01 / 1.0.0
+
+- feat: Added pptx exporting.
+- feat: Totally rewritten export system.
+- feat: Added loading indication.
+
 ### 2026-09-25 / 0.78.0
 
 - feat: Dynamic image extension resolving.
