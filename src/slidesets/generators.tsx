@@ -141,7 +141,10 @@ export async function ensureRenderedCode(
   code: CodeDefinition,
   exportingFormat: ClientContext['exportingFormat'] = 'html'
 ): Promise<void> {
-  if (!code || (code.rendered && (!renderedCodeFormats.has(code) || renderedCodeFormats.get(code) === exportingFormat))) {
+  if (
+    !code ||
+    (code.rendered && (!renderedCodeFormats.has(code) || renderedCodeFormats.get(code) === exportingFormat))
+  ) {
     return
   }
 

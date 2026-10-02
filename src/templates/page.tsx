@@ -17,7 +17,16 @@ interface PageProps {
   exporting?: boolean
 }
 
-export function page({ theme, talk, js, title, body = '', bodyClassName, fontUrls = [], exporting = false }: PageProps): VNode {
+export function page({
+  theme,
+  talk,
+  js,
+  title,
+  body = '',
+  bodyClassName,
+  fontUrls = [],
+  exporting = false
+}: PageProps): VNode {
   const { id } = theme
 
   const faviconImageUrl = resolveImageUrl({}, id, talk.id, '@theme/favicon.webp', exporting)
