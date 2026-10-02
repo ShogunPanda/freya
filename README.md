@@ -58,6 +58,36 @@ Use `--only` to select talks, or omit it to include all talks:
 npx freya --only my-talk,another-talk build
 ```
 
+### Custom commands
+
+Create `src/build/cli.ts` (or `src/build/cli.js`) exporting a `setupCLI` function:
+
+```ts
+import type { SetupCLI } from '@perseveranza-pets/freya'
+
+export const setupCLI: SetupCLI = (program, logger) => {
+  program
+    .command('hello')
+    .description('Run a custom command')
+    .action(() => {
+      logger.info('Hello!')
+    })
+}
+```
+
+Freya calls this hook after registering Dante's and its own commands, using the same
+Commander program and Pino logger. The hook can add commands, customize existing
+commands and options, and be asynchronous; it is awaited before argument parsing.
+This requires a Dante version that awaits asynchronous CLI hooks.
+
+Set `FREYA_CLI_PATH` to load a different file, resolved from the project's root.
+Otherwise, Freya checks `src/build/cli.ts` before `src/build/cli.js`. Projects without
+a CLI customization file continue to use the standard commands.
+
+Freya also re-exports Commander's types, including `Command` and `Option`, so projects
+can import them with `import type` from `@perseveranza-pets/freya` without declaring
+a direct Commander dependency. These exports are types only, not runtime constructors.
+
 ### Slides
 
 Configure the theme, slide dimensions and document metadata in `info.yml`:

@@ -1,3 +1,4 @@
+export type * from 'commander'
 export * from './build.ts'
 export * from './cli.ts'
 export * from './components/index.ts'

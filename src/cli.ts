@@ -1,10 +1,15 @@
 import type { Command } from 'commander'
 import type pino from 'pino'
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { InvalidArgumentError } from 'commander'
 import { setWhitelistedTalks } from './configuration.ts'
 import { deploy } from './exports/deploy.ts'
 import { performPDF } from './exports/pdf.ts'
 import { exportPptx } from './exports/pptx.ts'
+
+export type SetupCLI = (program: Command, logger: pino.Logger) => void | Promise<void>
 
 function concurrency(value: string): number {
   const parsed = Number(value)
@@ -14,7 +19,7 @@ function concurrency(value: string): number {
   return parsed
 }
 
-export function setupCLI(program: Command, logger: pino.Logger): void {
+export async function setupCLI(program: Command, logger: pino.Logger): Promise<void> {
   program
     .name('freya')
     .description('Opinionated JSX based slides generator.')
@@ -90,4 +95,17 @@ export function setupCLI(program: Command, logger: pino.Logger): void {
         process.exitCode = 1
       }
     })
+
+  // Run the project's hook after all inherited and Freya commands are registered.
+  const cliPath = process.env.FREYA_CLI_PATH
+    ? resolve(process.cwd(), process.env.FREYA_CLI_PATH)
+    : ['src/build/cli.ts', 'src/build/cli.js'].map(path => resolve(process.cwd(), path)).find(path => existsSync(path))
+
+  if (cliPath) {
+    const imported = await import(pathToFileURL(cliPath).href)
+    const siteSetupCLI: SetupCLI | undefined = imported.setupCLI
+    if (siteSetupCLI) {
+      await siteSetupCLI(program, logger)
+    }
+  }
 }

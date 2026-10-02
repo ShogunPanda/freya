@@ -19,6 +19,13 @@
 - `src/exports/deploy.ts` orchestrates HTML/PDF/PPTX and publishes selected artifacts.
 - `src/exports/cache.ts` is the shared PDF/PPTX fingerprint and manifest implementation.
 - `src/cli.ts` declares commands/options and delegates orchestration to these modules.
+- Freya's asynchronous `setupCLI` registers its commands before loading the consuming
+  project's `setupCLI`, passing the same Commander program and Pino logger. Resolve
+  `FREYA_CLI_PATH` from the working directory when set; otherwise prefer
+  `src/build/cli.ts` over `src/build/cli.js`. Await the project hook before returning.
+- This integration requires Dante to await its CLI hook before parsing arguments.
+  Keep the public `SetupCLI` type and type-only Commander re-exports available from
+  Freya so consuming projects do not need a direct Commander dependency.
 - `src/configuration.ts` forwards `FREYA_BUILD_VERSION` to `DANTE_BUILD_VERSION` before
   build contexts are created. The Freya variable takes precedence when present.
 
