@@ -1,3 +1,7 @@
+### 2026-10-02 / 1.1.0
+
+- feat: Allow setupCLI support.
+
 ### 2026-10-01 / 1.0.0
 
 - feat: Added pptx exporting.
