@@ -9,19 +9,29 @@ https://sw.cowtech.it/freya
 
 ## Installation
 
-Create a presentation project:
+Require **Node.js >=24.22.0** and an ESM project (`"type": "module"`). Freya uses Dante ^3.1.0.
+
+Print the complete agent skill to create or maintain a presentation project:
 
 ```bash
-npx --package=@perseveranza-pets/freya -- create-freya-slideset my-talk
-cd my-talk
-npm install
-npm run dev
+npx @perseveranza-pets/freya skills
 ```
 
-To add Freya to an existing project:
+Or install the skill through [skills.sh](https://skills.sh):
 
 ```bash
-npm install @perseveranza-pets/freya
+npx skills add ShogunPanda/freya --skill freya
+```
+
+[SKILL.md](./SKILL.md) contains the complete Preact/YAML scaffold, reusable components,
+tooling configurations, and maintenance workflow. The `create-freya-slideset` executable
+and bundled scaffolding templates have been removed. Ask your agent to use the skill,
+or create the documented files yourself. The skill command only prints instructions.
+
+To add Freya to an existing presentation project:
+
+```bash
+npm install @perseveranza-pets/freya preact
 ```
 
 ## Usage
@@ -32,17 +42,28 @@ contain multiple talks sharing the same themes and assets.
 ```text
 src/
   talks/
+    common.yml
     my-talk/
       info.yml
       slides.yml
       assets/
   themes/
+    common/
+      assets/
+      components/common.tsx
     main/
       theme.yml
-      style.css
+      theme.css
       layouts/
+        default.tsx
+      components/common.tsx
       assets/
 ```
+
+Create `src/themes/common/assets` even when empty: the builder copies it. Layouts
+default-export Preact components; use shared Markdown text and slide wrapper components
+as shown in the skill. Freya supplies its own build and server, so a project does not
+need a generic Dante build entry point.
 
 Run commands from the presentation project's root:
 
@@ -57,6 +78,34 @@ Use `--only` to select talks, or omit it to include all talks:
 ```bash
 npx freya --only my-talk,another-talk build
 ```
+
+### Commands and skills
+
+| Command               | Aliases      | Purpose                                                        |
+| --------------------- | ------------ | -------------------------------------------------------------- |
+| `freya development`   | `dev`, `d`   | Build, watch `src`, and serve with live reload                 |
+| `freya build`         | `b`          | Generate interactive HTML                                      |
+| `freya server`        | `serve`, `s` | Serve existing output                                          |
+| `freya pdf`           | `p`          | Export screenshot PDFs                                         |
+| `freya pptx`          | `x`          | Export editable PowerPoint presentations                       |
+| `freya deploy`        | `y`          | Stage Netlify HTML/PDF/PPTX output                             |
+| `freya font <url...>` | `f`          | Print font metadata as YAML and CSS; `--ranges` filters ranges |
+| `freya skills [name]` |              | Print an agent skill                                           |
+
+```bash
+freya skills         # Freya (default)
+freya skills freya   # Freya explicitly
+freya skills dante   # Underlying Dante engine
+freya skills --list  # Both registered IDs
+```
+
+Skills are printed without headers. All commands run the normal CLI hooks, including
+skill commands; an invalid project hook prevents execution. `--help` shows command
+options. Development and server accept `--ip` (default `0.0.0.0`) and `--port`
+(default `4200`). Server accepts `--directory` for the output base and serves its
+`html` subdirectory. The interactive builder currently writes to project `dist/html`
+even when Dante's inherited `--directory` option is supplied; use the default for
+build/development. Export commands use their own documented directory options.
 
 ### Custom commands
 
@@ -78,7 +127,7 @@ export const setupCLI: SetupCLI = (program, logger) => {
 Freya calls this hook after registering Dante's and its own commands, using the same
 Commander program and Pino logger. The hook can add commands, customize existing
 commands and options, and be asynchronous; it is awaited before argument parsing.
-This requires a Dante version that awaits asynchronous CLI hooks.
+Freya uses Dante's public launcher and asynchronous CLI integration.
 
 Set `FREYA_CLI_PATH` to load a different file, resolved from the project's root.
 Otherwise, Freya checks `src/build/cli.ts` before `src/build/cli.js`. Projects without
@@ -87,6 +136,24 @@ a CLI customization file continue to use the standard commands.
 Freya also re-exports Commander's types, including `Command` and `Option`, so projects
 can import them with `import type` from `@perseveranza-pets/freya` without declaring
 a direct Commander dependency. These exports are types only, not runtime constructors.
+
+### Development lifecycle
+
+The Node entry point passes Freya's CLI/build/server modules to Dante's launcher.
+Dante preloads TSX, loads CLI extensions, and lets Commander parse all options before
+enabling watch from the development action. Arguments containing spaces are preserved;
+global options can precede the command, e.g. `freya --only my-talk dev`.
+
+```ts
+import { developmentServerActive } from '@perseveranza-pets/freya'
+```
+
+This boolean is available at import time and during `setupCLI` and `preAction`.
+It is `false` in the initial bootstrap, then `true` in the watched development runtime.
+CLI modules and hooks therefore execute in both phases; register commands/options
+unconditionally and gate development-only side effects when needed. Other commands
+remain `false`. `true` does not mean the HTTP server is already listening. Freya's
+talk-selection hook is safe to repeat. Watch restarts also reconstruct the CLI.
 
 ### Slides
 
@@ -106,6 +173,16 @@ document:
 
 Define slides in `slides.yml`, using the layouts and fields supported by your theme.
 The legacy single-file `talk.yml` format is also supported.
+
+Multiple slides in `slides.yml` are YAML documents separated by `---`. The legacy
+format instead uses a `slides` array alongside `config` and `document`. Layout names
+select files in the theme's `layouts` directory; omitted names use `default`.
+Content fields are theme-defined; a string `content` is normalized into an array.
+Use `notes` for speaker notes.
+
+Shared values can live in `src/talks/common.yml`: `config: common.config` selects its
+entire `config` object, and document values such as `author: common.author` reference
+top-level shared entries. These are specific supported references, not general interpolation.
 
 Set `disabled: true` on a slide to exclude it from the presentation and all exports:
 
@@ -155,6 +232,26 @@ Without a loading layout, Freya uses the first slide's normal layout. Theme
 components can read `loaded: boolean` and `loadingProgress?: number` through
 `useClient()`. Progress is a percentage between 0 and 100 when available; it can be
 absent during the initial wait. Use `loaded` to determine whether loading is over.
+
+## Theme configuration and public APIs
+
+`theme.yml` selects `style: theme.css` and supplies `urls`, optional `layouts.loading`,
+optional `preloadImages`, and `fonts`. Even an empty font collection should contain
+`sources: {}`, `urls: []`, `ranges: {}`, and `families: {}`.
+
+Browser-facing layouts import from `@perseveranza-pets/freya/client`, which keeps
+server-only dependencies out of browser bundles:
+
+- `useSlide()` provides the current slide and index; `Slide`, `SlideProps` and
+  `SlideRenderer` describe theme data/renderers.
+- `useClient()` provides talk/theme data, content/image helpers, `loaded`, optional
+  `loadingProgress`, `isProduction`, `isExporting`, and `exportingFormat`.
+- `Image`, `SVG`, `Code`, `QR`, `Progress`, navigation and presenter components support
+  reusable layouts; `cleanCssClasses` combines conditional class names.
+- Hide interactive progress/navigation during exports using `isExporting`.
+
+Use the package root for server-side build/rendering/loaders, CLI types, and
+`developmentServerActive`. Do not import the root into browser components.
 
 ## Exporting
 
@@ -267,9 +364,20 @@ Configured Netlify functions are included in the deployment output.
 ## Environment variables
 
 - `FREYA_BUILD_VERSION`: fix the site version for reproducible builds and exports. Normally the version is generated automatically; change or unset a fixed version when publishing updated content.
+- `FREYA_CLI_PATH`: override the consuming project's CLI hook, relative to the working directory or absolute.
 - `FREYA_WHITELIST`: comma-separated talk IDs, overriding `--only`.
 - `FREYA_ENABLE_SERVICE_WORKER=true`: enable offline preparation during development; production builds enable it by default.
 - `PUSHER_ENABLED=true`: enable Pusher synchronization. Requires `PUSHER_KEY`, `PUSHER_SECRET` and `PUSHER_CLUSTER`.
+- `NODE_OPTIONS`: standard Node startup flags, inherited through the launcher.
+- `DANTE_WATCH_ADDITIONAL_PATHS`: comma-separated additional development watch paths.
+- `DANTE_WATCH_MODULES`: when nonempty, watch the installed Dante module. To watch Freya itself, add its path through `DANTE_WATCH_ADDITIONAL_PATHS`.
+- `DANTE_NODE_ADDITIONAL_OPTIONS`: legacy extra Node flags; prefer `NODE_OPTIONS`.
+
+The launcher explicitly sets Freya's CLI/build/server modules; `DANTE_CLI_PATH`,
+`DANTE_BUILD_FILE_PATH`, and `DANTE_SERVER_FILE_PATH` do not override those choices.
+Use `FREYA_CLI_PATH` for project CLI extensions. Freya does not chain project
+`src/build/index.ts` or `src/build/server.ts` hooks. The removed scaffolder no longer
+uses `DANTE_CREATE_PATH`.
 
 ## ESM Only
 
@@ -284,7 +392,8 @@ For information on using it in a CommonJS context, please check [this page](http
 - Fork the project.
 - Start a feature/bugfix branch.
 - Commit and push until you are happy with your contribution.
-- Make sure to add tests for it. This is important so existing functionality isn't broken unintentionally.
+- Run `pnpm run build` for TypeScript compilation, ESLint and Stylelint. Use targeted manual checks for changed behavior; `npm test` is currently a placeholder.
+- Read [SKILL.md](./SKILL.md) for maintenance invariants and the scaffolding workflow. Keep it synchronized with the README and implementation; do not add automated tests.
 
 ## Copyright
 

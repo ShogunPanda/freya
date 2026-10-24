@@ -1,5 +1,21 @@
-#!/bin/bash
+#!/usr/bin/env node
 
-ROOT=$(dirname $(realpath $0))
-PATH=$ROOT:$ROOT/../node_modules/@perseveranza-pets/dante/bin:$ROOT/../../dante/bin:$PATH
-DANTE_CLI_PATH=$ROOT/../dist/cli.js DANTE_BUILD_FILE_PATH=$ROOT/../dist/build.js DANTE_SERVER_FILE_PATH=$ROOT/../dist/server.js dante $@
+import { fileURLToPath } from 'node:url'
+import { launch } from '@perseveranza-pets/dante/launcher'
+
+try {
+  await launch({
+    cli: new URL('../dist/cli.js', import.meta.url),
+    build: new URL('../dist/build.js', import.meta.url),
+    server: new URL('../dist/server.js', import.meta.url),
+    skills: {
+      default: 'freya',
+      files: {
+        freya: fileURLToPath(new URL('../SKILL.md', import.meta.url))
+      }
+    }
+  })
+} catch (error) {
+  console.error(error)
+  process.exitCode = 1
+}
