@@ -1,3 +1,7 @@
+### 2026-11-02 / 2.1.0
+
+- feat: Exposed Preact entry points for consumers.
+
 ### 2026-11-02 / 2.0.0
 
 - feat!: Enabled project-owned system pages and configurable theme styling.
