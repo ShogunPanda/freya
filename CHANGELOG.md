@@ -1,3 +1,7 @@
+### 2026-11-02 / 2.2.1
+
+- fix: Honored inherited JSX runtime configuration in application builds.
+
 ### 2026-11-02 / 2.1.0
 
 - feat: Exposed Preact entry points for consumers.
