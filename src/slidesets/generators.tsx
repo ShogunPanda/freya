@@ -6,6 +6,7 @@ import { hostname } from 'node:os'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { cleanCssClasses, elapsed, renderCode, rootDir, sanitizeTabularOutputSnippet } from '@perseveranza-pets/dante'
+import { getTsconfig } from 'get-tsconfig'
 import { glob } from 'glob'
 import markdownIt from 'markdown-it'
 import { render } from 'preact-render-to-string'
@@ -24,6 +25,7 @@ interface Path {
 }
 
 const codeCache = new Map<string, string>()
+const tsconfigCache = new Map<string, unknown>()
 const renderedCodeFormats = new WeakMap<CodeDefinition, ClientContext['exportingFormat']>()
 
 const ignore: IgnoreLike = {
@@ -292,15 +294,13 @@ export async function generateApplicationScript(
     __replace_placeholder_imports__: imports.join('\n')
   }
 
+  // Let Rolldown read the configured runtime without an explicit override.
+  const jsxImportSource = getTsconfig(rootDir, 'tsconfig.json', tsconfigCache)?.config.compilerOptions?.jsxImportSource
   const bundled = await rolldown({
     input: applicationPath,
     treeshake: true,
     platform: 'browser',
-    transform: {
-      jsx: {
-        importSource: '@perseveranza-pets/freya/preact'
-      }
-    },
+    transform: jsxImportSource == null ? { jsx: { importSource: '@perseveranza-pets/freya/preact' } } : undefined,
     plugins: [
       {
         name: 'freya-application-placeholders',

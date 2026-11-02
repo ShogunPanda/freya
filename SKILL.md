@@ -387,7 +387,13 @@ The former `@#` filesystem prefix is no longer supported.
 Freya's `/preact`, `/preact/hooks`, `/preact/jsx-runtime` and `/preact/jsx-dev-runtime`
 entry points forward its own Preact APIs and types without importing server code.
 Use `jsxImportSource: '@perseveranza-pets/freya/preact'` in consumer projects; the
-browser bundler uses the same source. Migrate direct imports and JSX configuration
+browser bundler delegates JSX configuration to Rolldown when the project's tsconfig
+defines `jsxImportSource`, including inherited settings through `extends`. Otherwise,
+Freya sets the bundler's fallback to `@perseveranza-pets/freya/preact`. Declare the
+runtime in the project tsconfig when using different settings in nested configs,
+so that the global fallback does not override them.
+Configuration lookups are cached for the process lifetime; restart development after
+changing the tsconfig. Migrate direct imports and JSX configuration
 before removing consumer Preact dependencies. Keep these entry points as lightweight
 re-exports, with JSX namespaces preserved in generated declarations.
 

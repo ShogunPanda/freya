@@ -57,6 +57,7 @@
     "@perseveranza-pets/dante": "^3.2.0",
     "commander": "^15.0.0",
     "fastify": "^5.12.5",
+    "get-tsconfig": "^4.14.3",
     "glob": "^13.0.6",
     "http-errors-enhanced": "^5.0.1",
     "js-yaml": "^5.4.2",
