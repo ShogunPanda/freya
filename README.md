@@ -31,8 +31,37 @@ or create the documented files yourself. The skill command only prints instructi
 To add Freya to an existing presentation project:
 
 ```bash
-npm install @perseveranza-pets/freya preact
+npm install @perseveranza-pets/freya
 ```
+
+### Preact and JSX
+
+Freya exposes its Preact dependencies through dedicated entry points. Custom pages
+and themes do not need direct dependencies on `preact` or `preact-render-to-string`:
+
+```tsx
+import type { VNode } from '@perseveranza-pets/freya/preact'
+import { useState } from '@perseveranza-pets/freya/preact/hooks'
+import { render } from '@perseveranza-pets/freya/preact-render-to-string'
+```
+
+Configure the consuming project's `tsconfig.json` to resolve automatic JSX imports
+through Freya too:
+
+```json
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@perseveranza-pets/freya/preact"
+  }
+}
+```
+
+Both `/preact/jsx-runtime` and `/preact/jsx-dev-runtime` are available, including
+their JSX types. The renderer entry point preserves named and default exports.
+Project pages normally return a `VNode`; Freya renders them to HTML automatically.
+When migrating, update existing Preact imports and `jsxImportSource` before removing
+the direct dependencies. Keep importing Freya's theme APIs from `/client`.
 
 ## Usage
 
@@ -243,7 +272,7 @@ Create `src/pages/404.tsx` with a default-exported renderer. Freya passes Dante'
 
 ```tsx
 import type { BuildContext } from '@perseveranza-pets/dante'
-import type { VNode } from 'preact'
+import type { VNode } from '@perseveranza-pets/freya/preact'
 
 export default function Page404(context: BuildContext): VNode {
   return (

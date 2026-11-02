@@ -17,7 +17,7 @@ Freya extends Dante with YAML talks, Preact themes, browser navigation, offline 
 
 ## New presentation project
 
-Require Node >=24.22.0 and an ESM package (`"type": "module"`), normally private at version `0.1.0`. Install `@perseveranza-pets/freya` and `preact` as direct dependencies. Install TypeScript, Prettier, ESLint, Stylelint, and the Cowtech configs as dev dependencies, selecting mutually compatible versions. When using ESLint 10, also install `@eslint/compat`. With TypeScript 7, retain a TypeScript 6 API package for ESLint as described in Verification below. Use the existing package manager for existing projects.
+Require Node >=24.22.0 and an ESM package (`"type": "module"`), normally private at version `0.1.0`. Install `@perseveranza-pets/freya` as a direct dependency. Import Preact APIs and types from `@perseveranza-pets/freya/preact`, hooks from `/preact/hooks`, and HTML rendering APIs from `/preact-render-to-string`; no direct Preact dependencies are required. The renderer preserves named and default exports. Project pages return VNodes and are rendered by Freya automatically. Install TypeScript, Prettier, ESLint, Stylelint, and the Cowtech configs as dev dependencies, selecting mutually compatible versions. When using ESLint 10, also install `@eslint/compat`. With TypeScript 7, retain a TypeScript 6 API package for ESLint as described in Verification below. Use the existing package manager for existing projects.
 
 Recommended package scripts:
 
@@ -124,7 +124,7 @@ Freya includes no web fonts by default. Override `--freya-font-main` for the mai
 ### `src/themes/common/components/common.tsx`
 
 ```tsx
-import type { VNode } from 'preact'
+import type { VNode } from '@perseveranza-pets/freya/preact'
 import { useClient } from '@perseveranza-pets/freya/client'
 
 export function Text({ text }: { text: string }): VNode {
@@ -137,7 +137,7 @@ export function Text({ text }: { text: string }): VNode {
 
 ```tsx
 import type { SlideProps } from '@perseveranza-pets/freya/client'
-import type { ComponentChildren, VNode } from 'preact'
+import type { ComponentChildren, VNode } from '@perseveranza-pets/freya/preact'
 import { cleanCssClasses, Progress, useClient, useSlide } from '@perseveranza-pets/freya/client'
 
 interface SlideWrapperProps extends SlideProps {
@@ -160,7 +160,7 @@ export function SlideWrapper({ className, style, children }: SlideWrapperProps):
 
 ```tsx
 import type { Slide, SlideProps } from '@perseveranza-pets/freya/client'
-import type { VNode } from 'preact'
+import type { VNode } from '@perseveranza-pets/freya/preact'
 import { cleanCssClasses, useSlide } from '@perseveranza-pets/freya/client'
 import { Text } from '../../common/components/common.tsx'
 import { SlideWrapper } from '../components/common.tsx'
@@ -215,7 +215,7 @@ Layouts must export their renderer as default. Keep explicit `.tsx` extensions. 
     "outDir": "./dist",
     "rootDir": "./src",
     "jsx": "react-jsx",
-    "jsxImportSource": "preact"
+    "jsxImportSource": "@perseveranza-pets/freya/preact"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
@@ -383,6 +383,13 @@ use the same map. The standard theme pipeline does not read this map.
 The former `@#` filesystem prefix is no longer supported.
 
 ### Theme rendering
+
+Freya's `/preact`, `/preact/hooks`, `/preact/jsx-runtime` and `/preact/jsx-dev-runtime`
+entry points forward its own Preact APIs and types without importing server code.
+Use `jsxImportSource: '@perseveranza-pets/freya/preact'` in consumer projects; the
+browser bundler uses the same source. Migrate direct imports and JSX configuration
+before removing consumer Preact dependencies. Keep these entry points as lightweight
+re-exports, with JSX namespaces preserved in generated declarations.
 
 Use `/client` for theme imports: `useSlide` exposes the current slide/index; `useClient` exposes presentation data and helpers such as `parseContent`, image resolution and loading state. Components include `Image`, `SVG`, `Code`, `Progress`, `QR`, navigation and presenter helpers. Server tooling and CLI types come from the package root, not `/client`. The root re-exports `developmentServerActive` and type-only Commander APIs.
 

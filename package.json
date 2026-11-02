@@ -31,7 +31,12 @@
   "type": "module",
   "exports": {
     ".": "./dist/index.js",
-    "./client": "./dist/client.js"
+    "./client": "./dist/client.js",
+    "./preact": "./dist/preact/index.js",
+    "./preact/hooks": "./dist/preact/hooks.js",
+    "./preact/jsx-runtime": "./dist/preact/jsx-runtime.js",
+    "./preact/jsx-dev-runtime": "./dist/preact/jsx-dev-runtime.js",
+    "./preact-render-to-string": "./dist/preact-render-to-string.js"
   },
   "types": "./dist/index.d.ts",
   "scripts": {

@@ -298,7 +298,7 @@ export async function generateApplicationScript(
     platform: 'browser',
     transform: {
       jsx: {
-        importSource: 'preact'
+        importSource: '@perseveranza-pets/freya/preact'
       }
     },
     plugins: [
