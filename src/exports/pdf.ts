@@ -9,7 +9,7 @@ import { createRequire } from 'node:module'
 import { dirname, relative, resolve } from 'node:path'
 import { pipeline } from 'node:stream/promises'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { createBuildContext, loadFontsFile, finalizePageCSS, rootDir } from '@perseveranza-pets/dante'
+import { createBuildContext, finalizePageCSS, rootDir } from '@perseveranza-pets/dante'
 import PDFDocument from 'pdfkit'
 import { chromium } from 'playwright'
 import { filterWhitelistedTalks, setWhitelistedTalks } from '../configuration.ts'
@@ -26,7 +26,7 @@ export async function performPDF(command: Command, logger: pino.Logger): Promise
   context.extensions.freya = {
     export: true,
     exportingFormat: 'pdf',
-    fonts: await loadFontsFile(fileURLToPath(new URL('../assets/styles/fonts.yml', import.meta.url)))
+    fonts: { sources: {}, families: {}, urls: [], ranges: {} }
   }
   const output = resolve(absoluteStaticDir, 'pdf')
   const relativeOutput = relative(process.cwd(), output)

@@ -8,8 +8,8 @@
   width: 100%;
   height: 100%;
   min-height: 100vh;
-  background-color: black;
-  font-family: var(--freya-font-varela-round);
+  background-color: var(--freya-presentation-background);
+  font-family: var(--freya-font-main);
 }
 
 .freya\@loading {
@@ -26,15 +26,15 @@
 
 .freya\@svg {
   display: block;
+}
 
-  &-icon {
-    display: inline-block;
-    line-height: 1em;
-    vertical-align: middle;
-    stroke: currentColor;
-    stroke-width: 0;
-    fill: currentColor;
-  }
+.freya\@svg-icon {
+  display: inline-block;
+  line-height: 1em;
+  vertical-align: middle;
+  stroke: currentColor;
+  stroke-width: 0;
+  fill: currentColor;
 }
 
 .freya\@svg-definitions {
@@ -47,12 +47,12 @@
   z-index: 1;
   overflow: hidden;
   flex-direction: column;
-  width: 2000px;
-  height: 1120px;
-  min-width: 2000px;
-  min-height: 1120px;
+  width: var(--freya-slide-width);
+  height: var(--freya-slide-height);
+  min-width: var(--freya-slide-width);
+  min-height: var(--freya-slide-height);
   padding: 0.5--sp;
-  background-color: white;
+  background-color: var(--freya-slide-background);
   transform: var(--freya-slide-transform);
   transform-origin: var(--freya-slide-transform-origin);
 }
@@ -65,7 +65,7 @@
   left: 0;
   width: calc(var(--freya-progress) * 1%);
   height: 0.03--sp;
-  background-color: #5ac3ea;
+  background-color: var(--freya-color-accent);
 }
 
 .freya\@qr {
@@ -92,7 +92,7 @@
   }
 
   & .image {
-    background-color: white;
+    background-color: var(--freya-color-white);
   }
 }
 
@@ -147,12 +147,12 @@
     &,
     &:active,
     &:visited {
-      color: white;
+      color: var(--freya-color-white);
     }
 
     &:hover,
     &:focus {
-      color: #5ac3ea;
+      color: var(--freya-color-accent);
     }
 
     & .icon {
@@ -169,7 +169,7 @@
 }
 
 .freya\@navigator {
-  --freya-slide-display-progress: none;
+  --freya-display-progress: none;
   position: absolute;
   display: grid;
   z-index: 3;
@@ -184,28 +184,38 @@
   min-height: 100%;
   max-height: 100%;
   padding: 0.2--sp;
-  padding-right: 0.9--sp;
 
   & .close {
     position: fixed;
     display: flex;
+    z-index: 10;
     align-items: center;
     justify-content: center;
-    top: 0.2--sp;
-    right: 0.2--sp;
+    top: 0.05--sp;
+    right: 0.05--sp;
+    width: 0.3--sp;
+    height: 0.3--sp;
+    padding: var(--freya-controller-padding);
+    border-radius: 1.5rem;
+    background-color: rgb(30, 30, 30);
+    color: var(--freya-color-white);
+    transition:
+      background-color 0.3s,
+      color 0.3s;
 
     &,
     &:active,
     &:visited {
-      color: white;
+      color: var(--freya-color-white);
     }
 
     &:hover {
-      color: #5ac3ea;
+      background-color: var(--freya-color-accent);
+      color: var(--freya-color-black);
     }
 
     & .image {
-      height: 0.3--sp;
+      height: 0.2--sp;
     }
   }
 
@@ -221,11 +231,11 @@
     cursor: pointer;
 
     &:hover {
-      border-color: #5ac3ea;
+      border-color: var(--freya-color-accent);
     }
 
     &.active {
-      border-color: #5ac3ea;
+      border-color: var(--freya-color-accent);
     }
 
     & .contents {
@@ -245,8 +255,8 @@
       width: calc(3ch + 3rem);
       height: calc(1ch + 3rem);
       background-color: rgb(0, 0, 0);
-      color: white;
-      font-family: var(--freya-font-noto-sans);
+      color: var(--freya-color-white);
+      font-family: var(--freya-font-mono);
       font-size: 10--pt;
       font-weight: 600;
       pointer-events: none;
@@ -256,7 +266,7 @@
 }
 
 .freya\@presenter {
-  --freya-slide-display-progress: none;
+  --freya-display-progress: none;
   position: absolute;
   display: grid;
   z-index: 3;
@@ -266,7 +276,6 @@
   width: 100%;
   min-height: 100%;
   padding: 0.2--sp;
-  padding-right: 0.9--sp;
 
   &.with-previous {
     grid-template-areas: 'header header header' 'previous current next' 'u1 notes u2';
@@ -288,11 +297,11 @@
     column-gap: 1ch;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--freya-color-white);
     font-size: 20--pt;
 
     & .label {
-      font-family: var(--freya-font-noto-sans);
+      font-family: var(--freya-font-mono);
       font-weight: 600;
       line-height: 0.3--sp;
 
@@ -307,18 +316,18 @@
       &,
       &:active,
       &:visited {
-        color: white;
+        color: var(--freya-color-white);
       }
 
       &:hover {
-        color: #5ac3ea;
+        color: var(--freya-color-accent);
       }
 
       & .icon {
         height: 0.25--sp;
 
         &.active {
-          color: #5ac3ea;
+          color: var(--freya-color-accent);
         }
       }
     }
@@ -327,23 +336,34 @@
   & .close {
     position: fixed;
     display: flex;
+    z-index: 10;
     align-items: center;
     justify-content: center;
-    top: 0.2--sp;
-    right: 0.2--sp;
-    color: white;
+    top: 0.05--sp;
+    right: 0.05--sp;
+    width: 0.3--sp;
+    height: 0.3--sp;
+    padding: var(--freya-controller-padding);
+    border-radius: 1.5rem;
+    background-color: rgb(30, 30, 30);
+    color: var(--freya-color-white);
+    transition:
+      background-color 0.3s,
+      color 0.3s;
 
+    &,
     &:active,
     &:visited {
-      color: white;
+      color: var(--freya-color-white);
     }
 
     &:hover {
-      color: #5ac3ea;
+      background-color: var(--freya-color-accent);
+      color: var(--freya-color-black);
     }
 
     & .image {
-      height: 0.3--sp;
+      height: 0.2--sp;
     }
   }
 
@@ -363,7 +383,7 @@
 
     &.current {
       grid-area: current;
-      border-color: #5ac3ea;
+      border-color: var(--freya-color-accent);
     }
 
     &.next {
@@ -387,8 +407,8 @@
       width: calc(3ch + 3rem);
       height: calc(1ch + 3rem);
       background-color: rgb(0, 0, 0);
-      color: white;
-      font-family: var(--freya-font-noto-sans);
+      color: var(--freya-color-white);
+      font-family: var(--freya-font-mono);
       font-size: 10--pt;
       font-weight: 600;
       pointer-events: none;
@@ -398,6 +418,6 @@
 
   & .notes {
     grid-area: notes;
-    color: white;
+    color: var(--freya-color-white);
   }
 }

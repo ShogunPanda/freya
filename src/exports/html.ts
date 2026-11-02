@@ -4,16 +4,16 @@ import type pino from 'pino'
 import type { SlideRenderer } from '../slidesets/models.ts'
 import { mkdir, mkdtemp, readdir, rename, rm } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { builder, cleanCssClasses, createBuildContext, rootDir } from '@perseveranza-pets/dante'
+import { builder, createBuildContext, rootDir } from '@perseveranza-pets/dante'
 import { render } from 'preact-render-to-string'
 import { SvgDefinitions } from '../client.ts'
 import { setWhitelistedTalks } from '../configuration.ts'
+import { renderProjectPage } from '../pages.ts'
 import { resolveSVG } from '../rendering/svg.tsx'
 import { parseContent, prepareClientContext } from '../slidesets/generators.tsx'
 import { collectTalkImages, getTalk, getTheme } from '../slidesets/loaders.ts'
 import { page } from '../templates/page.tsx'
 import { SlideComponent } from '../templates/slide.tsx'
-import { body as speakerNotesBody, page as speakerNotesPage } from '../templates/speaker-notes.tsx'
 
 export async function performBuild(command: Command, logger: pino.Logger): Promise<void> {
   let staging: string | undefined
@@ -89,11 +89,7 @@ export async function generateAllSlidesets(
       )
     }
     if (talk.slides.some(slide => (slide.notes ?? '').length > 0)) {
-      const bodyClassName = cleanCssClasses('freya@root', 'freya@speaker-notes__body')
-      slides[`${id}/speaker-notes.html`] = render(speakerNotesPage(context, bodyClassName)).replace(
-        '@BODY@',
-        render(speakerNotesBody({ talk }))
-      )
+      slides[`${id}/speaker-notes.html`] = await renderProjectPage('speaker-notes', context, { talk })
     }
     if (prepare) {
       await prepare(slides)

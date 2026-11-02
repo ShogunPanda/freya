@@ -1,9 +1,17 @@
+import type { SVGAttributes, VNode } from 'preact'
 import type { ParsedSVG } from '../slidesets/models.ts'
 import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { cleanCssClasses, rootDir } from '@perseveranza-pets/dante'
 import { render } from 'preact-render-to-string'
 import { js2xml, xml2js } from 'xml-js'
 import { generateSVGId, normalizeSVGProps } from '../components/svg.tsx'
 import { resolveImagePath } from '../slidesets/loaders.ts'
+
+export interface SvgFileProps extends Omit<SVGAttributes<SVGSVGElement>, 'path'> {
+  path: string | URL
+  className?: string
+}
 
 export function parseSVG(raw: string): [Record<string, string | undefined>, string] {
   // Open the the file and parse as XML
@@ -70,4 +78,18 @@ export function resolveSVG(
   )
 
   return cache[key]
+}
+
+export function SvgFile({ path, className, ...props }: SvgFileProps): VNode {
+  const filename = path instanceof URL ? path : resolve(rootDir, path)
+  const [svgProps, svgContents] = parseSVG(readFileSync(filename, 'utf8'))
+
+  return (
+    <svg
+      {...normalizeSVGProps(svgProps)}
+      {...props}
+      className={cleanCssClasses(className)}
+      dangerouslySetInnerHTML={{ __html: svgContents }}
+    />
+  )
 }

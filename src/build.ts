@@ -2,12 +2,12 @@ import type { BuildContext, BuildResult } from '@perseveranza-pets/dante'
 import { existsSync } from 'node:fs'
 import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { elapsed, loadFontsFile, rootDir } from '@perseveranza-pets/dante'
+import { elapsed, rootDir } from '@perseveranza-pets/dante'
 import { glob } from 'glob'
 import { filterWhitelistedTalks, isServiceWorkerEnabled, pusherConfig } from './configuration.ts'
 import { css, cssVisitor } from './css.ts'
 import { readFile } from './fs.ts'
+import { renderProjectPage } from './pages.ts'
 import { generateAllSlidesets, generateAssetsListing, generatePage404 } from './slidesets/generators.tsx'
 import { getAllTalks, getTalk, getTheme } from './slidesets/loaders.ts'
 import { indexServiceWorkerDeclaration, talkServiceWorkerDeclaration } from './templates/service-workers.ts'
@@ -68,9 +68,7 @@ export async function build(context: BuildContext): Promise<BuildResult> {
     context.extensions.freya = {}
   }
 
-  context.extensions.freya.fonts = await loadFontsFile(
-    fileURLToPath(new URL('./assets/styles/fonts.yml', import.meta.url))
-  )
+  context.extensions.freya.fonts = { sources: {}, families: {}, urls: [], ranges: {} }
   context.extensions.freya.images = new Set()
   context.extensions.freya.talkImages = new Map<string, Set<string>>()
   context.extensions.freya.talks = filterWhitelistedTalks(context, await getAllTalks())
@@ -79,7 +77,7 @@ export async function build(context: BuildContext): Promise<BuildResult> {
 
   // Generate the slidesets
   context.extensions.freya.slidesets = await generateAllSlidesets(context)
-  context.extensions.freya.slidesets['404'] = generatePage404(context)
+  context.extensions.freya.slidesets['404'] = await generatePage404(context)
 
   // Write slidesets and track preCache information
   const toPrecache = new Set<string>(context.extensions.freya.images as Set<string>)
@@ -178,6 +176,11 @@ export async function build(context: BuildContext): Promise<BuildResult> {
   }
 
   if (!context.isProduction) {
+    for (const id of context.extensions.freya.talks as Set<string>) {
+      const talk = await getTalk(id)
+      const notes = await renderProjectPage('speaker-notes', context, { talk })
+      await writeFile(resolve(baseDir, `${id}_speaker-notes.html`), notes, 'utf8')
+    }
     const lists = await generateAssetsListing(context)
     for (const [name, file] of Object.entries(lists)) {
       await writeFile(resolve(baseDir, `${name}_assets.html`), file, 'utf8')

@@ -86,7 +86,7 @@ export class ExportCache {
   ): Promise<ExportCache> {
     const hash = createHash('sha256')
     hash.update(JSON.stringify({ cacheVersion: 2, extension, ...format }))
-    const sharedPaths = ['.env', 'src/talks/common.yml', 'src/themes', 'src/scripts']
+    const sharedPaths = ['.env', 'src/talks/common.yml', 'src/themes', 'src/scripts', 'src/pages']
     for (const path of sharedPaths) {
       hash.update(JSON.stringify([path, await hashTree(resolve(root, path))]))
     }

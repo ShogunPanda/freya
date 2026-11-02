@@ -1,9 +1,10 @@
 import type { BuildContext } from '@perseveranza-pets/dante'
 import type { TokenOrValue } from 'lightningcss'
-import type { Talk, Theme } from './slidesets/models.ts'
-import { basename, dirname, resolve } from 'node:path'
+import { homedir } from 'node:os'
+import { basename, dirname, isAbsolute, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { rootDir } from '@perseveranza-pets/dante'
+import { transform } from 'lightningcss'
 import { readFile } from './fs.ts'
 import { getTalk, getTheme } from './slidesets/loaders.ts'
 
@@ -61,39 +62,55 @@ export async function css(context: BuildContext): Promise<string> {
     id = id === 'speaker-notes' ? id : basename(dirname(context.currentPage!))
   }
 
-  let cssFiles: Promise<string>[]
-  let talk: Talk | undefined
-  let theme: Theme | undefined
-
-  if (!id || id === '404' || id === 'index' || id.endsWith('_assets') || id === 'speaker-notes') {
-    cssFiles = [loadLayeredCss('page', fileURLToPath(new URL('./assets/styles/page.css', import.meta.url)))]
-  } else {
-    talk = await getTalk(id)
-    theme = await getTheme(talk.config.theme)
-
-    cssFiles = [
-      loadLayeredCss('slideset', fileURLToPath(new URL('./assets/styles/slideset.css', import.meta.url))),
-      loadLayeredCss('reset', resolve(rootDir, 'src/themes', theme.id, 'reset.css'), true),
-      loadLayeredCss('variables', resolve(rootDir, 'src/themes', theme.id, 'variables.css'), true),
-      loadLayeredCss('colors', resolve(rootDir, 'src/themes', theme.id, 'colors.css'), true),
-      loadLayeredCss('theme', resolve(rootDir, 'src/themes', theme.id, 'theme.css')),
-      loadLayeredCss('talk', resolve(rootDir, 'src/talks', talk.id, 'talk.css'), true)
-    ]
+  // Project-owned system pages supply their complete document and styling.
+  if (
+    !id ||
+    id === '404' ||
+    id === 'index' ||
+    id.endsWith('_assets') ||
+    id.endsWith('_speaker-notes') ||
+    id === 'speaker-notes'
+  ) {
+    return ''
   }
 
+  const talk = await getTalk(id)
+  const theme = await getTheme(talk.config.theme)
+
+  const cssFiles = [
+    `@layer variables {
+        :root {
+          --freya-slide-width: ${talk.config.dimensions.width}px;
+          --freya-slide-height: ${talk.config.dimensions.height}px;
+        }
+      }`,
+    loadLayeredCss('slideset', fileURLToPath(new URL('./assets/styles/slideset.css', import.meta.url))),
+    loadLayeredCss('reset', resolve(rootDir, 'src/themes', theme.id, 'reset.css'), true),
+    loadLayeredCss('variables', resolve(rootDir, 'src/themes', theme.id, 'variables.css'), true),
+    loadLayeredCss('colors', resolve(rootDir, 'src/themes', theme.id, 'colors.css'), true),
+    loadLayeredCss('theme', resolve(rootDir, 'src/themes', theme.id, theme.style ?? 'theme.css')),
+    loadLayeredCss('talk', resolve(rootDir, 'src/talks', talk.id, 'talk.css'), true)
+  ]
+
   const layers = await Promise.all([
-    '@layer normalize, variables, reset, fonts, responsiveness, slideset, theme, talk, page, colors;',
+    '@layer normalize, variables, reset, fonts, responsiveness, slideset, theme, talk, colors;',
     loadLayeredCss('normalize', fileURLToPath(new URL('./assets/styles/normalize.css', import.meta.url))),
     loadLayeredCss('variables', fileURLToPath(new URL('./assets/styles/variables.css', import.meta.url))),
     loadLayeredCss('reset', fileURLToPath(new URL('./assets/styles/reset.css', import.meta.url))),
-    loadLayeredCss('fonts', fileURLToPath(new URL('./assets/styles/fonts.css', import.meta.url))),
     loadLayeredCss('responsiveness', fileURLToPath(new URL('./assets/styles/responsiveness.css', import.meta.url))),
     ...cssFiles
   ])
 
-  let css = layers.join('\n\n')
+  return resolveCSSImports(layers.join('\n\n'), theme.id, talk.id)
+}
 
-  const matcher = /^@import (['"])(@.+)(\1);$/m
+async function resolveCSSImports(
+  css: string,
+  theme?: string,
+  talk?: string,
+  imports: Record<string, string> = {}
+): Promise<string> {
+  const matcher = /^[\t ]*@import[\t ]+(['"])(@[^'"\r\n]+)\1;[\t ]*$/m
   let mo: RegExpMatchArray | null = ['']
   while (mo) {
     mo = css.match(matcher)
@@ -108,14 +125,18 @@ export async function css(context: BuildContext): Promise<string> {
 
     if (id.startsWith('@freya/')) {
       url = fileURLToPath(new URL(`./assets/styles/${id.replace('@freya/', '')}`, import.meta.url))
-
-      replacement = await readFile(url)
     } else if (id.startsWith('@theme/') && theme) {
-      url = resolve(rootDir, 'src/themes', theme.id, id.replace('@theme/', ''))
+      url = resolve(rootDir, 'src/themes', theme, id.replace('@theme/', ''))
     } else if (id.startsWith('@talk/') && talk) {
-      url = resolve(rootDir, 'src/talks', talk.id, id.replace('@talk/', ''))
+      url = resolve(rootDir, 'src/talks', talk, id.replace('@talk/', ''))
     } else if (id.startsWith('@./')) {
       url = resolve(rootDir, 'src', id.replace(/^@/, ''))
+    } else {
+      const separator = id.indexOf('/')
+      const alias = id.slice(1, separator)
+      if (separator > 1 && Object.hasOwn(imports, alias)) {
+        url = resolve(imports[alias], id.slice(separator + 1))
+      }
     }
 
     if (url) {
@@ -126,6 +147,39 @@ export async function css(context: BuildContext): Promise<string> {
   }
 
   return css.replaceAll(/((?:freya|theme|talk)(?:-(?:[a-z0-9-]+))?)@/g, '$1\\@')
+}
+
+/** Compile a project stylesheet without injecting Freya's default styles. */
+export async function compileCSS(
+  path: string | URL,
+  context: Pick<BuildContext, 'isProduction'> & Partial<Pick<BuildContext, 'extensions'>>
+): Promise<string> {
+  const filename = path instanceof URL ? fileURLToPath(path) : resolve(rootDir, path)
+  const imports: Record<string, string> = {}
+  for (const [alias, directory] of Object.entries(
+    (context.extensions?.freya?.cssImports ?? {}) as Record<string, string>
+  )) {
+    if (!alias || /[@/]/.test(alias) || ['freya', 'theme', 'talk', '.'].includes(alias)) {
+      throw new Error(`Invalid or reserved CSS import alias "${alias}"`)
+    }
+    const expanded = directory === '~' || directory.startsWith('~/') ? homedir() + directory.slice(1) : directory
+    if (!isAbsolute(expanded)) {
+      throw new Error(`CSS import alias "${alias}" requires an absolute path or a path starting with ~/`)
+    }
+    Object.defineProperty(imports, alias, { value: expanded, enumerable: true })
+  }
+  const source = await resolveCSSImports(await readFile(filename), undefined, undefined, imports)
+  const { code } = transform({
+    filename,
+    code: Buffer.from(source),
+    minify: context.isProduction,
+    sourceMap: false,
+    customAtRules: {
+      color: { prelude: '<custom-ident>+' }
+    },
+    visitor: cssVisitor
+  })
+  return code.toString()
 }
 
 export const cssVisitor = {

@@ -117,6 +117,10 @@ fonts:
 
 Keep all font collection fields even when empty. Add `preloadImages` for images selected only at runtime and `layouts: { loading: loading }` to select an optional loading layout.
 
+Freya includes no web fonts by default. Override `--freya-font-main` for the main interface font and `--freya-font-mono` for slide numbers, presenter labels, and index abstracts. They default to `var(--freya-font-system)` and `var(--freya-font-monospace)` respectively. Declare any custom font faces and export font metadata in the theme.
+
+`theme.style` selects the theme stylesheet, falling back to `theme.css` when omitted. Optional theme `variables.css`, `reset.css`, `colors.css` and talk `talk.css` participate in the existing CSS layers. UI colors are configurable through `--freya-color-accent` (default `#5ac3ea`), `--freya-slide-background` (white), and `--freya-presentation-background` (black). Slide width/height and minimum sizes use `--freya-slide-width`/`--freya-slide-height`, populated from talk dimensions with CSS defaults of `2000px`/`1120px`. Change talk dimensions rather than only CSS dimensions to keep browser scaling consistent. The initial transform is `scale(1)`. Navigator/presenter hide progress through `--freya-display-progress`. Freya controls use accent-colored `:focus-visible` outlines; native outlines elsewhere are preserved. Resource grids adapt to viewport width.
+
 ### `src/themes/common/components/common.tsx`
 
 ```tsx
@@ -258,7 +262,7 @@ export default {
 - `freya build` / `b`: interactive HTML in `dist/html`.
 - `freya server` / `serve` / `s`: serve existing output; `--directory` selects the output base (default `dist`). Freya serves its `html` subdirectory.
 - The interactive builder currently targets project `dist/html` even with Dante's `--directory`; use the default for build/development. Export commands have their own output options.
-- `freya --only my-talk,another-talk <command>` selects talks. `FREYA_WHITELIST` takes precedence. Options may precede the command, including development aliases.
+- `freya --only my-talk,another-talk <command>` selects talks. `FREYA_WHITELIST` and `-o`/`--only` are combined as a union with duplicates removed. Each initialization recomputes the selection from both sources; it does not accumulate previous calls. Options may precede the command, including development aliases.
 - `freya font <url...> --ranges latin` inherits Dante's font metadata tool (YAML/CSS output, not font binary downloads).
 - `freya pdf` / `p`: screenshot PDF per talk in `<directory>/pdf`, default directory `dist`; `--concurrency` defaults to 3 browsers and up to 3 tabs each, `--scale` defaults to 2 and must be a positive integer.
 - `freya pptx` / `x`: editable PPTX per talk in `--directory` (default `pptx`), slide concurrency default 4.
@@ -284,6 +288,101 @@ export const setupCLI: SetupCLI = async (program, logger) => {
 Register commands/options unconditionally. Dante first preloads TSX, then awaits Freya and project CLI hooks before parsing. The development action replaces the process via `execve` with watch enabled. Module imports, `setupCLI`, and `preAction` run first with `developmentServerActive === false`, then again in a fresh watched runtime with `true`. Other commands remain `false`. `true` is a lifecycle marker, not proof that the HTTP server is listening. Freya's talk-filter hook is safe to repeat; gate effects that must skip bootstrap on this boolean. Skill commands follow this same regular hook flow.
 
 ## Theme APIs, assets, and exports
+
+### Project-owned 404
+
+Create `src/pages/404.tsx`, directly under `src/pages`, to supply an optional 404 page. Default-export a function accepting Dante's `BuildContext` and returning a complete Preact `VNode` document, synchronously or asynchronously. Freya awaits it, renders it with an HTML doctype, and writes `404.html` alongside the interactive HTML pages. Imports and renderer failures are build errors; a missing default renderer function is also an error.
+
+The project owns all markup, metadata and styling. Freya's CSS pipeline returns no styles for this page, including no reset, fonts or variables. Read a sibling CSS file with `readFile(new URL('./404.css', import.meta.url), 'utf8')` and insert a `<style>` in the renderer, or explicitly publish linked assets. Dante's development live-reload script can still be injected. Without `src/pages/404.tsx`, Freya generates `404.html` containing `<!doctype html><html><head></head><body></body></html>`, served with HTTP 404. Index, asset and speaker-note pages also use project renderers with the same empty-document fallback. When adding project 404 examples, do not import the removed `src/templates/404.tsx` or rely on `.freya@page404` rules.
+
+### Project-owned index and assets
+
+All four system pages are loaded by `renderProjectPage` in `src/pages.ts` from
+`src/pages/<name>.tsx`. Default-export a `PageRenderer<Name>`, receiving a
+`BuildContext` and `PageData[Name]`, and returning a complete Preact `VNode` or
+`Promise<VNode>`. Freya adds the doctype. An absent renderer produces exactly
+`<!doctype html><html><head></head><body></body></html>`; import errors, missing
+default functions and renderer failures propagate. Do not restore built-in
+templates as a fallback. The project owns styles, metadata and font preloads.
+
+For `index.tsx`, `PageData['index']` contains:
+
+- `talks: Record<string, Talk>`: the selected talks keyed by ID. The renderer
+  handles hidden/archived filtering, ordering and presentation.
+- `common: Record<string, object>`: loaded shared `src/talks/common.yml` metadata.
+- `script: string`: site-version initialization plus service-worker registration
+  when enabled. Insert it with `<script dangerouslySetInnerHTML={{ __html: script }} />`.
+  Dante supplies development live reload separately.
+
+`generateAllSlidesets` in `src/slidesets/generators.tsx` generates this index for
+interactive builds, including deployment HTML, as `index.html` at `/`.
+
+For `assets.tsx`, `PageData['assets']` contains `theme: Theme`, `talk: Talk` and
+`commonImages`, `themeImages`, `talkImages` as arrays of prefixed asset identifiers
+(`@common/`, `@theme/`, `@talk/`). Resolve previews with
+`resolveImageUrl(cache, theme.id, talk.id, id)` and preserve the identifiers for
+clipboard actions. Browser scripts for copying/filtering belong to the renderer.
+`generateAssetsListing` runs only in non-production builds; `src/build.ts` writes
+`<talk>_assets.html` and the development route serves it at `/<talk>/assets`.
+
+Use `compileCSS` for project-owned styles. `css()` must return no automatic styles
+for index, 404, asset listings and speaker notes. For migrations, provide each
+renderer directly under `src/pages`; migrate its styles and browser behavior too.
+The removal of default system-page templates is a breaking change, even though
+projects without renderers can still build successfully with empty pages.
+
+### Project-owned speaker notes
+
+`src/pages/speaker-notes.tsx` default-exports `PageRenderer<'speaker-notes'>`,
+receiving `(context, { talk })` and returning a complete Preact document.
+`src/exports/html.ts` invokes it when preparing static slides for a talk containing
+notes, writing `<talk>/speaker-notes.html`. Use `renderNotes(slide)` for Markdown;
+retain original slide indices when skipping slides without notes. The renderer
+owns its CSS, optionally compiled with `compileCSS`. A missing renderer returns
+the empty document; renderer/import failures propagate. Freya injects no styles.
+Development builds also render this page for every selected talk into
+`<talk>_speaker-notes.html`. The development-only `/<talk>/speaker-notes` route
+serves it, returning HTTP 404 for missing talks/pages. The CSS pipeline excludes
+these preview files from automatic slide styles, like the assets listing.
+
+### Compiling project CSS
+
+`SvgFile` is a server-only component exported from the package root and implemented
+in `src/rendering/svg.tsx`. It reuses `parseSVG` and `normalizeSVGProps` to inline a
+local file without the slide client context. Pass a file URL, such as
+`new URL('./assets/background.svg', import.meta.url)`, or a string resolved against
+the project working directory. It accepts standard SVG props, removes source width
+and height, and preserves the viewBox. Do not export it from `/client` or confuse
+it with the existing context-dependent `Svg` component.
+
+For project page CSS, import `compileCSS` from `@perseveranza-pets/freya` and call
+`await compileCSS(new URL('./pages.css', import.meta.url), context)`. It returns
+CSS text for a `<style dangerouslySetInnerHTML={{ __html: css }} />` element.
+String paths resolve against the project working directory; the context only
+requires `isProduction`. The helper reuses Freya's import resolver and `cssVisitor`,
+including `--pt` (2.7px), `--sp` (200px), `@color` utilities, and Freya/theme/talk
+class-name escaping, then runs Lightning CSS and minifies production output.
+No default styles, resets, variables or layers are loaded automatically.
+
+Explicitly import shared files with standalone lines like
+`@import '@freya/variables.css';` and `@import '@./pages/shared.css';`.
+`@./` is rooted at project `src`, not the importing file. Nested alias imports are
+expanded. Standard relative imports are not expanded by this resolver. The standalone
+helper has no `@theme/` or `@talk/` context; use explicit `@./themes/...` paths instead.
+CSS variables remain browser custom properties. For example,
+`@color accent freya-color-accent;` creates `theme@fg-accent` and `theme@bg-accent`.
+
+`compileCSS` reads custom aliases from `context.extensions.freya.cssImports`, a
+`Record<string, string>` mapping names to absolute directories. For example,
+`{ foo: '~/Development/Private/sites/www/src/assets/styles' }` enables
+`@import '@foo/application.css';`. Expand a leading `~` or `~/` in directories
+to the current user's home. Keys omit `@` and `/`; `freya`, `theme`, `talk` and `.`
+are reserved. Invalid aliases and relative directories are errors. The caller owns
+initialization; compileCSS does not mutate the context. Nested and indented imports
+use the same map. The standard theme pipeline does not read this map.
+The former `@#` filesystem prefix is no longer supported.
+
+### Theme rendering
 
 Use `/client` for theme imports: `useSlide` exposes the current slide/index; `useClient` exposes presentation data and helpers such as `parseContent`, image resolution and loading state. Components include `Image`, `SVG`, `Code`, `Progress`, `QR`, navigation and presenter helpers. Server tooling and CLI types come from the package root, not `/client`. The root re-exports `developmentServerActive` and type-only Commander APIs.
 

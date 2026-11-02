@@ -88,6 +88,18 @@ export async function assetsHandler(
   return reply.sendFile(finalPathBasename, finalPathDirname)
 }
 
+export async function speakerNotesHandler(
+  this: FastifyInstance,
+  request: FastifyRequest<{ Params: { talk: string } }>,
+  reply: FastifyReply
+): Promise<void> {
+  const page = `${request.params.talk}_speaker-notes`
+  if (!pageExists(this, request.params.talk) || !pageExists(this, page)) {
+    return reply.code(NOT_FOUND).sendFile('404.html')
+  }
+  return reply.sendFile(`${page}.html`)
+}
+
 export function setupServer(server: FastifyInstance, isProduction: boolean): ServerResult {
   if (pusherConfig) {
     server.register(fastifyFormBody)
@@ -122,6 +134,11 @@ export function setupServer(server: FastifyInstance, isProduction: boolean): Ser
   })
 
   if (!isProduction) {
+    server.route({
+      method: 'GET',
+      url: '/:talk/speaker-notes',
+      handler: speakerNotesHandler
+    })
     server.route({
       method: 'GET',
       url: '/:talk/assets',

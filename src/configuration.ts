@@ -19,18 +19,16 @@ function loadPusherSettings(): Pusher | undefined {
   return { key, secret, cluster }
 }
 
-export function setWhitelistedTalks(list: string): void {
-  let whitelisted
-  if (process.env.FREYA_WHITELIST) {
-    whitelisted = process.env.FREYA_WHITELIST
-  } else {
-    whitelisted = list
-  }
-
-  whitelistedTalks = (whitelisted ?? '')
-    .split(/\s*,\s*/)
-    .map(t => t.trim())
-    .filter(t => t)
+export function setWhitelistedTalks(list: string = ''): void {
+  whitelistedTalks = [
+    ...new Set(
+      [process.env.FREYA_WHITELIST ?? '', list]
+        .join(',')
+        .split(',')
+        .map(t => t.trim())
+        .filter(t => t)
+    )
+  ]
 }
 
 export function filterWhitelistedTalks(_context: BuildContext, talks: Set<string>): Set<string> {

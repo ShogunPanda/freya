@@ -46,7 +46,7 @@ export function normalizeSVGProps(props: Record<string, string | undefined>): SV
     stroke,
     fill,
     'stroke-linecap': strokeLinecap,
-    'stroke-linecap': strokeLinejoin
+    'stroke-linejoin': strokeLinejoin
   } = props
 
   // Camelcase some props and all the styles

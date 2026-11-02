@@ -62,7 +62,7 @@ export interface Talk extends RawTalk {
 export interface Theme {
   id: string
   preloadImages?: string[]
-  style: string
+  style?: string
   urls: Record<string, string>
   fonts: Fonts
   layouts?: { loading?: string }

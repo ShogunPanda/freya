@@ -5,7 +5,7 @@ import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promise
 import { createRequire } from 'node:module'
 import { dirname, join, posix, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { createBuildContext, finalizePageCSS, loadFontsFile, rootDir } from '@perseveranza-pets/dante'
+import { createBuildContext, finalizePageCSS, rootDir } from '@perseveranza-pets/dante'
 import JSZip from 'jszip'
 import { chromium } from 'playwright'
 import pptxgen from 'pptxgenjs'
@@ -1458,7 +1458,7 @@ export async function exportPptx(command: Command, logger: pino.Logger, destinat
     context.extensions.freya = {
       export: true,
       exportingFormat: 'pptx',
-      fonts: await loadFontsFile(fileURLToPath(new URL('../assets/styles/fonts.yml', import.meta.url))),
+      fonts: { sources: {}, families: {}, urls: [], ranges: {} },
       talks: filterWhitelistedTalks(context, await getAllTalks())
     }
     const selected = context.extensions.freya.talks as Set<string>

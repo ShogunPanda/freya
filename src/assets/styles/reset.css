@@ -5,7 +5,6 @@
 *::before,
 *::after {
   box-sizing: border-box;
-  outline: none;
 }
 
 body {
@@ -87,4 +86,10 @@ dt {
 
 dt:nth-child(n + 1) {
   margin-top: 1rem;
+}
+
+:where(.freya\@controller > a, .freya\@navigator > a, .freya\@presenter > .header > a):focus-visible {
+  outline: 2px solid var(--freya-color-accent);
+
+  outline-offset: 3px;
 }

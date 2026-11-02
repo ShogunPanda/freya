@@ -12,13 +12,12 @@ import { render } from 'preact-render-to-string'
 import { rolldown } from 'rolldown'
 import { generateSVGId } from '../components/svg.tsx'
 import { isServiceWorkerEnabled, pusherConfig } from '../configuration.ts'
+import { renderProjectPage } from '../pages.ts'
 import { resolveSVG } from '../rendering/svg.tsx'
-import { page as page404 } from '../templates/404.tsx'
-import { page as assetsPage } from '../templates/assets.tsx'
-import { page as index } from '../templates/index.tsx'
 import { page } from '../templates/page.tsx'
+import { serviceWorkerRegistration } from '../templates/service-workers.ts'
 import { SlideComponent, Widgets } from '../templates/slide.tsx'
-import { collectTalkImages, getTalk, getTheme, imageExtensions, resolvePusher } from './loaders.ts'
+import { collectTalkImages, getCommon, getTalk, getTheme, imageExtensions, resolvePusher } from './loaders.ts'
 
 interface Path {
   name: string
@@ -135,6 +134,23 @@ export function parseContent(cache: Record<string, string>, raw?: string): strin
     .trim()
 
   return cache[raw]
+}
+
+/** Convert HTML to plain text without interpreting Markdown. */
+export function cleanHTML(raw: string): string {
+  return raw
+    .replaceAll(/<!--[\s\S]*?(?:-->|$)/g, '')
+    .replaceAll(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '')
+    .replaceAll(/<\/?([a-z][a-z0-9:-]*)\b(?:[^>"']|"[^"]*"|'[^']*')*>/gi, (_tag, name: string) =>
+      /^(?:address|article|aside|blockquote|br|div|dl|dt|dd|fieldset|figcaption|figure|footer|form|h[1-6]|header|hr|li|main|nav|ol|p|pre|section|table|td|th|tr|ul)$/i.test(
+        name
+      )
+        ? ' '
+        : ''
+    )
+    .replaceAll(/&(?:#x[\da-f]+|#\d+|[a-z][a-z\d]+);/gi, entity => markdownRenderer.utils.unescapeAll(entity))
+    .replaceAll(/\s+/g, ' ')
+    .trim()
 }
 
 export async function ensureRenderedCode(
@@ -304,13 +320,11 @@ export async function generateApplicationScript(
   return generated.output[0].code
 }
 
-export function generatePage404(context: BuildContext): string {
-  return render(page404(context, cleanCssClasses('freya@root', 'freya@page404', 'body')))
+export async function generatePage404(context: BuildContext): Promise<string> {
+  return renderProjectPage('404', context, undefined)
 }
 
 export async function generateAssetsListing(context: BuildContext): Promise<Record<string, string>> {
-  const bodyClassName = cleanCssClasses('freya@root', 'freya@resources', 'body')
-
   const pages: Record<string, string> = {}
 
   // For each talk, generate all the slideset
@@ -328,7 +342,7 @@ export async function generateAssetsListing(context: BuildContext): Promise<Reco
 
     const [commonImages, themeImages, talkImages] = await listThemeAndTalkImages(talk.config.theme, id)
 
-    pages[id] = render(assetsPage({ context, theme, talk, commonImages, themeImages, talkImages, bodyClassName }))
+    pages[id] = await renderProjectPage('assets', context, { theme, talk, commonImages, themeImages, talkImages })
 
     const progress = `[${i.toString().padStart(padding, '0')}/${totalPadded}]`
     context.logger.info(`${progress} Generated assets listing for slideset ${id} in ${elapsed(startTime)} ms.`)
@@ -468,9 +482,14 @@ export async function generateAllSlidesets(context: BuildContext): Promise<Recor
   }
 
   // Generate the index file
-  slidesets.index = render(
-    await index(context, resolvedTalks, cleanCssClasses('freya@root', 'freya@resources', 'body'))
-  )
+  slidesets.index = await renderProjectPage('index', context, {
+    talks: resolvedTalks,
+    common: await getCommon(),
+    script: [
+      `globalThis.__freyaSiteVersion = ${JSON.stringify(context.version)}`,
+      isServiceWorkerEnabled(context) ? serviceWorkerRegistration('/sw.js') : ''
+    ].join('\n;\n')
+  })
 
   return slidesets
 }
