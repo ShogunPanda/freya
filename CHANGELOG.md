@@ -1,3 +1,8 @@
+### 2026-11-02 / 2.0.0
+
+- feat!: Enabled project-owned system pages and configurable theme styling.
+- feat!: Improved CI and made it skills friendly.
+
 ### 2026-10-02 / 1.1.0
 
 - feat: Allow setupCLI support.
